@@ -15,10 +15,9 @@ import {
   World,
 } from '@sciurus/ecs';
 import { derive, Type } from 'rustable';
-import { App, AppExit } from '../src/app';
+import { App, AppExit, SubApp } from '../src/app';
 import { PreUpdate, Update } from '../src/main_schedule';
 import { Plugin } from '../src/plugin';
-import { SubApp } from '../src/subapp';
 
 @derive([Plugin])
 class PluginA {

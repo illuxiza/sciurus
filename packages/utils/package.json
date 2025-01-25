@@ -1,7 +1,7 @@
 {
   "name": "@sciurus/utils",
   "description": "A Collection of Utilities for the Sciurus.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "https://github.com/illuxiza/sciurus#readme",
   "license": "MIT",
   "main": "lib/index.js",
@@ -9,6 +9,7 @@
   "types": "lib/index.d.ts",
   "exports": {
     ".": {
+      "types": "./lib/index.d.ts",
       "require": "./lib/index.js",
       "import": "./lib/index.mjs"
     }

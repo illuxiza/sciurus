@@ -1,7 +1,7 @@
 {
   "name": "sciurus",
   "description": "A lightweight, TypeScript-based implementation of Bevy.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "workspaces": [
     "packages/*"
   ],
@@ -10,6 +10,7 @@
   "types": "./lib/index.d.ts",
   "exports": {
     ".": {
+      "types": "./lib/index.d.ts",
       "require": "./lib/index.js",
       "import": "./lib/index.mjs"
     }

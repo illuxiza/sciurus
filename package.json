@@ -3,7 +3,8 @@
   "description": "A lightweight, TypeScript-based implementation of Bevy.",
   "version": "0.0.3",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",

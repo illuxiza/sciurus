@@ -1,7 +1,7 @@
 {
   "name": "@sciurus/utils",
   "description": "A Collection of Utilities for the Sciurus.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/illuxiza/sciurus#readme",
   "license": "MIT",
   "main": "lib/index.js",
@@ -26,8 +26,8 @@
   "bugs": {
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
-  "dependencies": {
-    "rustable": "^0.3.13"
+  "peerDependencies": {
+    "rustable": "^0.3.14"
   },
   "publishConfig": {
     "access": "public"

@@ -1,0 +1,29 @@
+{
+  "include": ["packages", "types", "src"],
+  "compilerOptions": {
+    "allowJs": false,
+    "target": "ESNext",
+    "module": "ESNext",
+    "baseUrl": "./",
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./lib",
+    "strict": true,
+    "esModuleInterop": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "types": ["vitest", "vitest/globals"],
+    "paths": {
+      "@sciurus/app": ["packages/app"],
+      "@sciurus/ecs": ["packages/ecs"],
+      "@sciurus/utils": ["packages/utils"]
+    }
+  }
+}

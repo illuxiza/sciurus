@@ -1,0 +1,11 @@
+node_modules/
+lib
+coverage/
+.DS_Store
+*.log
+.idea
+.vscode
+.yarn
+package-lock.json
+yarn.lock
+.vitest

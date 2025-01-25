@@ -1,0 +1,34 @@
+{
+  "name": "@sciurus/utils",
+  "description": "A Collection of Utilities for the Sciurus.",
+  "version": "0.0.1",
+  "homepage": "https://github.com/illuxiza/sciurus#readme",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "lib/index.mjs",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./lib/index.js",
+      "import": "./lib/index.mjs"
+    }
+  },
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/illuxiza/sciurus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/illuxiza/sciurus/issues"
+  },
+  "dependencies": {
+    "rustable": "^0.3.13"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

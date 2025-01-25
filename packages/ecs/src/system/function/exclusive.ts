@@ -18,7 +18,7 @@ export class ExclusiveFunctionSystem {
   constructor(
     public func: (...args: any[]) => any,
     public param: ExclusiveSystemParam,
-    private __type: Constructor,
+    private _type: Constructor,
   ) {
     this.state = None;
     this.meta = SystemMeta.new(func.name || 'anonymous_system');
@@ -32,6 +32,10 @@ export class ExclusiveFunctionSystem {
 
   name(): string {
     return this.meta.name;
+  }
+
+  type(): Constructor {
+    return this._type;
   }
 
   componentAccess(): Access {
@@ -102,7 +106,7 @@ export class ExclusiveFunctionSystem {
   }
 
   defaultSystemSets(): Vec<SystemSet> {
-    const set = new SystemTypeSet(this.constructor as Constructor);
+    const set = new SystemTypeSet(this._type);
     return Vec.from([set]);
   }
 
@@ -121,8 +125,8 @@ export interface ExclusiveFunctionSystem extends System {}
 
 implTrait(ExclusiveFunctionSystem, IntoSystemSet, {
   intoSystemSet(): SystemSet {
-    return new SystemTypeSet(this['__type']);
+    return new SystemTypeSet(this.type());
   },
 });
 
-export interface FunctionSystem extends IntoSystemSet {}
+export interface ExclusiveFunctionSystem extends IntoSystemSet {}

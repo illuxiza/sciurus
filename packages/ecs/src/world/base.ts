@@ -88,20 +88,20 @@ let wordId = 0;
 
 export class World {
   id: number;
-  entities: Entities;
-  components: Components;
-  archetypes: Archetypes;
-  storages: Storages;
-  bundles: Bundles;
-  observers: Observers;
-  removedComponents: RemovedComponentEvents;
+  entities: Entities = new Entities();
+  components: Components = new Components();
+  archetypes: Archetypes = new Archetypes();
+  storages: Storages = new Storages();
+  bundles: Bundles = new Bundles();
+  observers: Observers = new Observers();
+  removedComponents: RemovedComponentEvents = new RemovedComponentEvents();
 
-  __changeTick: number;
-  __lastChangeTick: Tick;
-  __lastCheckTick: Tick;
-  __lastTriggerId: number;
+  _changeTick: number = 1;
+  _lastChangeTick: Tick = new Tick(0);
+  _lastCheckTick: Tick = new Tick(0);
+  _lastTriggerId: number = 0;
 
-  __command_queue: CommandQueue;
+  _command_queue: CommandQueue = new CommandQueue();
 
   static new() {
     return new World();
@@ -109,21 +109,6 @@ export class World {
 
   constructor() {
     this.id = wordId++;
-    this.entities = new Entities();
-    this.components = new Components();
-    this.archetypes = new Archetypes();
-    this.storages = new Storages();
-    this.bundles = new Bundles();
-    this.observers = new Observers();
-    this.removedComponents = new RemovedComponentEvents();
-
-    this.__changeTick = 1;
-    this.__lastChangeTick = new Tick(0);
-    this.__lastCheckTick = new Tick(0);
-    this.__lastTriggerId = 0;
-
-    this.__command_queue = new CommandQueue();
-
     this.bootstrap();
   }
 
@@ -146,23 +131,23 @@ export class World {
   }
 
   get changeTick() {
-    return new Tick(this.__changeTick);
+    return new Tick(this._changeTick);
   }
 
   set changeTick(t: Tick) {
-    this.__changeTick = t.tick;
+    this._changeTick = t.tick;
   }
 
   get lastChangeTick() {
-    return this.__lastChangeTick;
+    return this._lastChangeTick;
   }
 
   get lastTriggerId() {
-    return this.__lastTriggerId;
+    return this._lastTriggerId;
   }
 
   get commands() {
-    return new Commands(this.__command_queue, this.entities);
+    return new Commands(this._command_queue, this.entities);
   }
 
   registerComponent<T extends object>(component: Constructor<T>): ComponentId {
@@ -349,7 +334,7 @@ export class World {
     const bundleSpawner = BundleSpawner.new(bundle, this, changeTick);
     let entityLocation = bundleSpawner.spawnNonExistent(entity, bundle, getCaller());
 
-    if (!this.__command_queue.isEmpty()) {
+    if (!this._command_queue.isEmpty()) {
       this.flushCommands();
       entityLocation = this.entities.get(entity).unwrapOr(EntityLocation.INVALID);
     }
@@ -427,7 +412,7 @@ export class World {
 
   clearTrackers(): void {
     this.removedComponents.update();
-    this.__lastChangeTick = this.incrementChangeTick();
+    this._lastChangeTick = this.incrementChangeTick();
   }
 
   removedWithId(componentId: ComponentId): Iterable<Entity> {
@@ -514,7 +499,7 @@ export class World {
     return this.storages.resources
       .get(componentId)
       .andThen((res) =>
-        res.getTicks().map((ticks) => ticks.isChanged(this.__lastChangeTick, this.changeTick)),
+        res.getTicks().map((ticks) => ticks.isChanged(this._lastChangeTick, this.changeTick)),
       )
       .unwrapOr(false);
   }
@@ -585,7 +570,7 @@ export class World {
 
   checkChangeTicks() {
     const changeTick = this.changeTick;
-    if (changeTick.relativeTo(this.__lastCheckTick).get() < CHECK_TICK_THRESHOLD) {
+    if (changeTick.relativeTo(this._lastCheckTick).get() < CHECK_TICK_THRESHOLD) {
       return;
     }
     const { tables, sparseSets, resources } = this.storages;
@@ -600,18 +585,18 @@ export class World {
       },
     });
 
-    this.__lastCheckTick = changeTick;
+    this._lastCheckTick = changeTick;
   }
 
   incrementChangeTick() {
-    const prevTick = this.__changeTick;
-    this.__changeTick += 1;
+    const prevTick = this._changeTick;
+    this._changeTick += 1;
     return new Tick(prevTick);
   }
 
   lastChangeTickScope<T>(lastChangeTick: Tick, f: (world: World) => T): T {
-    const guard = new LastTickGuard(this, this.__lastChangeTick);
-    guard.world.__lastChangeTick = lastChangeTick;
+    const guard = new LastTickGuard(this, this._lastChangeTick);
+    guard.world._lastChangeTick = lastChangeTick;
     const ret = f(this);
     guard.drop();
     return ret;
@@ -679,7 +664,7 @@ export class World {
     caller?: string,
   ): Mut<R> {
     const changeTick = this.changeTick;
-    const lastChangeTick = this.__lastChangeTick;
+    const lastChangeTick = this._lastChangeTick;
     const componentId = this.components.registerResource(resType);
     let data = this.initializeResourceInternal(componentId);
     if (!data.isPresent()) {
@@ -691,7 +676,7 @@ export class World {
 
   getResourceOrInit<R extends object>(resType: Constructor<R>, caller?: string): Mut<R> {
     const changeTick = this.changeTick;
-    const lastChangeTick = this.__lastChangeTick;
+    const lastChangeTick = this._lastChangeTick;
     const componentId = this.components.registerResource(resType);
     let data = this.initializeResourceInternal(componentId);
     if (!data.isPresent()) {
@@ -1308,8 +1293,8 @@ export class World {
   }
 
   flushCommands() {
-    if (!this.__command_queue.isEmpty()) {
-      this.__command_queue.applyOrDropQueued(Some(this));
+    if (!this._command_queue.isEmpty()) {
+      this._command_queue.applyOrDropQueued(Some(this));
     }
   }
 
@@ -1328,7 +1313,7 @@ class LastTickGuard {
   }
 
   drop() {
-    this.world.__lastChangeTick = this.lastTick;
+    this.world._lastChangeTick = this.lastTick;
   }
 }
 

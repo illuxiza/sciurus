@@ -1,11 +1,10 @@
-import { ComponentTicks } from '../../change_detection/tick';
-import { Components } from '../../component/collection';
-import { ComponentId } from '../../component/types';
-
 import { implTrait, iter, Option, Ptr, Vec } from 'rustable';
 import { Bundle, DynamicBundle } from '../../bundle/base';
 import { BundleInserter } from '../../bundle/insert';
 import { InsertMode } from '../../bundle/types';
+import { ComponentTicks } from '../../change_detection/tick';
+import { Components } from '../../component/collection';
+import { ComponentId } from '../../component/types';
 import { Entity } from '../../entity/base';
 import { EntityLocation } from '../../entity/location';
 import { RemovedComponentEvents } from '../../removal_detection';

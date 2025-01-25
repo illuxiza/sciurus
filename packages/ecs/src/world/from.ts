@@ -1,16 +1,17 @@
+import { NOT_IMPLEMENTED } from '@sciurus/utils';
 import { Constructor, Default, hasTrait, implTrait, trait, useTrait } from 'rustable';
 import { type World } from './base';
 
 @trait
 export class FromWorld {
   static fromWorld<T extends object>(_world: World): T {
-    throw new Error('Not Implemented');
+    throw NOT_IMPLEMENTED;
   }
 }
 
 implTrait(Default, FromWorld, {
   static: {
-    fromWorld(_world: World): any {
+    fromWorld() {
       return this.default();
     },
   },

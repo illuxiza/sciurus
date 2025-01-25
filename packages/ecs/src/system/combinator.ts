@@ -1,4 +1,5 @@
-import { implTrait, trait, Vec } from 'rustable';
+import { NOT_IMPLEMENTED } from '@sciurus/utils';
+import { Constructor, implTrait, trait, Type, Vec } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
@@ -17,7 +18,7 @@ export class Combine {
    * the two composite systems are invoked and their outputs are combined.
    */
   combine(_input: any, _a: (input: any) => any, _b: (input: any) => any): any {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 
@@ -26,24 +27,21 @@ export class Combine {
  * The behavior of this combinator is specified by implementing the Combine trait.
  */
 export class CombinatorSystem {
-  private component_access: Access;
-  private archetype_component_access: Access;
+  private component_access: Access = new Access();
+  private archetype_component_access: Access = new Access();
 
   constructor(
     public a: System,
     public b: System,
-    private __name: string,
-  ) {
-    this.component_access = new Access();
-    this.archetype_component_access = new Access();
-  }
+    private _name: string,
+  ) {}
 
   static new<A extends System, B extends System>(a: A, b: B, name: string): CombinatorSystem {
     return new CombinatorSystem(a, b, name);
   }
 
   name(): string {
-    return this.__name;
+    return this._name;
   }
 
   componentAccess(): Access {
@@ -134,24 +132,21 @@ export interface CombinatorSystem extends System {}
  * A System created by piping the output of the first system into the input of the second.
  */
 export class PipeSystem {
-  private component_access: Access;
-  private archetype_component_access: Access;
+  private component_access: Access = new Access();
+  private archetype_component_access: Access = new Access();
 
   constructor(
     public a: System,
     public b: System,
-    private __name: string,
-  ) {
-    this.component_access = new Access();
-    this.archetype_component_access = new Access();
-  }
-
-  static new<A extends System, B extends System>(a: A, b: B, name: string): PipeSystem {
-    return new PipeSystem(a, b, name);
-  }
+    private _name: string,
+  ) {}
 
   name(): string {
-    return this.__name;
+    return this._name;
+  }
+
+  type(): Constructor {
+    return Type(this.a.type(), [this.b.type()]);
   }
 
   componentAccess(): Access {

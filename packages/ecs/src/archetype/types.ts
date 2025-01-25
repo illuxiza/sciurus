@@ -25,15 +25,11 @@ export class ArchetypeFlags {
   static readonly ON_REMOVE_OBSERVER = new ArchetypeFlags(1 << 8);
   static readonly ON_DESPAWN_OBSERVER = new ArchetypeFlags(1 << 9);
 
-  value: number;
-
   static empty() {
     return new ArchetypeFlags(0);
   }
 
-  constructor(value: number) {
-    this.value = value;
-  }
+  constructor(public value: number) {}
 
   insert(flag: ArchetypeFlags) {
     this.value |= flag.value;

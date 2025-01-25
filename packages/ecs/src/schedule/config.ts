@@ -1,10 +1,10 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { Enum, implTrait, trait, variant, Vec } from 'rustable';
+import { IntoSystem } from '../system';
 import { System } from '../system/base';
 import { Ambiguity, DependencyKind, GraphInfo } from './graph';
 import { IntoSystemSet, SystemSet } from './set';
 import { Chain, Condition, IntoCondition } from './types';
-import { IntoSystem } from '../system';
 
 export const ambiguousWith = (graphInfo: GraphInfo, set: SystemSet) => {
   const ambiguity = graphInfo.ambiguousWith;
@@ -50,7 +50,7 @@ export class NodeConfigs<T> extends Enum {
   }
   @variant
   static NodeConfig<T>(_config: NodeConfig<T>): NodeConfigs<T> {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   @variant
@@ -59,7 +59,7 @@ export class NodeConfigs<T> extends Enum {
     _collectiveConditions: Vec<Condition>,
     _chained: Chain,
   ): NodeConfigs<T> {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   match<U>(patterns: Partial<NodeConfigsMatch<T, U>>): U {
@@ -254,7 +254,7 @@ export namespace SystemSetConfigs {
 @trait
 export class IntoConfigs<T = any> extends TraitValid {
   intoConfigs(): NodeConfigs<T> {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   inSet(set: IntoSystemSet): NodeConfigs<T> {

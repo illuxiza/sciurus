@@ -65,7 +65,7 @@ export class WorldCell {
   }
 
   incrementTriggerId() {
-    this.world.__lastTriggerId += 1;
+    this.world._lastTriggerId += 1;
   }
 
   lastTriggerId() {

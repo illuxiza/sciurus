@@ -1,4 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { Constructor, implTrait, trait, useTrait } from 'rustable';
 import { World } from '../../world/base';
 import { SystemMeta } from '../types';
@@ -17,14 +17,14 @@ export class ExclusiveSystemParam<State = any, Item = any> extends TraitValid {
    * Creates a new instance of this param's State.
    */
   initExclusiveState(_world: World, _systemMeta: SystemMeta): State {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   /**
    * Creates a parameter to be passed into an ExclusiveSystemParamFunction.
    */
   getExclusiveParam(_state: State, _systemMeta: SystemMeta, _input: any): Item {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 }
 
@@ -59,6 +59,6 @@ function into(param: Constructor<IntoExclusiveSystemParam> | ExclusiveSystemPara
 export class IntoExclusiveSystemParam<Item = any> {
   ITEM!: Item;
   static intoExclusiveSystemParam<P extends ExclusiveSystemParam>(): P {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 }

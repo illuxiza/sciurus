@@ -1,4 +1,4 @@
-import { getCaller } from '@sciurus/utils';
+import { getCaller, NOT_IMPLEMENTED } from '@sciurus/utils';
 import { macroTrait, None, Option, Ptr, Some, stringify, trait } from 'rustable';
 import { Tick, Ticks } from './tick';
 
@@ -102,7 +102,7 @@ class DetectChangesMutTrait<T> extends DetectChanges<T> {
    */
   bypassChangeDetection(): Ptr<T> {
     if (!this.__val__) {
-      throw new Error('Not implemented');
+      throw NOT_IMPLEMENTED;
     }
     return Ptr({
       get: () => this.__val__,

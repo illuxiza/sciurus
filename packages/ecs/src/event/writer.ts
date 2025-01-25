@@ -5,11 +5,7 @@ import { Events, SendBatchIds } from './collection';
 
 @derive([Default])
 export class EventWriterInner<E extends object> {
-  events: Events<E>;
-
-  constructor(events: Events<E>) {
-    this.events = events;
-  }
+  constructor(public events: Events<E>) {}
 
   send(event: E): EventId {
     return this.events.send(event);

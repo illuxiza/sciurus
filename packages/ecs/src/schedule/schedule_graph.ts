@@ -1,3 +1,4 @@
+import { FixedBitSet, logger, NOT_IMPLEMENTED } from '@sciurus/utils';
 import {
   Constructor,
   Err,
@@ -18,11 +19,9 @@ import {
 } from 'rustable';
 import { Components } from '../component/collection';
 import { ComponentId } from '../component/types';
-import { World } from '../world/base';
-
-import { FixedBitSet, logger } from '@sciurus/utils';
 import { IntoSystem, ScheduleSystem } from '../system';
 import { System } from '../system/base';
+import { World } from '../world/base';
 import { IntoConfigs, NodeConfig, NodeConfigs, SystemConfig, SystemSetConfig } from './config';
 import { ApplyDeferred, isApplyDeferred, SystemSchedule } from './executor';
 import {
@@ -54,7 +53,7 @@ import {
 @trait
 export class ProcessNodeConfig {
   static processConfig(_scheduleGraph: ScheduleGraph, _config: NodeConfig<any>): NodeId {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 }
 

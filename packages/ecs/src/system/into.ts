@@ -1,19 +1,19 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { implTrait, trait } from 'rustable';
-import { AdapterSystem } from './adapt';
+import { AdapterSystem, AdaptFunc } from './adapt';
 import { ReadonlySystem, System } from './base';
 import { PipeSystem } from './combinator';
 
 @trait
 export class IntoSystem<In = any, Out = any> extends TraitValid {
   intoSystem(): System<In, Out> {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
   pipe<B>(system: B): IntoPipeSystem<this, B> {
-    return IntoPipeSystem.new(this, system);
+    return new IntoPipeSystem(this, system);
   }
-  map<T>(f: (out: Out) => T): IntoAdapterSystem<typeof f> {
-    return IntoAdapterSystem.new(f, this);
+  map<T>(f: (out: Out) => T): IntoAdapterSystem<AdaptFunc<In, Out, T>> {
+    return new IntoAdapterSystem(new AdaptFunc(f), this);
   }
 }
 
@@ -43,10 +43,6 @@ export class IntoPipeSystem<A, B> {
     public a: A,
     public b: B,
   ) {}
-
-  static new<A, B>(a: A, b: B): IntoPipeSystem<A, B> {
-    return new IntoPipeSystem(a, b);
-  }
 }
 
 implTrait(IntoPipeSystem, IntoSystem, {
@@ -54,7 +50,7 @@ implTrait(IntoPipeSystem, IntoSystem, {
     const systemA = IntoSystem.wrap(this.a).intoSystem();
     const systemB = IntoSystem.wrap(this.b).intoSystem();
     const name = `Pipe(${systemA.name()}, ${systemB.name()})`;
-    return PipeSystem.new(systemA, systemB, name);
+    return new PipeSystem(systemA, systemB, name);
   },
 });
 
@@ -69,17 +65,13 @@ export class IntoAdapterSystem<Func> {
     public func: Func,
     public system: IntoSystem,
   ) {}
-
-  static new<Func>(func: Func, system: IntoSystem): IntoAdapterSystem<Func> {
-    return new IntoAdapterSystem(func, system);
-  }
 }
 
 implTrait(IntoAdapterSystem<any>, IntoSystem, {
   intoSystem(): System {
     const system = IntoSystem.wrap(this.system).intoSystem();
     const name = system.name();
-    return AdapterSystem.new(this.func, system, name);
+    return new AdapterSystem(this.func, system, name);
   },
 });
 

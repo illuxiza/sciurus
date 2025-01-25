@@ -1,4 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { Constructor, defaultVal, implTrait, macroTrait, trait, useTrait } from 'rustable';
 import { Archetype } from '../../archetype/base';
 import { Tick } from '../../change_detection/tick';
@@ -43,7 +43,7 @@ class SystemParamTrait<State = any, Item = any> extends TraitValid {
    * and creates a new instance of this param's State.
    */
   initParamState(_world: World, _systemMeta: SystemMeta): State {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   /**
@@ -83,7 +83,7 @@ class SystemParamTrait<State = any, Item = any> extends TraitValid {
     _changeTick: Tick,
     _input: any,
   ): Item {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 }
 
@@ -230,6 +230,6 @@ function into(param: Constructor<IntoSystemParam> | SystemParam) {
 export class IntoSystemParam<Item = any> {
   ITEM!: Item;
   static intoSystemParam<P extends SystemParam>(): P {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 }

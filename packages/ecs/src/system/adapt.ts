@@ -1,4 +1,5 @@
-import { implTrait, trait, Vec } from 'rustable';
+import { NOT_IMPLEMENTED } from '@sciurus/utils';
+import { implTrait, trait, Type, Vec } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
@@ -11,36 +12,41 @@ import { System } from './base';
  * Customizes the behavior of an AdapterSystem
  */
 @trait
-export class Adapt {
+export class Adapt<In, Out, T> {
   /**
    * When used in an AdapterSystem, this function customizes how the system
    * is run and how its inputs/outputs are adapted.
    */
-  adapt(_input: any, _runSystem: (input: any) => any): any {
-    throw new Error('Method not implemented.');
+  adapt(_input: In, _runSystem: (input: In) => Out): T {
+    throw NOT_IMPLEMENTED;
   }
 }
+
+export class AdaptFunc<In, Out, T> {
+  constructor(public func: (out: Out) => T) {}
+  adapt(input: In, runSystem: (input: In) => Out) {
+    return this.func(runSystem(input));
+  }
+}
+
+implTrait(AdaptFunc, Adapt);
 
 /**
  * A System that takes the output of S and transforms it by applying Func to it
  */
-export class AdapterSystem {
+export class AdapterSystem<In, Out, T> {
   constructor(
-    public func: Adapt,
-    public system: System,
-    private __name: string,
+    public func: Adapt<In, Out, T>,
+    public system: System<In, Out>,
+    private _name: string,
   ) {}
 
-  static new<Func extends Adapt, S extends System>(
-    func: Func,
-    system: S,
-    name: string,
-  ): AdapterSystem {
-    return new AdapterSystem(func, system, name);
+  name(): string {
+    return this._name;
   }
 
-  name(): string {
-    return this.__name;
+  type() {
+    return Type(this.system.type(), [this.func.constructor]);
   }
 
   componentAccess(): Access {
@@ -104,7 +110,7 @@ export class AdapterSystem {
   }
 }
 
-// Implement ReadonlySystem for AdapterSystem if the inner system is read-only
 implTrait(AdapterSystem, System);
 
-export interface AdapterSystem extends System {}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface AdapterSystem<In, Out, T> extends System<In, T> {}

@@ -114,7 +114,7 @@ export class Commands {
   spawnBatch<T extends object>(components: IterableIterator<T>): void {
     this.queue(
       commandFn((world: World) => {
-        SpawnBatchIter.new(world, components, getCaller(1)).drop();
+        SpawnBatchIter.new(world, components, getCaller(1)).flush();
       }),
     );
   }

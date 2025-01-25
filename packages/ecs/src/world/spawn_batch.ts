@@ -32,7 +32,7 @@ export class SpawnBatchIter<I extends Iterator<any>> {
     return { done: false, value: this.spawner.spawnLazy(bundle.value, this.caller) };
   }
 
-  drop(): void {
+  flush(): void {
     while (!this.next().done) {
       /* empty */
     }
@@ -40,6 +40,6 @@ export class SpawnBatchIter<I extends Iterator<any>> {
   }
 
   [Symbol.dispose]() {
-    this.drop();
+    this.flush();
   }
 }

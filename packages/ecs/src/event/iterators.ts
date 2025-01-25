@@ -4,14 +4,10 @@ import { Events } from './collection';
 import { EventCursor } from './cursor';
 
 export class EventIterator<E extends object> implements IterableIterator<E> {
-  private __iter: EventIteratorWithId<E>;
-
-  constructor(iter: EventIteratorWithId<E>) {
-    this.__iter = iter;
-  }
+  constructor(private _iter: EventIteratorWithId<E>) {}
 
   next(): IteratorResult<E> {
-    const result = this.__iter.next();
+    const result = this._iter.next();
     return result.done ? { done: true, value: undefined } : { done: false, value: result.value[0] };
   }
 
@@ -24,17 +20,18 @@ export class EventIterator<E extends object> implements IterableIterator<E> {
   }
 
   len(): number {
-    return this.__iter.len();
+    return this._iter.len();
   }
 }
 
 export class EventIteratorWithId<E extends object> implements IterableIterator<[E, EventId]> {
-  private reader: EventCursor<E>;
   private chain: RustIter<EventInstance<E>>;
   private unread: number;
 
-  constructor(reader: EventCursor<E>, events: Events<E>) {
-    this.reader = reader;
+  constructor(
+    private reader: EventCursor<E>,
+    events: Events<E>,
+  ) {
     const aIndex = Math.max(reader.lastEventCount - events.eventsA.startEventCount, 0);
     const bIndex = Math.max(reader.lastEventCount - events.eventsB.startEventCount, 0);
     const a = events.eventsA.slice(aIndex);

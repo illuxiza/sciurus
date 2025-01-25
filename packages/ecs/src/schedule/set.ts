@@ -1,4 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import {
   Constructor,
   Eq,
@@ -79,7 +79,7 @@ implTrait(AnonymousSet, SystemSet, {
 @trait
 export class IntoSystemSet extends TraitValid {
   intoSystemSet(): SystemSet {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 

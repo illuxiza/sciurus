@@ -79,22 +79,22 @@ describe('CommandQueue', () => {
     const world = new World();
     world.initResource(OrderResource);
 
-    world.__command_queue.resume = (_error: Error) => {
+    world._command_queue.resume = (_error: Error) => {
       world.flushCommands();
       return Ok<any, Error>({});
     };
-    world.__command_queue.push(new AddIndexCommand(1));
-    world.__command_queue.push(
+    world._command_queue.push(new AddIndexCommand(1));
+    world._command_queue.push(
       commandFn((world: World) => {
-        world.__command_queue.push(new AddIndexCommand(2));
-        world.__command_queue.push(new PanicCommand('I panic!'));
-        world.__command_queue.push(new AddIndexCommand(3));
+        world._command_queue.push(new AddIndexCommand(2));
+        world._command_queue.push(new PanicCommand('I panic!'));
+        world._command_queue.push(new AddIndexCommand(3));
         world.flushCommands();
       }),
     );
-    world.__command_queue.push(new AddIndexCommand(4));
+    world._command_queue.push(new AddIndexCommand(4));
 
-    world.__command_queue.push(new AddIndexCommand(5));
+    world._command_queue.push(new AddIndexCommand(5));
     world.flushCommands();
 
     const order = world.resource(OrderResource);

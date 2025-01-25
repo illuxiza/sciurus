@@ -1,4 +1,4 @@
-import { logger } from '@sciurus/utils';
+import { logger, NOT_IMPLEMENTED } from '@sciurus/utils';
 import { Constructor, Result, trait, Type, Vec } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
@@ -9,23 +9,23 @@ import { DeferredWorld } from '../world/deferred';
 
 @trait
 export class System<In = any, Out = any> {
-  input: Constructor<In> = undefined!;
-  output: Constructor<Out> = undefined!;
+  INPUT: Constructor<In> = undefined!;
+  OUTPUT: Constructor<Out> = undefined!;
 
   name(): string {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   type(): Constructor {
-    return Type(System, [this.input, this.output]);
+    return Type(this.constructor as Constructor, [this.INPUT, this.OUTPUT]);
   }
 
   componentAccess(): Access {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   archetypeComponentAccess(): Access {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   run(input: In, world: World): Out {
@@ -37,19 +37,19 @@ export class System<In = any, Out = any> {
   }
 
   runUnsafe(_input: In, _world: WorldCell): Out {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   applyDeferred(_world: World): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   queueDeferred(_world: DeferredWorld): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   validateParamUnsafe(_world: WorldCell): boolean {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   validateParam(world: World): boolean {
@@ -59,19 +59,19 @@ export class System<In = any, Out = any> {
   }
 
   initialize(_world: World): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   isExclusive(): boolean {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   hasDeferred(): boolean {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   updateArchetypeComponentAccess(_world: WorldCell): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   defaultSystemSets(): Vec<SystemSet> {
@@ -79,15 +79,15 @@ export class System<In = any, Out = any> {
   }
 
   checkChangeTick(_changeTick: Tick): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   getLastRun(): Tick {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   setLastRun(_lastRun: Tick): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 
@@ -113,7 +113,7 @@ export class RunSystemOnce {
    * Tries to run a system with given input and apply deferred parameters.
    */
   runSystemOnceWith<T extends object, In, Out>(_system: T, _input: In): Result<Out, Error> {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 

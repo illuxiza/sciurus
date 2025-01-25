@@ -1,4 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { Constructor, implTrait, Option, trait, TypeId, typeId, useTrait, Vec } from 'rustable';
 import { Component } from '../component/base';
 import { type Components } from '../component/collection';
@@ -9,7 +9,7 @@ import { type Storages, type StorageType } from '../storage';
 @trait
 export class DynamicBundle extends TraitValid {
   getComponents(_ids: (storageType: StorageType, component: Component) => void) {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 
@@ -43,7 +43,7 @@ export class Bundle extends DynamicBundle {
     );
   }
   static staticBundleType(): BundleType {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
   static componentIds(
     components: Components,
@@ -78,20 +78,20 @@ export class BundleType extends TraitValid {
     _storages: Storages,
     _ids: (componentId: ComponentId) => void,
   ) {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
   getComponentIds(_components: Components, _ids: (id: Option<ComponentId>) => void): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
   fromComponents<T>(_ctx: T, _func: (t: T) => Bundle): any {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
   bundleRegisterRequiredComponents(
     _components: Components,
     _storages: Storages,
     _requiredComponents: RequiredComponents,
   ): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 

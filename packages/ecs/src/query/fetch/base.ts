@@ -1,6 +1,7 @@
+import { NOT_IMPLEMENTED } from '@sciurus/utils';
 import { Constructor, implTrait, trait } from 'rustable';
-import { WorldQuery } from '../world_query';
 import { ComponentId } from '../../component';
+import { WorldQuery } from '../world_query';
 
 @trait
 export class QueryData<Item = any, Fetch = any, State = any> extends WorldQuery<
@@ -20,7 +21,7 @@ export class ReadonlyQueryData<Item = any, Fetch = any, State = any> extends Que
 export class IntoFetch<D> {
   DATA!: QueryData<D>;
   static intoFetch<D extends object>(): QueryData<D> {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
   static shrink(item: any): any {
     return this.intoFetch().shrink(item);

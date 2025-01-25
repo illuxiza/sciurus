@@ -22,7 +22,7 @@ export class FunctionSystem {
   constructor(
     public func: (...args: any[]) => any,
     public param: SystemParam,
-    private __type: Constructor,
+    private _type: Constructor,
   ) {
     this.state = None;
     this.meta = SystemMeta.new(func.name || 'anonymous_system');
@@ -34,7 +34,7 @@ export class FunctionSystem {
   }
 
   type(): Constructor {
-    return this.__type;
+    return this._type;
   }
 
   componentAccess(): Access {
@@ -57,8 +57,8 @@ export class FunctionSystem {
     return this.meta.hasDeferred;
   }
 
-  withName(newName: string): this {
-    this.meta.name = newName;
+  withName(name: string): this {
+    this.meta.name = name;
     return this;
   }
 
@@ -105,10 +105,9 @@ export class FunctionSystem {
     this.meta.lastRun = world.changeTick.relativeTo(Tick.MAX);
   }
 
-  updateArchetypeComponentAccess(_world: WorldCell): void {
+  updateArchetypeComponentAccess(world: WorldCell): void {
     // This method is called with WorldCell, but we need World
     // We can access the World through WorldCell.world
-    const world = _world.world;
     const state = this.state.expect(ERROR_UNINITIALIZED);
     if (state.worldId !== world.id) {
       throw new Error(
@@ -133,7 +132,7 @@ export class FunctionSystem {
   }
 
   defaultSystemSets(): Vec<SystemSet> {
-    const set = new SystemTypeSet(this.__type);
+    const set = new SystemTypeSet(this._type);
     return Vec.from([set]);
   }
 
@@ -159,7 +158,7 @@ export interface FunctionSystem extends WithParamWarnPolicy {}
 
 implTrait(FunctionSystem, IntoSystemSet, {
   intoSystemSet(): SystemSet {
-    return new SystemTypeSet(this['__type']);
+    return new SystemTypeSet(this.type());
   },
 });
 

@@ -1,4 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { implTrait, trait, Type } from 'rustable';
 import { Trigger } from '../observer/types';
 import { System } from './base';
@@ -32,7 +32,7 @@ export class IntoObserverSystem<
   Out = void,
 > extends TraitValid {
   intoSystem(): System<Trigger<E, B>, Out> {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 

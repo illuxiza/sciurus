@@ -1,4 +1,4 @@
-import { FixedBitSet } from '@sciurus/utils';
+import { FixedBitSet, NOT_IMPLEMENTED } from '@sciurus/utils';
 import { Clone, derive, Enum, Eq, iter, variant, Vec } from 'rustable';
 import { ComponentId } from '../component/types';
 import { World } from '../world/base';
@@ -669,11 +669,11 @@ interface AccessConflictsMatch<U> {
  */
 export class AccessConflicts extends Enum {
   @variant static All(): AccessConflicts {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   @variant static Individual(_conflicts: FixedBitSet): AccessConflicts {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   match<U>(patterns: Partial<AccessConflictsMatch<U>>): U {

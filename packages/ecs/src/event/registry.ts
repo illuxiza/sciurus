@@ -6,15 +6,11 @@ import { World } from '../world';
 import { Events } from './collection';
 
 class RegisteredEvent {
-  componentId: ComponentId;
-  previouslyUpdated: boolean;
-  update: (ptr: MutUntyped) => void;
-
-  constructor(componentId: ComponentId, update: (ptr: MutUntyped) => void) {
-    this.componentId = componentId;
-    this.previouslyUpdated = false;
-    this.update = update;
-  }
+  constructor(
+    public componentId: ComponentId,
+    public update: (ptr: MutUntyped) => void,
+    public previouslyUpdated = false,
+  ) {}
 }
 
 export enum ShouldUpdateEvents {

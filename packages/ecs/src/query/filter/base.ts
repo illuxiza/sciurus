@@ -1,3 +1,4 @@
+import { NOT_IMPLEMENTED } from '@sciurus/utils';
 import { implTrait, trait } from 'rustable';
 import { Entity } from '../../entity/base';
 import { TableRow } from '../../storage';
@@ -23,7 +24,7 @@ export class QueryFilter<Item = any, Fetch = any, State = any> extends WorldQuer
    * @returns A boolean indicating whether the entity passes the filter.
    */
   filterFetch(_fetch: Fetch, _entity: Entity, _tableRow: TableRow): boolean {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 }
 

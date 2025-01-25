@@ -1,5 +1,5 @@
 import { FixedBitSet } from '@sciurus/utils';
-import { implTrait, Option, typeId, Vec } from 'rustable';
+import { implTrait, Ok, Option, typeId, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
 import { Access } from '../../query/access';
 import { type ScheduleSystem, System } from '../../system';
@@ -55,14 +55,15 @@ implTrait(ApplyDeferred, System, {
   hasDeferred(): boolean {
     return false;
   },
-  runUnsafe(_input: any[], _world: WorldCell): void {},
-  run(_input: any[], _world: World): void {},
+  runUnsafe(_input: any[], _world: WorldCell) {
+    return Ok(undefined);
+  },
+  run(_input: any[], _world: World) {
+    return Ok(undefined);
+  },
   applyDeferred(_world: World): void {},
   queueDeferred(_world: DeferredWorld): void {},
   validateParamUnsafe(_world: WorldCell): boolean {
-    return true;
-  },
-  validateParam(_world: World): boolean {
     return true;
   },
   initialize(_world: World): void {},

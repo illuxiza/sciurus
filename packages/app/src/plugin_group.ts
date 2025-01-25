@@ -1,4 +1,4 @@
-import { logger, TraitValid } from '@sciurus/utils';
+import { logger, NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import {
   Constructor,
   Err,
@@ -28,7 +28,7 @@ class PluginEntry {
 export class PluginGroup extends TraitValid {
   /** Configures the Plugins that are to be added */
   build(): PluginGroupBuilder {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
   /** Configures a name for the PluginGroup */
   name(): string {

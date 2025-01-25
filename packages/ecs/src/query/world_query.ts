@@ -1,4 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { implTrait, None, Option, Ptr, Some, trait } from 'rustable';
 import { Archetype } from '../archetype/base';
 import { Tick } from '../change_detection/tick';
@@ -24,33 +24,33 @@ export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid
    * This function manually implements subtyping for the query items.
    */
   shrink(_item: Item): Item {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   /**
    * This function manually implements subtyping for the query fetches.
    */
   shrinkFetch(_fetch: Fetch): Fetch {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
   /**
    * Initializes the fetch for the query.
    */
   initFetch(_world: WorldCell, _state: State, _lastRun: Tick, _thisRun: Tick): Fetch {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
   /**
    * Sets the archetype for the fetch.
    */
   setArchetype(_fetch: Fetch, _state: State, _archetype: Archetype, _table: Table): void {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   /**
    * Sets the table for the fetch.
    */
   setTable(_fetch: Fetch, _state: State, _table: Table): void {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   /**
@@ -68,7 +68,7 @@ export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid
    * @returns The fetched item.
    */
   fetch(_fetch: Fetch, _entity: Entity, _tableRow: TableRow): Item {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   /**
@@ -77,25 +77,25 @@ export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid
    * @param access The filtered access to update.
    */
   updateComponentAccess(_state: State, _access: Ptr<FilteredAccess>): void {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   /**
    * Initializes the query state.
    */
   initState(_world: World): State {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   getState(_components: Components): Option<State> {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 
   matchesComponentSet(
     _state: State,
     _setContainsId: (componentId: ComponentId) => boolean,
   ): boolean {
-    throw new Error('Not implemented');
+    throw NOT_IMPLEMENTED;
   }
 }
 

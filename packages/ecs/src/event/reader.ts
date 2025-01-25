@@ -6,13 +6,10 @@ import { EventIterator, EventIteratorWithId } from './iterators';
 
 @derive([Default])
 export class EventReaderInner<E extends object> {
-  reader: EventCursor<E>;
-  events: Events<E>;
-
-  constructor(events: Events<E>, reader?: EventCursor<E>) {
-    this.events = events;
-    this.reader = (reader ?? events) ? events.getCursor() : new EventCursor();
-  }
+  constructor(
+    public events: Events<E>,
+    public reader: EventCursor<E> = events ? events.getCursor() : new EventCursor(),
+  ) {}
 
   public read(): EventIterator<E> {
     return this.reader.read(this.events);

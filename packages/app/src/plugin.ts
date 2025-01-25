@@ -1,4 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
+import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { implTrait, macroTrait, trait } from 'rustable';
 import { App } from './app';
 
@@ -7,7 +7,7 @@ import { App } from './app';
 class PluginTrait extends TraitValid {
   /** Configures the App to which this plugin is added */
   build(_app: App): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 
   /** Has the plugin finished its setup? */
@@ -63,7 +63,7 @@ export interface PlaceholderPlugin extends Plugin {}
 @trait
 export class Plugins extends TraitValid {
   addToApp(_app: App): void {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 
@@ -102,7 +102,7 @@ export class PluginsTupleMarker {}
 @trait
 class PluginGroupTrait extends TraitValid {
   build(): PluginGroupBuilder {
-    throw new Error('Method not implemented.');
+    throw NOT_IMPLEMENTED;
   }
 }
 

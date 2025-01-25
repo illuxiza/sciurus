@@ -286,14 +286,14 @@ describe('System Registry Tests', () => {
     });
 
     const double = system([In(Number)], function (input): number {
-      return input.valueOf() * 2;
+      return input.valueOf() * 3;
     });
 
     const world = new World();
 
     const output1 = world.runSystemCached(four.pipe(double));
     expect(output1.isOk()).toBe(true);
-    expect(output1.unwrap()).toBe(8);
+    expect(output1.unwrap()).toBe(12);
 
     const output2 = world.runSystemCached(four.map((i) => i * 2));
     expect(output2.isOk()).toBe(true);

@@ -1,5 +1,4 @@
-export { Archetype } from './base';
-
-export { Archetypes } from './collection';
-
-export { ArchetypeEntity, ArchetypeFlags, ArchetypeId, ArchetypeRow } from './types';
+export * from './base';
+export * from './collection';
+export * from './edges';
+export * from './types';

@@ -1,6 +1,6 @@
 import { HashMap, None, Option, Ptr, Some, Vec } from 'rustable';
-import { ArchetypeFlags } from '../archetype/types';
-import { ComponentId } from '../component/types';
+import { ArchetypeFlags } from '../archetype';
+import { type ComponentId } from '../component';
 import { Entity } from '../entity/base';
 import { ON_ADD, ON_DESPAWN, ON_INSERT, ON_REMOVE, ON_REPLACE } from '../world/component_constants';
 import { DeferredWorld } from '../world/deferred';
@@ -64,8 +64,8 @@ export class Observers {
     data: T,
     propagate: Ptr<boolean>,
   ): void {
-    world.asWorldCell().incrementTriggerId();
-    const observersSource = world.asWorldCell().observers;
+    world.incrementTriggerId();
+    const observersSource = world.observers;
 
     const observersOp = observersSource.tryGetObservers(eventType);
     if (observersOp.isNone()) {

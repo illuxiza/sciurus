@@ -2,8 +2,7 @@ import { Constructor, implTrait, None, Option, Some, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
 import { Access } from '../../query/access';
 import { IntoSystemSet, SystemSet, SystemTypeSet } from '../../schedule/set';
-import { World } from '../../world/base';
-import { WorldCell } from '../../world/cell';
+import { World } from '../../world';
 import { DeferredWorld } from '../../world/deferred';
 import { checkSystemChangeTick, System } from '../base';
 import { SystemParam } from '../param';
@@ -62,7 +61,7 @@ export class FunctionSystem {
     return this;
   }
 
-  runUnsafe(input: any, world: WorldCell): any {
+  runUnsafe(input: any, world: World): any {
     const changeTick = world.incrementChangeTick();
     const paramState = this.state.expect(ERROR_UNINITIALIZED).param;
     const params = this.param.getParam(paramState, this.meta, world, changeTick, input);
@@ -81,7 +80,7 @@ export class FunctionSystem {
     this.param.queue(paramState, this.meta, world);
   }
 
-  validateParamUnsafe(world: WorldCell): boolean {
+  validateParamUnsafe(world: World): boolean {
     const paramState = this.state.expect(ERROR_UNINITIALIZED).param;
     const isValid = this.param.validateParam(paramState, this.meta, world);
     if (!isValid) {
@@ -105,9 +104,9 @@ export class FunctionSystem {
     this.meta.lastRun = world.changeTick.relativeTo(Tick.MAX);
   }
 
-  updateArchetypeComponentAccess(world: WorldCell): void {
-    // This method is called with WorldCell, but we need World
-    // We can access the World through WorldCell.world
+  updateArchetypeComponentAccess(world: World): void {
+    // This method is called with World, but we need World
+    // We can access the World through World.world
     const state = this.state.expect(ERROR_UNINITIALIZED);
     if (state.worldId !== world.id) {
       throw new Error(

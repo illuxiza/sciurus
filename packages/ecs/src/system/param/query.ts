@@ -18,14 +18,14 @@ import { QueryEntityError } from '../../query/error';
 import { IntoFetch, QueryData } from '../../query/fetch';
 import { QueryFilter } from '../../query/filter/base';
 import { QueryState } from '../../query/state';
-import { World, WorldCell } from '../../world';
+import { World } from '../../world';
 import { SystemMeta } from '../types';
 import { ReadonlySystemParam, SystemParam } from './base';
 
 class QueryParam<D = any> {
   readonly data: QueryData;
   readonly filter: QueryFilter;
-  #world?: WorldCell;
+  #world?: World;
   #state?: QueryState;
   #lastRun?: Tick;
   #thisRun?: Tick;
@@ -41,7 +41,7 @@ class QueryParam<D = any> {
       this.filter = [];
     }
   }
-  init(world: WorldCell, state: QueryState, lastRun: Tick, thisRun: Tick): this {
+  init(world: World, state: QueryState, lastRun: Tick, thisRun: Tick): this {
     state.validateWorld(world.id);
     this.#world = world;
     this.#state = state;
@@ -111,13 +111,7 @@ implTrait(Query, SystemParam, {
       }),
     );
   },
-  getParam(
-    this: Query,
-    state: QueryState,
-    systemMeta: SystemMeta,
-    world: WorldCell,
-    changeTick: Tick,
-  ): any {
+  getParam(this: Query, state: QueryState, systemMeta: SystemMeta, world: World, changeTick: Tick) {
     return this.init(world, state, systemMeta.lastRun, changeTick);
   },
 });

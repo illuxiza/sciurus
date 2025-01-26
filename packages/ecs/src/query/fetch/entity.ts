@@ -1,12 +1,8 @@
 import { implTrait, Option, Ptr, Some } from 'rustable';
-import { Components } from '../../component/collection';
-import { ComponentId } from '../../component/types';
-import { Entity } from '../../entity/base';
-import { Entities } from '../../entity/collection';
-import { EntityLocation } from '../../entity/location';
+import { ComponentId, Components } from '../../component';
+import { Entities, Entity, EntityLocation } from '../../entity';
 import { TableRow } from '../../storage';
-import { WorldCell } from '../../world';
-import { World } from '../../world/base';
+import { World } from '../../world';
 import { FilteredAccess } from '../access';
 import { WorldQuery } from '../world_query';
 import { IntoFetch, QueryData, ReadonlyQueryData } from './base';
@@ -88,7 +84,7 @@ implTrait(EntityLocationFetch, WorldQuery, {
     return fetch;
   },
 
-  initFetch(world: WorldCell) {
+  initFetch(world: World) {
     return world.entities;
   },
 

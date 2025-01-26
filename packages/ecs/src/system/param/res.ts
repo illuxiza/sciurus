@@ -3,17 +3,16 @@ import { Tick, Ticks } from '../../change_detection';
 import { Res as ResValue } from '../../change_detection/res';
 import { ComponentId } from '../../component';
 import { World } from '../../world/base';
-import { WorldCell } from '../../world/cell';
 import { SystemMeta } from '../types';
 import { ReadonlySystemParam, SystemParam } from './base';
 
 class ResParam<T extends object = any> {
   constructor(public valueType: Constructor<T>) {}
 
-  #world?: WorldCell;
+  #world?: World;
   #value?: T;
 
-  init(world: WorldCell): this {
+  init(world: World): this {
     this.#world = world;
     this.#value = world.getResource(this.valueType).unwrap();
     return this;
@@ -46,7 +45,7 @@ implTrait(ResParam, SystemParam, {
     return componentId;
   },
 
-  validateParam(state: ComponentId, systemMeta: SystemMeta, world: WorldCell): boolean {
+  validateParam(state: ComponentId, systemMeta: SystemMeta, world: World): boolean {
     const isValid = world.storages.resources
       .get(state)
       .isSomeAnd((resourceData) => resourceData.isPresent());
@@ -56,7 +55,7 @@ implTrait(ResParam, SystemParam, {
     return isValid;
   },
 
-  getParam(state: ComponentId, systemMeta: SystemMeta, world: WorldCell, changeTick: Tick): any {
+  getParam(state: ComponentId, systemMeta: SystemMeta, world: World, changeTick: Tick): any {
     const op = world.getResourceWithTicks(state);
     if (op.isNone()) {
       throw new Error(
@@ -79,7 +78,5 @@ function createParam<T extends object>(valueType: Constructor<T>): ResParam<T> {
 export const Res = createFactory(ResValue, createParam) as typeof ResValue & {
   <T extends object>(valueType: Constructor<T>): ResParam<T>;
 };
-
-// export interface Res<T extends object> extends ResValue<T> {}
 
 export type Res<T> = ResValue<T> & T;

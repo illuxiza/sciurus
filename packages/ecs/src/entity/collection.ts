@@ -1,9 +1,12 @@
 import { INVALID_VALUE, logger } from '@sciurus/utils';
 import { None, Option, Ptr, range, Some, Vec } from 'rustable';
 import { Entity } from './base';
-import { EntityLocation } from './location';
-import { EntityMeta } from './meta';
-import { AllocAtWithoutReplacement, type EntityIndex } from './types';
+import {
+  AllocAtWithoutReplacement,
+  type EntityIndex,
+  type EntityLocation,
+  EntityMeta,
+} from './types';
 
 export class Entities {
   meta: Vec<EntityMeta>;

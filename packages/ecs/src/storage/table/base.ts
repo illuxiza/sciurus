@@ -1,6 +1,6 @@
 import { None, Option, Ptr, Some, Vec } from 'rustable';
 import { ComponentTicks, Tick } from '../../change_detection/tick';
-import { ComponentId } from '../../component/types';
+import { ComponentId } from '../../component';
 import { Entity } from '../../entity/base';
 import { ImmutableSparseSet } from '../sparse_set';
 import { TableRow } from '../types';

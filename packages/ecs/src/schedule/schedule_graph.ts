@@ -17,8 +17,7 @@ import {
   useTrait,
   Vec,
 } from 'rustable';
-import { Components } from '../component/collection';
-import { ComponentId } from '../component/types';
+import { ComponentId, Components } from '../component';
 import { IntoSystem, ScheduleSystem } from '../system';
 import { System } from '../system/base';
 import { World } from '../world/base';

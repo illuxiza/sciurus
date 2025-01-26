@@ -10,9 +10,15 @@ export class TraitValid {
     }
   }
   static wrap<T extends object>(this: Constructor<T>, val: any): InstanceType<Constructor<T>> {
-    if (!hasTrait(val, this)) {
-      throw new Error(`${typeName(val)} is not a valid ${typeName(this)} type.`);
-    }
+    TraitValid.validType.bind(this)(val);
     return val as InstanceType<Constructor<T>>;
+  }
+  static staticWrap<T extends Constructor>(this: T, val: any): T {
+    TraitValid.validType.bind(this)(val);
+    if (typeof val === 'function') {
+      return val as T;
+    } else {
+      return val.constructor as T;
+    }
   }
 }

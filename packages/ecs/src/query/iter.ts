@@ -3,14 +3,14 @@ import { Archetype, ArchetypeEntity, Archetypes } from '../archetype';
 import { Tick } from '../change_detection';
 import { Entity } from '../entity';
 import { Table, Tables } from '../storage';
-import { WorldCell } from '../world';
+import { World } from '../world';
 import { QueryData } from './fetch';
 import { QueryFilter } from './filter/base';
 import { QueryState, StorageId } from './state';
 
 export class QueryIter<D extends QueryData, F extends QueryFilter> {
   constructor(
-    public world: WorldCell,
+    public world: World,
     public tables: Tables,
     public archetypes: Archetypes,
     public queryState: QueryState<D, F>,
@@ -18,7 +18,7 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
   ) {}
 
   static new<D extends QueryData, F extends QueryFilter>(
-    world: WorldCell,
+    world: World,
     queryState: QueryState<D, F>,
     lastRun: Tick,
     thisRun: Tick,
@@ -280,7 +280,7 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
   }
 
   static initEmpty(
-    world: WorldCell,
+    world: World,
     queryState: QueryState,
     lastRun: Tick,
     thisRun: Tick,
@@ -307,7 +307,7 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
   }
 
   static init<D extends QueryData, F extends QueryFilter>(
-    world: WorldCell,
+    world: World,
     queryState: QueryState<D, F>,
     lastRun: Tick,
     thisRun: Tick,

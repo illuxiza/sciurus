@@ -1,7 +1,6 @@
 import { EMPTY_VALUE } from '@sciurus/utils';
 import { HashMap, Option, RustIter, Vec } from 'rustable';
-import { type RequiredComponentConstructor } from '../component/required_components';
-import { type ComponentId } from '../component/types';
+import { type ComponentId, type RequiredComponentConstructor } from '../component';
 import { type Entity } from '../entity/base';
 import { type StorageType, type TableRow } from '../storage';
 
@@ -19,6 +18,7 @@ export class ArchetypeFlags {
   static readonly ON_REPLACE_HOOK = new ArchetypeFlags(1 << 2);
   static readonly ON_REMOVE_HOOK = new ArchetypeFlags(1 << 3);
   static readonly ON_DESPAWN_HOOK = new ArchetypeFlags(1 << 4);
+
   static readonly ON_ADD_OBSERVER = new ArchetypeFlags(1 << 5);
   static readonly ON_INSERT_OBSERVER = new ArchetypeFlags(1 << 6);
   static readonly ON_REPLACE_OBSERVER = new ArchetypeFlags(1 << 7);

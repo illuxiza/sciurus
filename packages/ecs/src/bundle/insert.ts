@@ -1,12 +1,12 @@
 import { Archetype } from '../archetype/base';
 import { ArchetypeAfterBundleInsert } from '../archetype/types';
 import { Tick } from '../change_detection/tick';
-import { ON_ADD, ON_INSERT, ON_REPLACE } from '../world/component_constants';
+import { EntityLocation } from '../entity';
 import { Entity } from '../entity/base';
 import { Entities } from '../entity/collection';
-import { EntityLocation } from '../entity/location';
 import { Table } from '../storage/table/base';
 import { World } from '../world/base';
+import { ON_ADD, ON_INSERT, ON_REPLACE } from '../world/component_constants';
 import { BundleInfo } from './info';
 import { ArchetypeMoveType, BundleId, InsertMode } from './types';
 

@@ -1,6 +1,8 @@
+import { Default, derive } from 'rustable';
 import { Events } from './collection';
 import { EventIterator, EventIteratorWithId } from './iterators';
 
+@derive([Default])
 export class EventCursor<E extends object> {
   lastEventCount: number = 0;
 

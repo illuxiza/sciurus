@@ -1,18 +1,26 @@
 import { Constructor, None, Option, Ptr, Result, RustIter, useTrait, Vec } from 'rustable';
 import { Archetype } from '../archetype/base';
-import { ComponentId } from '../component/types';
+import { ComponentHook, ComponentHooks, ComponentId } from '../component';
 import { Entity } from '../entity/base';
 import { Observers } from '../observer/collection';
 import { Traversal } from '../traversal';
-import { WorldCell } from './cell';
+import { World } from './base';
 import { EntityWorld } from './entity_ref/world';
 import { EntityFetchError, intoEntityFetch } from './entry_fetch';
 
 export class DeferredWorld {
-  constructor(public world: WorldCell) {}
+  constructor(public world: World) {}
 
   get commands() {
     return this.world.commands;
+  }
+
+  get observers() {
+    return this.world.observers;
+  }
+
+  incrementTriggerId() {
+    this.world._lastTriggerId += 1;
   }
 
   resource<R extends object>(R: Constructor<R>): R {
@@ -42,53 +50,69 @@ export class DeferredWorld {
     return this.getEntity(entity).unwrap();
   }
 
-  asWorldCell() {
-    return this.world;
+  private triggerHook(
+    archetype: Archetype,
+    entity: Entity,
+    targets: RustIter<ComponentId>,
+    hasHookFn: (arch: Archetype) => boolean,
+    hookSelector: (hooks: ComponentHooks) => Option<ComponentHook>,
+  ) {
+    if (hasHookFn(archetype)) {
+      for (const componentId of targets) {
+        const hooks = this.world.components.getInfoUnchecked(componentId).hooks;
+        hookSelector(hooks).map((hook) => hook(new DeferredWorld(this.world), entity, componentId));
+      }
+    }
   }
 
   triggerOnAdd(archetype: Archetype, entity: Entity, targets: RustIter<ComponentId>) {
-    if (archetype.hasAddHook()) {
-      for (const componentId of targets) {
-        const hooks = this.world.components.getInfoUnchecked(componentId).hooks;
-        hooks.onAddHook.map((hook) => hook(new DeferredWorld(this.world), entity, componentId));
-      }
-    }
+    this.triggerHook(
+      archetype,
+      entity,
+      targets,
+      (arch) => arch.hasAddHook(),
+      (hooks) => hooks.onAddHook,
+    );
   }
 
   triggerOnInsert(archetype: Archetype, entity: Entity, targets: RustIter<ComponentId>) {
-    if (archetype.hasInsertHook()) {
-      for (const componentId of targets) {
-        const hooks = this.world.components.getInfoUnchecked(componentId).hooks;
-        hooks.onInsertHook.map((hook) => hook(new DeferredWorld(this.world), entity, componentId));
-      }
-    }
+    this.triggerHook(
+      archetype,
+      entity,
+      targets,
+      (arch) => arch.hasInsertHook(),
+      (hooks) => hooks.onInsertHook,
+    );
   }
 
   triggerOnReplace(archetype: Archetype, entity: Entity, targets: RustIter<ComponentId>) {
-    if (archetype.hasReplaceHook()) {
-      for (const componentId of targets) {
-        const hooks = this.world.components.getInfoUnchecked(componentId).hooks;
-        hooks.onReplaceHook.map((hook) => hook(new DeferredWorld(this.world), entity, componentId));
-      }
-    }
+    this.triggerHook(
+      archetype,
+      entity,
+      targets,
+      (arch) => arch.hasReplaceHook(),
+      (hooks) => hooks.onReplaceHook,
+    );
   }
 
   triggerOnRemove(archetype: Archetype, entity: Entity, targets: RustIter<ComponentId>) {
-    if (archetype.hasRemoveHook()) {
-      for (const componentId of targets) {
-        const hooks = this.world.components.getInfoUnchecked(componentId).hooks;
-        hooks.onRemoveHook.map((hook) => hook(new DeferredWorld(this.world), entity, componentId));
-      }
-    }
+    this.triggerHook(
+      archetype,
+      entity,
+      targets,
+      (arch) => arch.hasRemoveHook(),
+      (hooks) => hooks.onRemoveHook,
+    );
   }
 
   triggerOnDespawn(archetype: Archetype, entity: Entity, targets: RustIter<ComponentId>) {
-    if (archetype.hasDespawnHook()) {
-      for (const componentId of targets) {
-        const hooks = this.world.components.getInfoUnchecked(componentId).hooks;
-        hooks.onDespawnHook.map((hook) => hook(new DeferredWorld(this.world), entity, componentId));
-      }
-    }
+    this.triggerHook(
+      archetype,
+      entity,
+      targets,
+      (arch) => arch.hasDespawnHook(),
+      (hooks) => hooks.onDespawnHook,
+    );
   }
 
   triggerObservers(event: ComponentId, target: Entity, components: RustIter<ComponentId>): void {

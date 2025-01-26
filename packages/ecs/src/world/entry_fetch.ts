@@ -1,8 +1,7 @@
 import { Constructor, Err, Iter, Ok, Result, typeId, TypeId } from 'rustable';
-import { Entity } from '../entity/base';
-import { WorldCell } from './cell';
-import { EntityMut } from './entity_ref/mut';
-import { EntityRef } from './entity_ref/ref';
+import { Entity } from '../entity';
+import { World } from './base';
+import { EntityCell } from './entity_ref/cell';
 import { EntityWorld } from './entity_ref/world';
 
 const Registry = new Map<TypeId, Constructor<WorldEntityFetch<any, any, any>>>();
@@ -26,41 +25,41 @@ export function intoEntityFetch<E>(entity: E): WorldEntityFetch<any, any, any> {
 }
 
 export abstract class WorldEntityFetch<R, M, D> {
-  abstract fetchRef(cell: WorldCell): Result<R, EntityFetchError>;
-  abstract fetchMut(cell: WorldCell): Result<M, EntityFetchError>;
-  abstract fetchDeferredMut(cell: WorldCell): Result<D, EntityFetchError>;
+  abstract fetchRef(cell: World): Result<R, EntityFetchError>;
+  abstract fetchMut(cell: World): Result<M, EntityFetchError>;
+  abstract fetchDeferredMut(cell: World): Result<D, EntityFetchError>;
 }
 
 @registerEntityFetch(Entity)
-export class EntityWorldEntityFetch extends WorldEntityFetch<EntityRef, EntityWorld, EntityMut> {
+export class EntityWorldEntityFetch extends WorldEntityFetch<EntityCell, EntityWorld, EntityCell> {
   constructor(public id: Entity) {
     super();
   }
 
-  fetchRef(cell: WorldCell): Result<EntityRef, EntityFetchError> {
+  fetchRef(cell: World): Result<EntityCell, EntityFetchError> {
     const ecell = cell.getEntity(this.id);
     if (ecell.isNone()) {
       return Err(EntityFetchError.NoSuchEntity(this.id, cell));
     }
-    return Ok(EntityRef.new(ecell.unwrap()));
+    return Ok(ecell.unwrap());
   }
 
-  fetchMut(cell: WorldCell): Result<EntityWorld, EntityFetchError> {
+  fetchMut(cell: World): Result<EntityWorld, EntityFetchError> {
     const location = cell.entities.get(this.id);
     if (location.isNone()) {
       return Err(EntityFetchError.NoSuchEntity(this.id, cell));
     }
     // SAFETY: caller ensures that the world cell has mutable access to the entity.
     // SAFETY: location was fetched from the same world's `Entities`.
-    return Ok(new EntityWorld(cell.world, this.id, location.unwrap()));
+    return Ok(new EntityWorld(cell, this.id, location.unwrap()));
   }
 
-  fetchDeferredMut(cell: WorldCell): Result<EntityMut, EntityFetchError> {
+  fetchDeferredMut(cell: World): Result<EntityCell, EntityFetchError> {
     const ecell = cell.getEntity(this.id);
     if (ecell.isNone()) {
       return Err(EntityFetchError.NoSuchEntity(this.id, cell));
     }
-    return Ok(EntityMut.new(ecell.unwrap()));
+    return Ok(ecell.unwrap());
   }
 }
 
@@ -70,55 +69,55 @@ export class EntityIterable {
 
 @registerEntityFetch(Entity, Iter)
 export class EntitiesWorldEntityFetch extends WorldEntityFetch<
-  Iterable<EntityRef>,
-  Iterable<EntityMut>,
-  Iterable<EntityMut>
+  Iterable<EntityCell>,
+  Iterable<EntityCell>,
+  Iterable<EntityCell>
 > {
   public ids: Iterable<Entity>;
   constructor(ids: EntityIterable) {
     super();
     this.ids = ids.ids;
   }
-  fetchRef(cell: WorldCell): Result<Iterable<EntityRef>, EntityFetchError> {
-    const refs: EntityRef[] = [];
+  fetchRef(cell: World): Result<Iterable<EntityCell>, EntityFetchError> {
+    const refs: EntityCell[] = [];
     for (const id of this.ids) {
       const ecell = cell.getEntity(id);
       if (ecell.isNone()) {
         return Err(EntityFetchError.NoSuchEntity(id, cell));
       }
-      refs.push(EntityRef.new(ecell.unwrap()));
+      refs.push(ecell.unwrap());
     }
 
     return Ok(refs);
   }
 
-  fetchMut(cell: WorldCell): Result<Iterable<EntityMut>, EntityFetchError> {
+  fetchMut(cell: World): Result<Iterable<EntityCell>, EntityFetchError> {
     const uniqueIds = new Set(this.ids);
     const idsArray = [...this.ids];
     if (uniqueIds.size !== idsArray.length) {
       return Err(EntityFetchError.AliasedMutability(idsArray[0]));
     }
 
-    const refs: EntityMut[] = [];
+    const refs: EntityCell[] = [];
     for (const id of uniqueIds) {
       const ecell = cell.getEntity(id);
       if (ecell.isNone()) {
         return Err(EntityFetchError.NoSuchEntity(id, cell));
       }
-      refs.push(EntityMut.new(ecell.unwrap()));
+      refs.push(ecell.unwrap());
     }
 
     return Ok(refs);
   }
 
-  fetchDeferredMut(cell: WorldCell): Result<Iterable<EntityMut>, EntityFetchError> {
+  fetchDeferredMut(cell: World): Result<Iterable<EntityCell>, EntityFetchError> {
     return this.fetchMut(cell);
   }
 }
 
 export class EntityFetchError extends Error {
-  static NoSuchEntity(id: Entity, world: WorldCell): EntityFetchError {
-    return new EntityFetchError(`Entity {${id}} does not exist in the world {${world.world.id}}`);
+  static NoSuchEntity(id: Entity, world: World): EntityFetchError {
+    return new EntityFetchError(`Entity {${id}} does not exist in the world {${world.id}}`);
   }
 
   static AliasedMutability(id: Entity): EntityFetchError {

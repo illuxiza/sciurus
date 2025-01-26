@@ -1,6 +1,6 @@
 import { FixedBitSet, NOT_IMPLEMENTED } from '@sciurus/utils';
 import { Clone, derive, Enum, Eq, iter, variant, Vec } from 'rustable';
-import { ComponentId } from '../component/types';
+import { ComponentId } from '../component';
 import { World } from '../world/base';
 
 export interface Access extends Clone, Eq {}

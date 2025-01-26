@@ -1,8 +1,7 @@
 import { Option, Ptr } from 'rustable';
 import { ArchetypeComponentId } from '../../archetype/types';
 import { Tick } from '../../change_detection/tick';
-import { Components } from '../../component/collection';
-import { ComponentId } from '../../component/types';
+import { ComponentId, Components } from '../../component';
 import { BlobArray } from '../data_array';
 import { SparseSet } from '../sparse_set';
 import { ResourceData } from './data';

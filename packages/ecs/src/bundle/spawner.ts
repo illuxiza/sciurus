@@ -2,12 +2,12 @@ import { EMPTY_VALUE } from '@sciurus/utils';
 import { Archetype } from '../archetype/base';
 import { SpawnBundleStatus } from '../archetype/types';
 import { Tick } from '../change_detection/tick';
-import { ON_ADD, ON_INSERT } from '../world/component_constants';
+import { EntityLocation } from '../entity';
 import { Entity } from '../entity/base';
 import { Entities } from '../entity/collection';
-import { EntityLocation } from '../entity/location';
 import { Table } from '../storage/table/base';
 import { type World } from '../world/base';
+import { ON_ADD, ON_INSERT } from '../world/component_constants';
 import { BundleInfo } from './info';
 import { BundleId, InsertMode } from './types';
 

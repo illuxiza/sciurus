@@ -7,9 +7,9 @@ import { type Entity } from '../../entity/base';
 import { type World } from '../../world/base';
 import { Command, commandFn } from '../../world/command_queue';
 import { type EntityWorld } from '../../world/entity_ref/world';
-import { fromWorld } from '../../world/from';
-import { type Commands } from './base';
+import { FromWorld } from '../../world/from';
 import { IntoObserverSystem } from '../observer';
+import { type Commands } from './base';
 
 /**
  * Commands for modifying a specific entity
@@ -81,7 +81,7 @@ export class EntityCommands {
     const c = getCaller();
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity) as Result<EntityWorld, Error>;
+        const entityMut = world.fetchEntityMut(entity) as Result<EntityWorld, Error>;
         if (entityMut.isOk()) {
           entityMut.unwrap().insertById(componentId, value);
         } else {
@@ -97,7 +97,7 @@ export class EntityCommands {
   tryInsertById<T extends object>(componentId: ComponentId, value: T): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity) as Result<EntityWorld, Error>;
+        const entityMut = world.fetchEntityMut(entity) as Result<EntityWorld, Error>;
         if (entityMut.isOk()) {
           entityMut.unwrap().insertById(componentId, value);
         }
@@ -135,7 +135,7 @@ export class EntityCommands {
   remove<T extends any>(bundle: T): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity);
+        const entityMut = world.fetchEntityMut(entity);
         if (entityMut.isOk()) {
           entityMut.unwrap().remove(bundle);
         }
@@ -147,7 +147,7 @@ export class EntityCommands {
   removeWithRequires<T extends Constructor>(bundle: T): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity);
+        const entityMut = world.fetchEntityMut(entity);
         if (entityMut.isOk()) {
           entityMut.unwrap().removeWithRequires(bundle);
         }
@@ -159,7 +159,7 @@ export class EntityCommands {
   removeById(componentId: ComponentId): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity);
+        const entityMut = world.fetchEntityMut(entity);
         if (entityMut.isOk()) {
           entityMut.unwrap().removeById(componentId);
         }
@@ -170,7 +170,7 @@ export class EntityCommands {
   clear(): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity);
+        const entityMut = world.fetchEntityMut(entity);
         if (entityMut.isOk()) {
           entityMut.unwrap().clear();
         }
@@ -189,7 +189,7 @@ export class EntityCommands {
   retain<T extends Constructor>(bundle: T): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity);
+        const entityMut = world.fetchEntityMut(entity);
         if (entityMut.isOk()) {
           entityMut.unwrap().retain(bundle);
         }
@@ -215,7 +215,7 @@ export class EntityCommands {
   observe(observer: IntoObserverSystem): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity);
+        const entityMut = world.fetchEntityMut(entity);
         if (entityMut.isOk()) {
           entityMut.unwrap().observe(observer);
         }
@@ -227,7 +227,7 @@ export class EntityCommands {
   moveComponents(target: Entity): this {
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
-        const entityMut = world.getEntityMut(entity);
+        const entityMut = world.fetchEntityMut(entity);
         if (entityMut.isOk()) {
           entityMut.unwrap().moveComponents(target);
         }
@@ -324,7 +324,7 @@ export class EntityEntryCommands<T extends object> {
   orFromWorld(): this {
     this.entityCommands.commands.queue(
       commandFn((world: World) => {
-        const value = fromWorld(world, this.marker);
+        const value = FromWorld.staticWrap(this.marker).fromWorld(world);
         const entity = world.entity(this.entityCommands.entity);
         entity.insert(value);
       }),
@@ -342,7 +342,7 @@ function despawn(logWarning: boolean): EntityCommand {
 function insert<T extends object>(bundle: T, mode: InsertMode): EntityCommand {
   const c = getCaller(1);
   return entityCommandFn((entity: Entity, world: World) => {
-    const entityRef = world.getEntityMut(entity) as Result<EntityWorld, Error>;
+    const entityRef = world.fetchEntityMut(entity) as Result<EntityWorld, Error>;
     if (entityRef.isOk()) {
       entityRef.unwrap().insertWithCaller(bundle, mode, c);
     } else {
@@ -356,7 +356,7 @@ function insert<T extends object>(bundle: T, mode: InsertMode): EntityCommand {
 function tryInsert<T extends object>(bundle: T, mode: InsertMode): EntityCommand {
   const c = getCaller(1);
   return entityCommandFn((entity: Entity, world: World) => {
-    const entityRef = world.getEntityMut(entity) as Result<EntityWorld, Error>;
+    const entityRef = world.fetchEntityMut(entity) as Result<EntityWorld, Error>;
     if (entityRef.isOk()) {
       entityRef.unwrap().insertWithCaller(bundle, mode, c);
     }

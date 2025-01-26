@@ -1,8 +1,7 @@
 import { HashMap, None, Option, RustIter, Some, Vec } from 'rustable';
-import { type Components } from '../component/collection';
-import { type ComponentId } from '../component/types';
+import { type ComponentId, type Components } from '../component';
+import { type EntityLocation } from '../entity';
 import { type Entity } from '../entity/base';
-import { type EntityLocation } from '../entity/location';
 import { type Observers } from '../observer/collection';
 import {
   type ImmutableSparseSet,

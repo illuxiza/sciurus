@@ -1,13 +1,13 @@
 import { implTrait } from 'rustable';
 import { Tick } from '../../change_detection';
 import { Entities } from '../../entity/collection';
-import { World, WorldCell } from '../../world';
+import { World } from '../../world';
 import { SystemMeta } from '../types';
 import { IntoSystemParam, SystemParam } from './base';
 
 class EntitiesSystemParam {
   initParamState(_world: World, _systemMeta: SystemMeta): void {}
-  getParam(_state: void, _systemMeta: SystemMeta, world: WorldCell, _changeTick: Tick): Entities {
+  getParam(_state: void, _systemMeta: SystemMeta, world: World, _changeTick: Tick): Entities {
     return world.entities;
   }
 }

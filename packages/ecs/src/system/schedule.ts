@@ -3,7 +3,6 @@ import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
 import { World } from '../world/base';
-import { WorldCell } from '../world/cell';
 import { DeferredWorld } from '../world/deferred';
 import { System } from './base';
 
@@ -36,7 +35,7 @@ implTrait(ScheduleSystem, System<void, Result<void, Error>>, {
   hasDeferred(this: ScheduleSystem): boolean {
     return this.inner.hasDeferred();
   },
-  runUnsafe(this: ScheduleSystem, world: WorldCell): Result<void, Error> {
+  runUnsafe(this: ScheduleSystem, world: World): Result<void, Error> {
     const ret = (this.inner as System<void, Result<void, Error>>).runUnsafe(void 0, world);
     if (!ret) {
       return Ok(void 0);
@@ -60,7 +59,7 @@ implTrait(ScheduleSystem, System<void, Result<void, Error>>, {
     this.inner.queueDeferred(world);
   },
 
-  validateParamUnsafe(this: ScheduleSystem, world: WorldCell): boolean {
+  validateParamUnsafe(this: ScheduleSystem, world: World): boolean {
     return this.inner.validateParamUnsafe(world);
   },
 
@@ -68,7 +67,7 @@ implTrait(ScheduleSystem, System<void, Result<void, Error>>, {
     this.inner.initialize(world);
   },
 
-  updateArchetypeComponentAccess(this: ScheduleSystem, world: WorldCell): void {
+  updateArchetypeComponentAccess(this: ScheduleSystem, world: World): void {
     this.inner.updateArchetypeComponentAccess(world);
   },
 

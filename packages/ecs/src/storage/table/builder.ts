@@ -1,5 +1,4 @@
-import { type ComponentId } from '../../component/types';
-import { ComponentInfo } from '../../component/info';
+import { type ComponentId, type ComponentInfo } from '../../component';
 import { SparseSet } from '../sparse_set';
 import { Table } from './base';
 import { ThinColumn } from './thin_column';

@@ -8,8 +8,6 @@ import { SystemMeta } from '../types';
  */
 @trait
 export class ExclusiveSystemParam<State = any, Item = any> extends TraitValid {
-  STATE!: State;
-  ITEM!: Item;
   isWorld(): boolean {
     return false;
   }
@@ -56,9 +54,8 @@ function into(param: Constructor<IntoExclusiveSystemParam> | ExclusiveSystemPara
 }
 
 @trait
-export class IntoExclusiveSystemParam<Item = any> {
-  ITEM!: Item;
-  static intoExclusiveSystemParam<P extends ExclusiveSystemParam>(): P {
+export class IntoExclusiveSystemParam {
+  static intoExclusiveSystemParam(): ExclusiveSystemParam {
     throw NOT_IMPLEMENTED;
   }
 }

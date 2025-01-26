@@ -2,11 +2,10 @@ import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { implTrait, None, Option, Ptr, Some, trait } from 'rustable';
 import { Archetype } from '../archetype/base';
 import { Tick } from '../change_detection/tick';
-import { Components } from '../component/collection';
-import { ComponentId } from '../component/types';
+import { ComponentId, Components } from '../component';
 import { Entity } from '../entity';
 import { Table, type TableRow } from '../storage';
-import { World, WorldCell } from '../world';
+import { World } from '../world';
 import { FilteredAccess } from './access';
 
 /**
@@ -36,7 +35,7 @@ export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid
   /**
    * Initializes the fetch for the query.
    */
-  initFetch(_world: WorldCell, _state: State, _lastRun: Tick, _thisRun: Tick): Fetch {
+  initFetch(_world: World, _state: State, _lastRun: Tick, _thisRun: Tick): Fetch {
     throw NOT_IMPLEMENTED;
   }
   /**
@@ -106,13 +105,7 @@ implTrait(Array<WorldQuery>, WorldQuery, {
   shrinkFetch(this: Array<WorldQuery>, fetch: any): any {
     return this.map((q, i) => q.shrinkFetch(fetch[i]));
   },
-  initFetch(
-    this: Array<WorldQuery>,
-    world: WorldCell,
-    state: any,
-    lastRun: Tick,
-    thisRun: Tick,
-  ): any {
+  initFetch(this: Array<WorldQuery>, world: World, state: any, lastRun: Tick, thisRun: Tick): any {
     return this.map((q, i) => q.initFetch(world, state[i], lastRun, thisRun));
   },
   setArchetype(

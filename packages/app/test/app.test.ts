@@ -14,7 +14,7 @@ import {
   With,
   World,
 } from '@sciurus/ecs';
-import { derive, Type } from 'rustable';
+import { Default, derive, Type } from 'rustable';
 import { App, AppExit, SubApp } from '../src/app';
 import { PreUpdate, Update } from '../src/main_schedule';
 import { Plugin } from '../src/plugin';
@@ -252,14 +252,14 @@ describe('app tests', () => {
   });
 
   test('initializing_resources_from_world', () => {
-    @derive([Resource])
+    @derive([Resource, Default])
     class TestResource {
       static fromWorld(_world: World): TestResource {
         return new TestResource();
       }
     }
 
-    @derive([Resource])
+    @derive([Resource, Default])
     class NonSendTestResource {
       private _marker: any;
       static fromWorld(_world: World): NonSendTestResource {

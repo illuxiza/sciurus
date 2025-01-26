@@ -1,15 +1,12 @@
 import { implTrait, iter, Option, Ptr, Vec } from 'rustable';
-import { Bundle, DynamicBundle } from '../../bundle/base';
-import { BundleInserter } from '../../bundle/insert';
-import { InsertMode } from '../../bundle/types';
-import { ComponentTicks } from '../../change_detection/tick';
-import { Components } from '../../component/collection';
-import { ComponentId } from '../../component/types';
+import { Bundle, BundleInserter, DynamicBundle, InsertMode } from '../../bundle';
+import { ComponentTicks } from '../../change_detection';
+import { ComponentId, Components } from '../../component';
+import { EntityLocation } from '../../entity';
 import { Entity } from '../../entity/base';
-import { EntityLocation } from '../../entity/location';
 import { RemovedComponentEvents } from '../../removal_detection';
 import { Storages, StorageType } from '../../storage';
-import { WorldCell } from '../cell';
+import { World } from '../base';
 
 export function insertDynamicBundle<T>(
   bundleInserter: BundleInserter,
@@ -65,7 +62,7 @@ export function takeComponent(
 }
 
 export function getComponent<T>(
-  world: WorldCell,
+  world: World,
   componentId: ComponentId,
   storageType: StorageType,
   entity: Entity,
@@ -80,7 +77,7 @@ export function getComponent<T>(
 }
 
 export function getComponentAndTicks(
-  world: WorldCell,
+  world: World,
   componentId: ComponentId,
   storageType: StorageType,
   entity: Entity,
@@ -105,7 +102,7 @@ export function getComponentAndTicks(
 }
 
 export function getTicks(
-  world: WorldCell,
+  world: World,
   componentId: ComponentId,
   storageType: StorageType,
   entity: Entity,

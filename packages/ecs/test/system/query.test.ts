@@ -1,16 +1,16 @@
-import { derive } from 'rustable';
+import { Default, derive } from 'rustable';
 import { World } from '../../../ecs/src';
 import { Component } from '../../../ecs/src/component';
 import { Entity } from '../../../ecs/src/entity';
 import { With } from '../../../ecs/src/query/filter/with';
 import { Without } from '../../../ecs/src/query/filter/without';
 import { Commands } from '../../../ecs/src/system/commands';
-import { system } from '../../src/system/function/fn';
 import { Local } from '../../../ecs/src/system/param';
 import { Query } from '../../../ecs/src/system/param/query';
+import { system } from '../../src/system/function/fn';
 
 it('should run system once', () => {
-  @derive(Component)
+  @derive([Component, Default])
   class T {
     constructor(public value: number) {}
   }

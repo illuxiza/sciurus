@@ -1,10 +1,10 @@
 import { EnumInstance, Enums } from 'rustable';
 import { Entity } from '../entity/base';
-import { WorldCell } from '../world/cell';
+import { World } from '../world';
 
 const queryEntityErrorVars = {
-  QueryDoesNotMatch: (_entity: Entity, _world: WorldCell) => {},
-  NoSuchEntity: (_entity: Entity, _world: WorldCell) => {},
+  QueryDoesNotMatch: (_entity: Entity, _world: World) => {},
+  NoSuchEntity: (_entity: Entity, _world: World) => {},
   AliasedMutability: (_entity: Entity) => {},
 };
 

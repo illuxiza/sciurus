@@ -9,7 +9,7 @@ import {
   SystemSet,
   World,
 } from '@sciurus/ecs';
-import { derive, implTrait, Ptr, Vec } from 'rustable';
+import { Default, derive, implTrait, Ptr, Vec } from 'rustable';
 import { App } from './app';
 import { Plugin } from './plugin';
 
@@ -137,7 +137,7 @@ export class Last {}
 @derive([SystemSet])
 export class Animation {}
 
-@derive([Resource])
+@derive([Resource, Default])
 export class MainScheduleOrder {
   /** The labels to run for the main phase of the [`Main`] schedule (in the order they will be run). */
   public labels: Vec<ScheduleLabel>;
@@ -206,7 +206,7 @@ export class MainScheduleOrder {
 }
 
 /** Defines the schedules to be run for the [`FixedMain`] schedule */
-@derive([Resource])
+@derive([Resource, Default])
 export class FixedMainScheduleOrder {
   public labels: Vec<ScheduleLabel>;
 

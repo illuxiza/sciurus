@@ -1,8 +1,10 @@
+import { Default, derive } from 'rustable';
 import { MAX_CHANGE_AGE } from './constants';
 
 /**
  * A tick is a monotonically increasing number that can be used to track changes in the world.
  */
+@derive([Default])
 export class Tick {
   static MAX: Tick = new Tick(MAX_CHANGE_AGE);
 

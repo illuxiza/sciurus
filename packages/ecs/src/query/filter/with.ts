@@ -1,7 +1,5 @@
 import { Constructor, createFactory, implTrait, Ptr, useTrait } from 'rustable';
-import { Component } from '../../component/base';
-import { Components } from '../../component/collection';
-import { ComponentId } from '../../component/types';
+import { Component, ComponentId, Components } from '../../component';
 import { StorageType } from '../../storage';
 import { World } from '../../world/base';
 import { FilteredAccess } from '../access';

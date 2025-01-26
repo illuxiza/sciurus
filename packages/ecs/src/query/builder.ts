@@ -1,5 +1,5 @@
 import { Constructor, iter, Ptr } from 'rustable';
-import { ComponentId } from '../component/types';
+import { type ComponentId } from '../component';
 import { StorageType } from '../storage';
 import { World } from '../world/base';
 import { FilteredAccess } from './access';

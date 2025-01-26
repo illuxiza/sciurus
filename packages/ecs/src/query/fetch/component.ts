@@ -3,7 +3,7 @@ import { Archetype } from '../../archetype';
 import { Component, ComponentId, Components } from '../../component';
 import { Entity } from '../../entity/base';
 import { ComponentSparseSet, StorageType, Table, TableRow } from '../../storage';
-import { World, WorldCell } from '../../world';
+import { World } from '../../world';
 import { FilteredAccess } from '../access';
 import { WorldQuery } from '../world_query';
 import { IntoFetch, QueryData } from './base';
@@ -72,7 +72,7 @@ implTrait(ComponentFetch, WorldQuery, {
   shrinkFetch(fetch: any): any {
     return fetch;
   },
-  initFetch(this: ComponentFetch<any>, world: WorldCell, state: ComponentId): ReadFetch<any> {
+  initFetch(this: ComponentFetch<any>, world: World, state: ComponentId): ReadFetch<any> {
     return new ReadFetch<any>(
       this.component,
       new StorageSwitch(

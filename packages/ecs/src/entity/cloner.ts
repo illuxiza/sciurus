@@ -3,10 +3,10 @@ import {
   type ComponentCloneFn,
   type ComponentCloneHandler,
   componentCloneIgnore,
-} from '../component/clone_handler';
-import { ComponentId } from '../component/types';
+  type ComponentId,
+} from '../component';
 import { World } from '../world/base';
-import { EntityRef } from '../world/entity_ref/ref';
+import { EntityCell } from '../world/entity_ref/cell';
 import { Entity } from './base';
 
 export class EntityCloner {
@@ -33,9 +33,9 @@ export class EntityCloner {
   }
 
   cloneEntity(world: World): void {
-    const sourceEntity = world.getEntity(this.__source).unwrapOrElse(() => {
+    const sourceEntity = world.fetchEntity(this.__source).unwrapOrElse(() => {
       throw new Error('Source entity must exist');
-    }) as EntityRef;
+    }) as EntityCell;
 
     const archetype = sourceEntity.archetype;
     const components = archetype.components.filter((id) => this.isCloningAllowed(id));

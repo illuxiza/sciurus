@@ -1,11 +1,9 @@
 import { FixedBitSet } from '@sciurus/utils';
 import { implTrait, None, Ptr, Some } from 'rustable';
-import { Components } from '../../component/collection';
-import { ComponentId } from '../../component/types';
+import { ComponentId, Components } from '../../component';
 import { Entity } from '../../entity/base';
 import { TableRow } from '../../storage';
 import { type World } from '../../world';
-import { type WorldCell } from '../../world/cell';
 import { FilteredAccess } from '../access';
 import { WorldQuery } from '../world_query';
 import { QueryFilter } from './base';
@@ -43,7 +41,7 @@ implTrait(Or, WorldQuery, {
       return new OrFetch(this.filters[i], f.filter.shrinkFetch(f.fetch), f.matches);
     });
   },
-  initFetch(world: WorldCell, state: any[], lastRun: any, thisRun: any) {
+  initFetch(world: World, state: any[], lastRun: any, thisRun: any) {
     return state.map((s, i) => {
       const filter = this.filters[i];
       return new OrFetch(filter, filter.initFetch(world, s, lastRun, thisRun), false);

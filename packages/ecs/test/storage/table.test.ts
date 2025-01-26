@@ -1,13 +1,11 @@
-import { Components } from '../../src/component/collection';
+import { derive } from 'rustable';
+import { Tick } from '../../src/change_detection/tick';
+import { Component, ComponentId, Components } from '../../src/component';
+import { Entity } from '../../src/entity/base';
+import { TableRow } from '../../src/storage';
 import { Storages } from '../../src/storage/storages';
 import { Table } from '../../src/storage/table/base';
 import { TableBuilder } from '../../src/storage/table/builder';
-import { ComponentId } from '../../src/component/types';
-import { Component } from '../../src/component/base';
-import { Entity } from '../../src/entity/base';
-import { TableRow } from '../../src/storage';
-import { Tick } from '../../src/change_detection/tick';
-import { derive } from 'rustable';
 
 describe('Table', () => {
   let components: Components;

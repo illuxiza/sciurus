@@ -1,6 +1,6 @@
 import { Ptr } from 'rustable';
 import { Tick } from '../../change_detection/tick';
-import { ComponentInfo } from '../../component/info';
+import { type ComponentInfo } from '../../component';
 import { BlobArray, DataArray } from '../data_array';
 import { type TableRow } from '../types';
 

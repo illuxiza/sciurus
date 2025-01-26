@@ -3,8 +3,7 @@ import { Constructor, Result, trait, Type, Vec } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
-import { World } from '../world/base';
-import { WorldCell } from '../world/cell';
+import { World } from '../world';
 import { DeferredWorld } from '../world/deferred';
 
 @trait
@@ -29,14 +28,13 @@ export class System<In = any, Out = any> {
   }
 
   run(input: In, world: World): Out {
-    const cell = world.asWorldCell();
-    this.updateArchetypeComponentAccess(cell);
-    let ret = this.runUnsafe(input, cell);
-    this.applyDeferred(cell.world);
+    this.updateArchetypeComponentAccess(world);
+    let ret = this.runUnsafe(input, world);
+    this.applyDeferred(world);
     return ret;
   }
 
-  runUnsafe(_input: In, _world: WorldCell): Out {
+  runUnsafe(_input: In, _world: World): Out {
     throw NOT_IMPLEMENTED;
   }
 
@@ -48,14 +46,13 @@ export class System<In = any, Out = any> {
     throw NOT_IMPLEMENTED;
   }
 
-  validateParamUnsafe(_world: WorldCell): boolean {
+  validateParamUnsafe(_world: World): boolean {
     throw NOT_IMPLEMENTED;
   }
 
   validateParam(world: World): boolean {
-    const cell = world.asWorldCell();
-    this.updateArchetypeComponentAccess(cell);
-    return this.validateParamUnsafe(cell);
+    this.updateArchetypeComponentAccess(world);
+    return this.validateParamUnsafe(world);
   }
 
   initialize(_world: World): void {
@@ -70,7 +67,7 @@ export class System<In = any, Out = any> {
     throw NOT_IMPLEMENTED;
   }
 
-  updateArchetypeComponentAccess(_world: WorldCell): void {
+  updateArchetypeComponentAccess(_world: World): void {
     throw NOT_IMPLEMENTED;
   }
 
@@ -94,9 +91,8 @@ export class System<In = any, Out = any> {
 @trait
 export class ReadonlySystem<In = any, Out = any> extends System<In, Out> {
   runReadonly(input: In, world: World): Out {
-    const worldCell = world.asWorldCell();
-    this.updateArchetypeComponentAccess(worldCell);
-    return this.runUnsafe(input, worldCell);
+    this.updateArchetypeComponentAccess(world);
+    return this.runUnsafe(input, world);
   }
 }
 

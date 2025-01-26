@@ -1,4 +1,4 @@
-import { derive } from 'rustable';
+import { Default, derive } from 'rustable';
 import { World } from '../../../ecs/src';
 import { Component, Resource } from '../../../ecs/src/component';
 import { system } from '../../../ecs/src/system';
@@ -9,7 +9,7 @@ import { RegisteredSystemError, SystemId } from '../../../ecs/src/system/registr
 
 describe('System Registry Tests', () => {
   test('change detection', () => {
-    @derive([Resource])
+    @derive([Resource, Default])
     class Counter {
       value: number = 0;
     }
@@ -45,7 +45,7 @@ describe('System Registry Tests', () => {
   });
 
   test('local variables', () => {
-    @derive([Resource])
+    @derive([Resource, Default])
     class Counter {
       value: number = 0;
     }

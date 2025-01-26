@@ -1,13 +1,39 @@
-export { Mut, Ref } from './change_detection';
 export {
+  Archetype,
+  ArchetypeEntity,
+  ArchetypeFlags,
+  ArchetypeGeneration,
+  ArchetypeRecord,
+  Archetypes,
+  Edges,
+} from './archetype';
+export { Bundle, BundleInfo, BundleType, Bundles, DynamicBundle, InsertMode } from './bundle';
+export {
+  CHECK_TICK_THRESHOLD,
+  ComponentTicks,
+  DetectChanges,
+  DetectChangesMut,
+  MAX_CHANGE_AGE,
+  Mut,
+  MutUntyped,
+  Ref,
+  Tick,
+} from './change_detection';
+export {
+  ComponentId,
   Component,
   ComponentDescriptor,
-  ComponentId,
+  ComponentHooks,
   ComponentInfo,
   Components,
+  RequireFunc,
+  RequiredComponent,
+  RequiredComponents,
+  RequiredComponentsError,
   Resource,
+  component,
 } from './component';
-export { Entity } from './entity';
+export { Entities, Entity, EntityLocation } from './entity';
 export { Event, EventCursor, EventReader, EventRegistry, EventWriter, Events } from './event';
 export {
   EventUpdates,

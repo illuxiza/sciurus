@@ -1,7 +1,6 @@
-import { EntityRef } from '../../src/world/entity_ref/ref';
-import { derive, Ptr, Some } from 'rustable';
-import { Component, ComponentId, Resource } from '../../src/component';
-import { component } from '../../src/component/decorator';
+import { EntityCell } from 'packages/ecs/src/world/entity_ref/cell';
+import { Default, derive, Ptr, Some } from 'rustable';
+import { Component, component, ComponentId, Resource } from '../../src/component';
 import { Entity } from '../../src/entity/base';
 import { World } from '../../src/world/base';
 import { DeferredWorld } from '../../src/world/deferred';
@@ -50,7 +49,7 @@ describe('Bundle Tests', () => {
   }
 
   // Resource definition
-  @derive([Resource])
+  @derive([Resource, Default])
   class R {
     count: number = 0;
 
@@ -142,8 +141,8 @@ describe('Bundle Tests', () => {
         world.resource<R>(R).assertOrder(3);
       });
     const entityId = world.spawn(new A()).flush();
-    const entity = world.getEntity(entityId);
-    const entityRef = entity.unwrap() as EntityRef;
+    const entity = world.fetchEntity(entityId);
+    const entityRef = entity.unwrap() as EntityCell;
 
     expect(entityRef.contains(A)).toBe(false);
     expect(entityRef.contains(B)).toBe(false);

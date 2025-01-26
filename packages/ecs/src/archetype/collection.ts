@@ -1,10 +1,8 @@
 import { EMPTY_VALUE } from '@sciurus/utils';
 import { HashMap, Option, Ptr, range, RustIter, Vec } from 'rustable';
-import { type Components } from '../component/collection';
-import { type ComponentId } from '../component/types';
+import { type ComponentId, type Components } from '../component';
 import { type Observers } from '../observer/collection';
-import { type TableId } from '../storage';
-import { SparseSet } from '../storage/sparse_set';
+import { SparseSet, type TableId } from '../storage';
 import { Archetype } from './base';
 import { Edges } from './edges';
 import {

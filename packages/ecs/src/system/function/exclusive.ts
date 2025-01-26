@@ -1,9 +1,8 @@
 import { Constructor, implTrait, None, Option, Some, Vec } from 'rustable';
-import { Tick } from '../../change_detection/tick';
+import { Tick } from '../../change_detection';
 import { Access } from '../../query/access';
 import { IntoSystemSet, SystemSet, SystemTypeSet } from '../../schedule/set';
-import { World } from '../../world/base';
-import { WorldCell } from '../../world/cell';
+import { World } from '../../world';
 import { DeferredWorld } from '../../world/deferred';
 import { checkSystemChangeTick, System } from '../base';
 import { ExclusiveSystemParam } from '../param/exclusive';
@@ -82,7 +81,7 @@ export class ExclusiveFunctionSystem {
     });
   }
 
-  runUnsafe(_input: any, _world: WorldCell): any {
+  runUnsafe(_input: any, _world: World): any {
     throw new Error('Cannot run exclusive systems with a shared World reference');
   }
 
@@ -94,12 +93,12 @@ export class ExclusiveFunctionSystem {
     // "pure" exclusive systems do not have any buffers to apply
   }
 
-  validateParamUnsafe(_world: WorldCell): boolean {
+  validateParamUnsafe(_world: World): boolean {
     // All exclusive system params are always available
     return true;
   }
 
-  updateArchetypeComponentAccess(_world: WorldCell): void {}
+  updateArchetypeComponentAccess(_world: World): void {}
 
   checkChangeTick(changeTick: Tick): void {
     checkSystemChangeTick(this.meta.lastRun, changeTick, this.meta.name);

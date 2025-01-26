@@ -14,27 +14,28 @@ import {
   Some,
   stringify,
   typeId,
-  useTrait,
   variant,
 } from 'rustable';
-import { ArchetypeId } from '../archetype';
-import { Archetype } from '../archetype/base';
-import { Archetypes } from '../archetype/collection';
-import { Bundles } from '../bundle/collection';
-import { BundleInserter } from '../bundle/insert';
-import { BundleSpawner } from '../bundle/spawner';
-import { InsertMode } from '../bundle/types';
-import { CHECK_TICK_THRESHOLD } from '../change_detection/constants';
-import { Mut, MutUntyped } from '../change_detection/mut';
-import { ComponentTicks, Tick, Ticks } from '../change_detection/tick';
-import { Components } from '../component/collection';
-import { ComponentHooks } from '../component/hooks';
-import { ComponentInfo } from '../component/info';
-import { RequiredComponents } from '../component/required_components';
-import { ComponentDescriptor, ComponentId, RequiredComponentsError } from '../component/types';
-import { Entity } from '../entity/base';
-import { Entities } from '../entity/collection';
-import { EntityLocation } from '../entity/location';
+import { Archetype, ArchetypeId, Archetypes } from '../archetype';
+import { BundleInserter, Bundles, BundleSpawner, InsertMode } from '../bundle';
+import {
+  CHECK_TICK_THRESHOLD,
+  ComponentTicks,
+  Mut,
+  MutUntyped,
+  Tick,
+  Ticks,
+} from '../change_detection';
+import {
+  ComponentDescriptor,
+  ComponentHooks,
+  ComponentId,
+  ComponentInfo,
+  Components,
+  RequiredComponents,
+  RequiredComponentsError,
+} from '../component';
+import { Entities, Entity, EntityLocation } from '../entity';
 import { Event, EventId, Events, SendBatchIds } from '../event';
 import { Observers } from '../observer/collection';
 import { ObservedBy } from '../observer/entity';
@@ -45,6 +46,7 @@ import { QueryFilter } from '../query/filter/base';
 import { QueryState } from '../query/state';
 import { RemovedComponentEvents } from '../removal_detection';
 import { Schedule, Schedules } from '../schedule/base';
+import { ComponentSparseSet, Table } from '../storage';
 import { ResourceData } from '../storage/resource/data';
 import { Storages } from '../storage/storages';
 import { IntoSystem, SystemParam } from '../system';
@@ -61,7 +63,6 @@ import {
   SystemId,
 } from '../system/registry';
 import { SystemMeta } from '../system/types';
-import { WorldCell } from './cell';
 import { CommandQueue } from './command_queue';
 import {
   ON_ADD,
@@ -77,11 +78,9 @@ import {
 } from './component_constants';
 import { DeferredWorld } from './deferred';
 import { EntityCell } from './entity_ref/cell';
-import { EntityMut } from './entity_ref/mut';
-import { EntityRef } from './entity_ref/ref';
 import { EntityWorld } from './entity_ref/world';
 import { EntityFetchError, intoEntityFetch } from './entry_fetch';
-import { fromWorld } from './from';
+import { FromWorld } from './from';
 import { SpawnBatchIter } from './spawn_batch';
 
 let wordId = 0;
@@ -245,7 +244,7 @@ export class World {
   }
 
   entity(entity: Entity): EntityWorld {
-    return this.getEntityMut(entity).unwrap();
+    return this.fetchEntityMut(entity).unwrap();
   }
 
   inspectEntity(entity: Entity): Iterable<ComponentInfo> {
@@ -276,18 +275,22 @@ export class World {
     });
   }
 
-  getEntity<T>(entity: T): Result<any, Error> {
-    const fetch = intoEntityFetch(entity);
-    return fetch.fetchRef(this.asWorldCell());
+  getEntity(entity: Entity): Option<EntityCell> {
+    const location = this.entities.get(entity);
+    return location.map((loc) => new EntityCell(this, entity, loc));
   }
 
-  getEntityMut<T>(entity: T): Result<any, Error> {
+  fetchEntity<T>(entity: T): Result<any, EntityFetchError> {
     const fetch = intoEntityFetch(entity);
-    return fetch.fetchMut(this.asWorldCell());
+    return fetch.fetchRef(this);
   }
 
-  iterEntities(): Iterable<EntityRef> {
-    const worldCell = this.asWorldCell();
+  fetchEntityMut<T>(entity: T): Result<any, EntityFetchError> {
+    const fetch = intoEntityFetch(entity);
+    return fetch.fetchMut(this);
+  }
+
+  iterEntities(): Iterable<EntityCell> {
     return this.archetypes.archetypes.iter().flatMap((archetype) => {
       return archetype.entities.enumerate().map(([archetypeRow, archetypeEntity]) => {
         const entity = archetypeEntity.id;
@@ -297,14 +300,12 @@ export class World {
           tableId: archetype.tableId,
           tableRow: archetypeEntity.tableRow,
         };
-        const cell = new EntityCell(worldCell, entity, location);
-        return EntityRef.new(cell);
+        return new EntityCell(this, entity, location);
       });
     });
   }
 
-  iterEntitiesMut(): Iterable<EntityMut> {
-    const worldCell = this.asWorldCell();
+  iterEntitiesMut(): Iterable<EntityWorld> {
     return this.archetypes.archetypes.iter().flatMap((archetype) => {
       return archetype.entities.enumerate().map(([archetypeRow, archetypeEntity]) => {
         const entity = archetypeEntity.id;
@@ -314,8 +315,7 @@ export class World {
           tableId: archetype.tableId,
           tableRow: archetypeEntity.tableRow,
         };
-        const cell = new EntityCell(worldCell, entity, location);
-        return new EntityMut(cell);
+        return new EntityWorld(this, entity, location);
       });
     });
   }
@@ -357,8 +357,8 @@ export class World {
   }
 
   get<T extends object>(component: Constructor<T>, entity: Entity): Option<T> {
-    return this.getEntity(entity).match({
-      Ok: (entityRef: EntityRef) => entityRef.get(component),
+    return this.fetchEntity(entity).match({
+      Ok: (entityRef: EntityCell) => entityRef.get(component),
       Err: () => None,
     });
   }
@@ -395,7 +395,7 @@ export class World {
 
   protected despawnWithCaller(entity: Entity, caller: string, logWarning: boolean): boolean {
     this.flush();
-    const entityResult = this.getEntityMut(entity);
+    const entityResult = this.fetchEntityMut(entity);
     return entityResult.match({
       Ok: (entityMut: EntityWorld) => {
         entityMut['despawnWithCaller'](caller);
@@ -433,7 +433,7 @@ export class World {
   initResource<R extends object>(res: Constructor<R>, caller?: string): ComponentId {
     const componentId = this.components.registerResource(res);
     if (this.storages.resources.get(componentId).mapOr(true, (v) => v.isPresent())) {
-      const value = fromWorld(this, res);
+      const value = FromWorld.staticWrap(res).fromWorld(this);
       this.insertResourceById(componentId, value, caller);
     }
     return componentId;
@@ -547,11 +547,17 @@ export class World {
   }
 
   getResourceMut<R extends object>(resource: Constructor<R>): Option<Mut<R>> {
-    return new WorldCell(this).getResourceMut(resource);
+    const opId = this.components.getResourceId(typeId(resource));
+    if (opId.isNone()) {
+      return None;
+    }
+    return this.getResourceMutById(opId.unwrap()).map((data) => data.withType<R>());
   }
 
   getResource<R extends object>(resource: Constructor<R>): Option<R> {
-    return new WorldCell(this).getResource(resource);
+    return this.components
+      .getResourceId(typeId(resource))
+      .andThen((id) => this.getResourceById(id));
   }
 
   initializeResourceInternal(componentId: ComponentId): ResourceData {
@@ -654,8 +660,25 @@ export class World {
     return this.storages.resources.get(id).andThen((v) => v.getData());
   }
 
+  getResourceWithTicks(
+    componentId: ComponentId,
+  ): Option<[ptr: any, ticks: ComponentTicks, caller: Ptr<string>]> {
+    return this.storages.resources.get(componentId).andThen((resource) => resource.getWithTicks());
+  }
+
   getResourceMutById(id: ComponentId): Option<MutUntyped> {
-    return this.asWorldCell().getResourceMutById(id);
+    return this.storages.resources
+      .get(id)
+      .andThen((resource) => resource.getWithTicks())
+      .andThen(([data, ticks, caller]) =>
+        Some(
+          MutUntyped.new(
+            data,
+            Ticks.fromTickCells(ticks, this.lastChangeTick, this.changeTick),
+            caller,
+          ),
+        ),
+      );
   }
 
   getResourceOrInsertWith<R extends object>(
@@ -680,7 +703,7 @@ export class World {
     const componentId = this.components.registerResource(resType);
     let data = this.initializeResourceInternal(componentId);
     if (!data.isPresent()) {
-      const value = fromWorld(this, resType);
+      const value = FromWorld.staticWrap(resType).fromWorld(this);
       data.insert(value, changeTick, caller);
     }
     const value = data.getMut(lastChangeTick, changeTick).unwrap();
@@ -994,7 +1017,7 @@ export class World {
   }
 
   unregisterSystem<I, O>(id: SystemId<I, O>): Result<RemovedSystem<I, O>, RegisteredSystemError> {
-    const entityMut = this.getEntityMut(id.entity);
+    const entityMut = this.fetchEntityMut(id.entity);
     if (entityMut.isOk()) {
       const entity = entityMut.unwrap();
       const registeredSystem = entity.take(RegisteredSystem);
@@ -1013,7 +1036,7 @@ export class World {
   }
 
   runSystemWith<I, O>(id: SystemId<I, O>, input: I): Result<O, RegisteredSystemError> {
-    const entityMut = this.getEntityMut(id.entity);
+    const entityMut = this.fetchEntityMut(id.entity);
     if (entityMut.isErr()) {
       return Err(RegisteredSystemError.SystemIdNotRegistered(id));
     }
@@ -1037,7 +1060,7 @@ export class World {
       result = Err(RegisteredSystemError.InvalidParams(id));
     }
 
-    const updatedEntity = this.getEntityMut(id.entity) as Result<EntityWorld, EntityFetchError>;
+    const updatedEntity = this.fetchEntityMut(id.entity) as Result<EntityWorld, EntityFetchError>;
     if (updatedEntity.isOk()) {
       updatedEntity.unwrap().insert(new RegisteredSystem(system.system, system.initialized));
     }
@@ -1054,7 +1077,9 @@ export class World {
     }
 
     return this.resourceScope(CachedType, (world, id: Mut<CachedSystemId>) => {
-      const entity: Result<EntityWorld, EntityFetchError> = world.getEntityMut(id.systemId.entity);
+      const entity: Result<EntityWorld, EntityFetchError> = world.fetchEntityMut(
+        id.systemId.entity,
+      );
       if (entity.isOk()) {
         if (!entity.unwrap().contains(RegisteredSystem)) {
           entity.unwrap().insert(RegisteredSystem.new(system.intoSystem()));
@@ -1094,18 +1119,16 @@ export class World {
   }
 
   trigger<E extends object>(event: E) {
-    const eventId = useTrait(event.constructor as Constructor<E>, Event).registerComponentId(this);
+    const eventId = Event.staticWrap(event).registerComponentId(this);
     this.triggerTargetsDynamicRef(eventId, event, []);
   }
 
   triggerTargets<E extends object, T>(event: E, targets: T) {
-    const eventId = useTrait(event.constructor as Constructor<E>, Event).registerComponentId(this);
-    // SAFETY: We just registered `eventId` with the type of `event`
+    const eventId = Event.staticWrap(event).registerComponentId(this);
     this.triggerTargetsDynamicRef(eventId, event, targets);
   }
 
   triggerTargetsDynamic<E extends object, T>(eventId: ComponentId, eventData: E, targets: T): void {
-    // SAFETY: `eventData` is accessible as the type represented by `eventId`
     this.triggerTargetsDynamicRef(eventId, eventData, targets);
   }
 
@@ -1114,12 +1137,11 @@ export class World {
     eventData: E,
     targets: T,
   ): void {
-    const world = new DeferredWorld(this.asWorldCell());
+    const world = this.intoDeferred();
     const t = TriggerTargets.wrap(targets);
-    const eventType = eventData.constructor as Constructor<E>;
     if (t.entities().isEmpty()) {
       world.triggerObserversWithData(
-        useTrait(eventType, Event).traversal(),
+        Event.staticWrap(eventData).traversal(),
         eventId,
         Entity.PLACEHOLDER,
         t.components(),
@@ -1129,12 +1151,12 @@ export class World {
     } else {
       for (const target of t.entities()) {
         world.triggerObserversWithData(
-          useTrait(eventType, Event).traversal(),
+          Event.staticWrap(eventData).traversal(),
           eventId,
           target,
           t.components(),
           eventData,
-          useTrait(eventType, Event).autoPropagate(),
+          Event.staticWrap(eventData).autoPropagate(),
         );
       }
     }
@@ -1266,21 +1288,13 @@ export class World {
     );
   }
 
-  fetchTable(location: EntityLocation, componentId: ComponentId) {
-    return this.storages.tables.getUnchecked(location.tableId).getColumn(componentId);
-  }
-
-  fetchSparseSet(componentId: ComponentId) {
-    return this.storages.sparseSets.get(componentId);
-  }
-
   flush() {
     this.flushEntities();
     this.flushCommands();
   }
 
   intoDeferred(): DeferredWorld {
-    return new DeferredWorld(this.asWorldCell());
+    return new DeferredWorld(this);
   }
 
   flushEntities() {
@@ -1298,8 +1312,11 @@ export class World {
     }
   }
 
-  asWorldCell(): WorldCell {
-    return new WorldCell(this);
+  fetchSparseSet(componentId: number): Option<ComponentSparseSet> {
+    return this.storages.sparseSets.get(componentId);
+  }
+  fetchTable(location: EntityLocation): Option<Table> {
+    return this.storages.tables.get(location.tableId);
   }
 }
 
@@ -1336,8 +1353,8 @@ export interface World extends RunSystemOnce {}
 
 class WorldSystemParam {
   initParamState(_world: World, _systemMeta: SystemMeta): void {}
-  getParam(_state: void, _systemMeta: SystemMeta, world: WorldCell, _changeTick: Tick): World {
-    return world.world;
+  getParam(_state: void, _systemMeta: SystemMeta, world: World, _changeTick: Tick): World {
+    return world;
   }
 }
 

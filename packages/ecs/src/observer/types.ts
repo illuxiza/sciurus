@@ -1,6 +1,6 @@
 import { TraitValid } from '@sciurus/utils';
 import { Constructor, HashMap, implTrait, Ptr, trait, Vec } from 'rustable';
-import { ComponentId } from '../component/types';
+import { ComponentId } from '../component';
 import { Entity } from '../entity/base';
 import { DeferredWorld } from '../world/deferred';
 

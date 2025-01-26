@@ -1,10 +1,10 @@
-import { derive, Ok } from 'rustable';
+import { Default, derive, Ok } from 'rustable';
 import { Resource } from '../../src/component';
 import { World } from '../../src/world/base';
 import { commandFn, CommandQueue } from '../../src/world/command_queue';
 
 // Resource class to track command execution order
-@derive(Resource)
+@derive([Default, Resource])
 class OrderResource {
   constructor(public values: number[] = []) {}
 }

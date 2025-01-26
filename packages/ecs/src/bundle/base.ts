@@ -1,9 +1,11 @@
 import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { Constructor, implTrait, Option, trait, TypeId, typeId, useTrait, Vec } from 'rustable';
-import { Component } from '../component/base';
-import { type Components } from '../component/collection';
-import { type RequiredComponents } from '../component/required_components';
-import { type ComponentId } from '../component/types';
+import {
+  Component,
+  type ComponentId,
+  type Components,
+  type RequiredComponents,
+} from '../component';
 import { type Storages, type StorageType } from '../storage';
 
 @trait
@@ -101,7 +103,7 @@ implTrait(Component, DynamicBundle, {
   },
 });
 
-export class ComponentBundleType {
+class ComponentBundleType {
   constructor(public component: Constructor<Component>) {}
   componentIds(
     components: Components,
@@ -144,10 +146,6 @@ implTrait(Component, Bundle, {
     },
   },
 });
-
-export interface BundleOptions {
-  [key: string]: Constructor<any>;
-}
 
 implTrait(Array, DynamicBundle, {
   getComponents(this: Array<any>, ids: (storageType: StorageType, component: Component) => void) {

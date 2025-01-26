@@ -11,29 +11,19 @@ import {
   useTrait,
   Vec,
 } from 'rustable';
-import { Archetype } from '../../archetype/base';
-import { Archetypes } from '../../archetype/collection';
-import { ArchetypeId } from '../../archetype/types';
-import { Bundle } from '../../bundle/base';
-import { BundleInfo } from '../../bundle/info';
-import { BundleInserter } from '../../bundle/insert';
-import { BundleId, InsertMode } from '../../bundle/types';
-import { Mut } from '../../change_detection/mut';
-import { Ref } from '../../change_detection/ref';
-import { ComponentTicks } from '../../change_detection/tick';
-import { ON_DESPAWN, ON_REMOVE, ON_REPLACE } from '../component_constants';
-import { ComponentId } from '../../component/types';
-import { Entity } from '../../entity/base';
-import { Entities } from '../../entity/collection';
-import { EntityLocation } from '../../entity/location';
+import { Archetype, ArchetypeId, Archetypes } from '../../archetype';
+import { Bundle, BundleId, BundleInfo, BundleInserter, InsertMode } from '../../bundle';
+import { ComponentTicks, Mut, Ref } from '../../change_detection';
+import { ComponentId } from '../../component';
+import { Entities, Entity, EntityLocation } from '../../entity';
+import { Observer } from '../../observer/runner';
 import { Storages, StorageType } from '../../storage';
+import { IntoObserverSystem } from '../../system';
 import { World } from '../base';
+import { ON_DESPAWN, ON_REMOVE, ON_REPLACE } from '../component_constants';
 import { DeferredWorld } from '../deferred';
 import { EntityCell } from './cell';
 import { insertDynamicBundle, takeComponent } from './func';
-import { EntityRef } from './ref';
-import { IntoObserverSystem } from '../../system/observer';
-import { Observer } from '../../observer/runner';
 
 export class EntityWorld {
   __world: World;
@@ -58,7 +48,7 @@ export class EntityWorld {
 
   asEntityCell(): EntityCell {
     this.assertNotDespawned();
-    return new EntityCell(this.__world.asWorldCell(), this.__entity, this.__location);
+    return new EntityCell(this.__world, this.__entity, this.__location);
   }
 
   get id() {
@@ -91,19 +81,19 @@ export class EntityWorld {
 
   get<T extends object>(component: Constructor<T>): Option<T> {
     this.assertNotDespawned();
-    return EntityRef.fromWorld(this).get(component);
+    return EntityCell.fromWorld(this).get(component);
   }
 
   components(query: any): any {
-    return EntityRef.fromWorld(this).components(query);
+    return EntityCell.fromWorld(this).components(query);
   }
 
   getComponents(query: any): Option<any> {
-    return EntityRef.fromWorld(this).getComponents(query);
+    return EntityCell.fromWorld(this).getComponents(query);
   }
 
   getRef<T extends object>(component: Constructor<T>): Option<Ref<T>> {
-    return EntityRef.fromWorld(this).getRef(component);
+    return EntityCell.fromWorld(this).getRef(component);
   }
 
   getMut<T extends object>(component: Constructor<T>): Option<Mut<T>> {
@@ -111,15 +101,15 @@ export class EntityWorld {
   }
 
   getChangeTicks(component: any): Option<ComponentTicks> {
-    return EntityRef.fromWorld(this).getChangeTicks(component);
+    return EntityCell.fromWorld(this).getChangeTicks(component);
   }
 
   getChangeTicksById(componentId: ComponentId): Option<ComponentTicks> {
-    return EntityRef.fromWorld(this).getChangeTicksById(componentId);
+    return EntityCell.fromWorld(this).getChangeTicksById(componentId);
   }
 
   getById(componentId: Iterable<ComponentId>): Result<any[], Error> {
-    return EntityRef.fromWorld(this).getById(componentId);
+    return EntityCell.fromWorld(this).fetchById(componentId);
   }
 
   insert<T extends object>(bundle: T, caller?: string): this {

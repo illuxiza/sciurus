@@ -10,28 +10,62 @@ import {
   typeId,
   useTrait,
 } from 'rustable';
-import { Archetype } from '../../archetype/base';
-import { Mut, MutUntyped } from '../../change_detection/mut';
-import { Ref } from '../../change_detection/ref';
-import { ComponentTicks, Tick, Ticks } from '../../change_detection/tick';
-import { Component } from '../../component/base';
-import { ComponentId } from '../../component/types';
-import { Entity } from '../../entity/base';
-import { EntityLocation } from '../../entity/location';
+import { Archetype } from '../../archetype';
+import { ComponentTicks, Mut, MutUntyped, Ref, Tick, Ticks } from '../../change_detection';
+import { Component, ComponentId } from '../../component';
+import { Entity, EntityLocation } from '../../entity';
 import { ReadonlyQueryData } from '../../query/fetch';
-import { WorldCell } from '../cell';
 import { getComponent, getComponentAndTicks, getTicks } from './func';
-import { GetEntityMutByIdError } from './types';
+import { GetEntityMutByIdError, QUERY_MISMATCH_ERROR } from './types';
+import { EntityWorld } from './world';
+import { World } from '../base';
+
+type DynamicComponentFetch = (
+  cell: EntityCell,
+  iter: Iterable<ComponentId>,
+) => Result<any[], Error>;
+
+const defaultFetch = (cell: EntityCell, iter: Iterable<ComponentId>): Result<any[], Error> => {
+  const ptrs = [];
+  for (const id of iter) {
+    const ptr = cell.getById(id);
+    if (ptr.isNone()) return Err(new Error(`Component ${id} not found`));
+    ptrs.push(ptr);
+  }
+  return Ok(ptrs);
+};
+
+type DynamicComponentMutFetch = (
+  cell: EntityCell,
+  iter: Iterable<ComponentId>,
+) => Result<MutUntyped[], Error>;
+
+const defaultMutFetch = (
+  cell: EntityCell,
+  iter: Iterable<ComponentId>,
+): Result<MutUntyped[], Error> => {
+  const ptrs = [];
+  for (const id of iter) {
+    const ret = cell.getMutById(id);
+    if (ret.isErr()) return ret as unknown as Result<MutUntyped[], Error>;
+    ptrs.push(ret.unwrap());
+  }
+  return Ok(ptrs);
+};
 
 export class EntityCell {
-  world: WorldCell;
+  world: World;
   entity: Entity;
   location: EntityLocation;
 
-  constructor(world: WorldCell, entity: Entity, location: EntityLocation) {
+  constructor(world: World, entity: Entity, location: EntityLocation) {
     this.world = world;
     this.entity = entity;
     this.location = location;
+  }
+
+  static fromWorld(world: EntityWorld) {
+    return world.asEntityCell();
   }
 
   get id(): Entity {
@@ -55,7 +89,7 @@ export class EntityCell {
     return id.isSomeAnd((id) => this.containsId(id));
   }
 
-  get<T extends Constructor>(component: T): Option<InstanceType<T>> {
+  get<T extends object>(component: Constructor<T>): Option<T> {
     return this.world.components
       .getId(typeId(component))
       .andThen((componentId) =>
@@ -65,11 +99,11 @@ export class EntityCell {
           useTrait(component, Component).storageType(),
           this.entity,
           this.location,
-        ).map((value) => value as InstanceType<T>),
+        ),
       );
   }
 
-  getRef<T extends Constructor>(component: T): Option<Ref<InstanceType<T>>> {
+  getRef<T extends object>(component: Constructor<T>): Option<Ref<T>> {
     const lastChangeTick = this.world.lastChangeTick;
     const changeTick = this.world.changeTick;
     return this.world.components
@@ -83,8 +117,8 @@ export class EntityCell {
           this.location,
         ).map(
           ([value, cells, caller]) =>
-            new Ref<InstanceType<T>>(
-              value as InstanceType<T>,
+            new Ref<T>(
+              value as T,
               Ticks.fromTickCells(cells, lastChangeTick, changeTick),
               caller[Ptr.ptr],
             ),
@@ -92,7 +126,7 @@ export class EntityCell {
       );
   }
 
-  getChangeTicks<T extends Constructor>(component: T): Option<ComponentTicks> {
+  getChangeTicks<T extends object>(component: Constructor<T>): Option<ComponentTicks> {
     return this.world.components
       .getId(typeId(component))
       .andThen((componentId) =>
@@ -114,11 +148,11 @@ export class EntityCell {
       );
   }
 
-  getMut<T extends Constructor>(component: T): Option<Mut<InstanceType<T>>> {
+  getMut<T extends object>(component: Constructor<T>): Option<Mut<T>> {
     return this.getMutAssumeMutable(component);
   }
 
-  getMutAssumeMutable<T extends Constructor>(component: T): Option<Mut<InstanceType<T>>> {
+  getMutAssumeMutable<T extends object>(component: Constructor<T>): Option<Mut<T>> {
     return this.getMutUsingTicksAssumeMutable(
       component,
       this.world.lastChangeTick,
@@ -126,11 +160,11 @@ export class EntityCell {
     );
   }
 
-  getMutUsingTicksAssumeMutable<T extends Constructor>(
-    component: T,
+  getMutUsingTicksAssumeMutable<T extends object>(
+    component: Constructor<T>,
     lastChangeTick: Tick,
     changeTick: Tick,
-  ): Option<Mut<InstanceType<T>>> {
+  ): Option<Mut<T>> {
     const componentId = this.world.components.getId(typeId(component));
     return componentId.match({
       None: () => None,
@@ -145,6 +179,10 @@ export class EntityCell {
           Mut.new(value, Ticks.fromTickCells(cells, lastChangeTick, changeTick), caller),
         ),
     });
+  }
+
+  components<T extends object, Q>(query: T): Q {
+    return this.getComponents<T, Q>(query).expect(QUERY_MISMATCH_ERROR);
   }
 
   getComponents<T extends object, Q>(query: T): Option<Q> {
@@ -170,6 +208,20 @@ export class EntityCell {
           return None;
         }),
     });
+  }
+
+  fetchById(
+    componentIds: Iterable<ComponentId>,
+    fetch: DynamicComponentFetch = defaultFetch,
+  ): Result<any[], Error> {
+    return fetch(this, componentIds);
+  }
+
+  fetchMutById(
+    componentIds: Iterable<ComponentId>,
+    fetch: DynamicComponentMutFetch = defaultMutFetch,
+  ): Result<MutUntyped[], Error> {
+    return fetch(this, componentIds);
   }
 
   getById(componentId: ComponentId): Option<any> {

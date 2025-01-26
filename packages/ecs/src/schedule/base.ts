@@ -1,6 +1,7 @@
 import { logger } from '@sciurus/utils';
 import {
   Constructor,
+  Default,
   derive,
   Err,
   HashMap,
@@ -13,8 +14,7 @@ import {
   RustIter,
 } from 'rustable';
 import { Tick } from '../change_detection/tick';
-import { ComponentId, Resource } from '../component';
-import { Components } from '../component/collection';
+import { ComponentId, Components, Resource } from '../component';
 import { ScheduleSystem } from '../system';
 import { type World } from '../world/base';
 import { IntoConfigs } from './config';
@@ -191,7 +191,7 @@ export class Schedule {
   }
 }
 
-@derive([Resource])
+@derive([Resource, Default])
 export class Schedules {
   inner: HashMap<any, Schedule> = new HashMap();
   ignoredSchedulingAmbiguities: HashSet<ComponentId> = new HashSet();

@@ -1,4 +1,4 @@
-import { Constructor, derive, Vec } from 'rustable';
+import { Constructor, Default, derive, Vec } from 'rustable';
 import { Tick } from '../change_detection';
 import { MutUntyped } from '../change_detection/mut';
 import { ComponentId, Resource } from '../component';
@@ -19,7 +19,7 @@ export enum ShouldUpdateEvents {
   Ready,
 }
 
-@derive([Resource])
+@derive([Resource, Default])
 export class EventRegistry {
   shouldUpdate: ShouldUpdateEvents = ShouldUpdateEvents.Always;
   private eventUpdates: Vec<RegisteredEvent> = Vec.new();

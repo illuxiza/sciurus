@@ -1,16 +1,14 @@
 import { Constructor, createFactory, derive, implTrait, iter, Option, RustIter } from 'rustable';
-import { Tick } from './change_detection/tick';
-import { Component } from './component/base';
-import { ComponentId } from './component/types';
-import { Entity } from './entity/base';
+import { Tick } from './change_detection';
+import { Component, ComponentId } from './component';
+import { Entity } from './entity';
 import { Event, EventId } from './event/base';
 import { Events } from './event/collection';
 import { EventCursor } from './event/cursor';
-import { SparseSet } from './storage/sparse_set';
+import { SparseSet } from './storage';
 import { SystemParam } from './system/param/base';
 import { SystemMeta } from './system/types';
-import { World } from './world/base';
-import { WorldCell } from './world/cell';
+import { World } from './world';
 
 export class RemovedComponentEvents {
   private eventSets: SparseSet<ComponentId, Events<RemovedComponentEntity>> = new SparseSet();
@@ -121,7 +119,7 @@ class RemovedComponentsParam<T extends Component> {
   getParam(
     [componentId, reader]: [ComponentId, RemovedComponentReader<T>],
     _systemMeta: SystemMeta,
-    world: WorldCell,
+    world: World,
     _changeTick: Tick,
   ): RemovedComponentsInner<T> {
     return new RemovedComponentsInner(componentId, reader, world.removedComponents);

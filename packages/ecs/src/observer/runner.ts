@@ -1,7 +1,6 @@
 import { Constructor, implTrait, Ptr, useTrait, Vec } from 'rustable';
 import { Bundle } from '../bundle/base';
-import { Component, ComponentId } from '../component';
-import { ComponentHook, ComponentHooks } from '../component/hooks';
+import { Component, ComponentHook, ComponentHooks, ComponentId } from '../component';
 import { Entity } from '../entity';
 import { Event } from '../event';
 import { StorageType } from '../storage';
@@ -128,11 +127,11 @@ function observerSystemRunner<E extends Event, B extends Bundle, S extends Obser
     ptr: any,
     propagate: Ptr<boolean>,
   ) {
-    const worldCell = world.asWorldCell();
+    const worldCell = world.world;
     const observerCell = worldCell.getEntity(observerTrigger.observer).unwrap();
     const state = observerCell.getMut(ObserverState).unwrap();
 
-    const lastTrigger = worldCell.lastTriggerId();
+    const lastTrigger = worldCell.lastTriggerId;
     if (state.lastTriggerId === lastTrigger) {
       return;
     }

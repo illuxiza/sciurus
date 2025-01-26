@@ -1,8 +1,7 @@
 import { Option, Vec } from 'rustable';
 import { type BundleId } from '../bundle/types';
-import { type RequiredComponentConstructor } from '../component/required_components';
-import { type ComponentId } from '../component/types';
-import { SparseArray } from '../storage/sparse_set/sparse_array';
+import { type ComponentId, type RequiredComponentConstructor } from '../component';
+import { SparseArray } from '../storage';
 import { ArchetypeAfterBundleInsert, type ArchetypeId, type ComponentStatus } from './types';
 
 export class Edges {

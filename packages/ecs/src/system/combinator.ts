@@ -3,8 +3,7 @@ import { Constructor, implTrait, trait, Type, Vec } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
-import { WorldCell } from '../world';
-import { World } from '../world/base';
+import { World } from '../world';
 import { DeferredWorld } from '../world/deferred';
 import { System } from './base';
 
@@ -60,7 +59,7 @@ export class CombinatorSystem {
     return this.a.hasDeferred() || this.b.hasDeferred();
   }
 
-  runUnsafe(input: any, world: WorldCell): any {
+  runUnsafe(input: any, world: World): any {
     return (this as any).func.combine(
       input,
       (input: any) => this.a.runUnsafe(input, world),
@@ -86,7 +85,7 @@ export class CombinatorSystem {
     this.b.queueDeferred(world);
   }
 
-  validateParamUnsafe(world: WorldCell): boolean {
+  validateParamUnsafe(world: World): boolean {
     return this.a.validateParamUnsafe(world);
   }
 
@@ -97,7 +96,7 @@ export class CombinatorSystem {
     this.component_access.extend(this.b.componentAccess());
   }
 
-  updateArchetypeComponentAccess(world: WorldCell): void {
+  updateArchetypeComponentAccess(world: World): void {
     this.a.updateArchetypeComponentAccess(world);
     this.b.updateArchetypeComponentAccess(world);
 
@@ -165,7 +164,7 @@ export class PipeSystem {
     return this.a.hasDeferred() || this.b.hasDeferred();
   }
 
-  runUnsafe(input: any, world: WorldCell): any {
+  runUnsafe(input: any, world: World): any {
     const value = this.a.runUnsafe(input, world);
     return this.b.runUnsafe(value, world);
   }
@@ -185,7 +184,7 @@ export class PipeSystem {
     this.b.queueDeferred(world);
   }
 
-  validateParamUnsafe(world: WorldCell): boolean {
+  validateParamUnsafe(world: World): boolean {
     return this.a.validateParamUnsafe(world);
   }
 
@@ -200,7 +199,7 @@ export class PipeSystem {
     this.component_access.extend(this.b.componentAccess());
   }
 
-  updateArchetypeComponentAccess(world: WorldCell): void {
+  updateArchetypeComponentAccess(world: World): void {
     this.a.updateArchetypeComponentAccess(world);
     this.b.updateArchetypeComponentAccess(world);
 

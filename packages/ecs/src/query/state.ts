@@ -3,10 +3,10 @@ import { Err, iter, None, Ok, Option, Ptr, Result, RustIter, Some, Vec } from 'r
 import { Archetype } from '../archetype/base';
 import { ArchetypeGeneration, ArchetypeId } from '../archetype/types';
 import { Tick } from '../change_detection';
-import { ComponentId } from '../component/types';
+import { ComponentId } from '../component';
 import { Entity } from '../entity';
 import { TableId } from '../storage';
-import { World, WorldCell } from '../world';
+import { World } from '../world';
 import { Access, FilteredAccess } from './access';
 import { QueryBuilder } from './builder';
 import { QueryEntityError, QuerySingleError } from './error';
@@ -197,7 +197,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    */
   isEmpty(world: World, lastRun: Tick, thisRun: Tick): boolean {
     this.validateWorld(world.id);
-    return this.isEmptyUnsafeWorldCell(world.asWorldCell(), lastRun, thisRun);
+    return this.isEmptyUnsafeWorldCell(world, lastRun, thisRun);
   }
 
   /**
@@ -205,11 +205,11 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    * This is always guaranteed to run in O(1) time.
    */
   contains(entity: Entity, world: World, lastRun: Tick, thisRun: Tick): boolean {
-    return this.getUncheckedManual(world.asWorldCell(), entity, lastRun, thisRun).isOk();
+    return this.getUncheckedManual(world, entity, lastRun, thisRun).isOk();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  isEmptyUnsafeWorldCell(world: WorldCell, lastRun: Tick, thisRun: Tick): boolean {
+  isEmptyUnsafeWorldCell(world: World, lastRun: Tick, thisRun: Tick): boolean {
     // return this.iterUncheckedManual(world, lastRun, thisRun).next().isNone();
     return false;
   }
@@ -219,7 +219,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    */
   updateArchetypes(world: World) {
     this.validateWorld(world.id);
-    this.updateArchetypesUnsafeWorldCell(world.asWorldCell());
+    this.updateArchetypesUnsafeWorldCell(world);
   }
 
   /**
@@ -246,7 +246,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   /**
    * Updates the state's internal view of the world's archetypes.
    */
-  updateArchetypesUnsafeWorldCell(world: WorldCell) {
+  updateArchetypesUnsafeWorldCell(world: World) {
     this.validateWorld(world.id);
     if (this.__componentAccess.required.isEmpty()) {
       const archetypes = world.archetypes;
@@ -388,14 +388,14 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     }
   }
 
-  transmute(newD: QueryData, world: WorldCell): QueryState {
+  transmute(newD: QueryData, world: World): QueryState {
     return this.transmuteFiltered(newD, [], world);
   }
 
   transmuteFiltered<NewD extends QueryData, NewF extends QueryFilter>(
     newD: NewD,
     newF: NewF,
-    world: WorldCell,
+    world: World,
   ): QueryState {
     this.validateWorld(world.id);
 
@@ -444,7 +444,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     );
   }
 
-  join(orderD: QueryData, newD: QueryData, world: WorldCell, other: QueryState): QueryState {
+  join(orderD: QueryData, newD: QueryData, world: World, other: QueryState): QueryState {
     return this.joinFiltered(orderD, [], newD, [], world, other);
   }
 
@@ -458,7 +458,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     orderF: OtherF,
     newD: NewD,
     newF: NewF,
-    world: WorldCell,
+    world: World,
     other: QueryState,
   ): QueryState {
     if (this.__worldId !== other.__worldId) {
@@ -540,45 +540,35 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    */
   get(world: World, entity: Entity): Result<any, QueryEntityError> {
     this.updateArchetypes(world);
-    return this.getUncheckedManual(
-      world.asWorldCell(),
-      entity,
-      world.lastChangeTick,
-      world.changeTick,
-    );
+    return this.getUncheckedManual(world, entity, world.lastChangeTick, world.changeTick);
   }
 
   getMany(world: World, entities: Entity[]): Result<any[], QueryEntityError> {
     this.updateArchetypes(world);
-    return this.getManyReadonlyManual(
-      world.asWorldCell(),
-      entities,
-      world.lastChangeTick,
-      world.changeTick,
-    );
+    return this.getManyReadonlyManual(world, entities, world.lastChangeTick, world.changeTick);
   }
 
   getMut(world: World, entity: Entity): Result<any, QueryEntityError> {
     this.updateArchetypes(world);
     const changeTick = world.changeTick;
     const lastChangeTick = world.lastChangeTick;
-    return this.getUncheckedManual(world.asWorldCell(), entity, lastChangeTick, changeTick);
+    return this.getUncheckedManual(world, entity, lastChangeTick, changeTick);
   }
 
   getManyMut(world: World, entities: Entity[]): Result<any[], QueryEntityError> {
     this.updateArchetypes(world);
     const changeTick = world.changeTick;
     const lastChangeTick = world.lastChangeTick;
-    return this.getManyUncheckedManual(world.asWorldCell(), entities, lastChangeTick, changeTick);
+    return this.getManyUncheckedManual(world, entities, lastChangeTick, changeTick);
   }
 
-  getUnchecked(world: WorldCell, entity: Entity): Result<any, QueryEntityError> {
+  getUnchecked(world: World, entity: Entity): Result<any, QueryEntityError> {
     this.updateArchetypesUnsafeWorldCell(world);
     return this.getUncheckedManual(world, entity, world.lastChangeTick, world.changeTick);
   }
 
   getUncheckedManual(
-    world: WorldCell,
+    world: World,
     entity: Entity,
     lastRun: Tick,
     thisRun: Tick,
@@ -609,7 +599,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   }
 
   getManyReadonlyManual(
-    world: WorldCell,
+    world: World,
     entities: Entity[],
     lastRun: Tick,
     thisRun: Tick,
@@ -626,7 +616,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   }
 
   getManyUncheckedManual(
-    world: WorldCell,
+    world: World,
     entities: Entity[],
     lastRun: Tick,
     thisRun: Tick,
@@ -655,21 +645,21 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   iter(world: World): QueryIter<D, F> {
     this.updateArchetypes(world);
     // SAFETY: query is read only
-    return this.iterUncheckedManual(world.asWorldCell(), world.lastChangeTick, world.changeTick);
+    return this.iterUncheckedManual(world, world.lastChangeTick, world.changeTick);
   }
 
   iterManual(world: World): QueryIter<D, F> {
     this.validateWorld(world.id);
     // SAFETY: query is read only and world is validated
-    return this.iterUncheckedManual(world.asWorldCell(), world.lastChangeTick, world.changeTick);
+    return this.iterUncheckedManual(world, world.lastChangeTick, world.changeTick);
   }
 
-  iterUnchecked(world: WorldCell): QueryIter<D, F> {
+  iterUnchecked(world: World): QueryIter<D, F> {
     this.updateArchetypesUnsafeWorldCell(world);
     return this.iterUncheckedManual(world, world.lastChangeTick, world.changeTick);
   }
 
-  iterUncheckedManual(world: WorldCell, lastRun: Tick, thisRun: Tick): QueryIter<D, F> {
+  iterUncheckedManual(world: World, lastRun: Tick, thisRun: Tick): QueryIter<D, F> {
     return QueryIter.new(world, this, lastRun, thisRun);
   }
 
@@ -685,11 +675,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   getSingle(world: World): Result<D['ITEM'], QuerySingleError> {
     this.updateArchetypes(world);
     // SAFETY: query is read only
-    return this.getSingleUncheckedManual(
-      world.asWorldCell(),
-      world.lastChangeTick,
-      world.changeTick,
-    );
+    return this.getSingleUncheckedManual(world, world.lastChangeTick, world.changeTick);
   }
 
   singleMut(world: World): D['ITEM'] {
@@ -706,16 +692,16 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     const changeTick = world.changeTick;
     const lastChangeTick = world.lastChangeTick;
     // SAFETY: query has unique world access
-    return this.getSingleUncheckedManual(world.asWorldCell(), lastChangeTick, changeTick);
+    return this.getSingleUncheckedManual(world, lastChangeTick, changeTick);
   }
 
-  getSingleUnchecked(world: WorldCell): Result<D['ITEM'], QuerySingleError> {
+  getSingleUnchecked(world: World): Result<D['ITEM'], QuerySingleError> {
     this.updateArchetypesUnsafeWorldCell(world);
     return this.getSingleUncheckedManual(world, world.lastChangeTick, world.changeTick);
   }
 
   getSingleUncheckedManual(
-    world: WorldCell,
+    world: World,
     lastRun: Tick,
     thisRun: Tick,
   ): Result<D['ITEM'], QuerySingleError> {

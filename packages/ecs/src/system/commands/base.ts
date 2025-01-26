@@ -241,7 +241,7 @@ export class Commands {
     const entity = this.spawnEmpty().id();
     const registeredSystem = new RegisteredSystem(system.intoSystem());
     this.queue((world: World) => {
-      const entityMut = world.getEntityMut(entity);
+      const entityMut = world.fetchEntityMut(entity);
       if (entityMut.isOk()) {
         entityMut.unwrap().insert(registeredSystem);
       }

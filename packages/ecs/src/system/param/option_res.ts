@@ -2,18 +2,17 @@ import { Constructor, createFactory, implTrait, None, Option, Some } from 'rusta
 import { Tick, Ticks } from '../../change_detection';
 import { Res as ResValue } from '../../change_detection/res';
 import { ComponentId } from '../../component';
-import { World } from '../../world/base';
-import { WorldCell } from '../../world/cell';
+import { World } from '../../world';
 import { SystemMeta } from '../types';
 import { ReadonlySystemParam, SystemParam } from './base';
 
 class OptionResParam<T extends object = any> {
   constructor(public valueType: Constructor<T>) {}
 
-  #world?: WorldCell;
+  #world?: World;
   #value?: T;
 
-  init(world: WorldCell): this {
+  init(world: World): this {
     this.#world = world;
     this.#value = world.getResource(this.valueType).unwrap();
     return this;
@@ -46,11 +45,11 @@ implTrait(OptionResParam, SystemParam, {
     return componentId;
   },
 
-  validateParam(_state: ComponentId, _systemMeta: SystemMeta, _world: WorldCell): boolean {
+  validateParam(_state: ComponentId, _systemMeta: SystemMeta, _world: World): boolean {
     return true;
   },
 
-  getParam(state: ComponentId, systemMeta: SystemMeta, world: WorldCell, changeTick: Tick): any {
+  getParam(state: ComponentId, systemMeta: SystemMeta, world: World, changeTick: Tick): any {
     const op = world.getResourceWithTicks(state);
     if (op.isNone()) {
       return None;

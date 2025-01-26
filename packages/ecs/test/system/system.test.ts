@@ -1,10 +1,10 @@
+import { Constructor, Default, derive, hasTrait, implTrait } from 'rustable';
 import { Resource } from '../../../ecs/src/component';
 import { Commands } from '../../../ecs/src/system/commands';
-import { Constructor, derive, hasTrait, implTrait } from 'rustable';
 import { System } from '../../src/system/base';
 import { World } from '../../src/world/base';
 
-@derive(Resource)
+@derive([Resource, Default])
 class Counter {
   constructor(public value: number = 0) {}
 }

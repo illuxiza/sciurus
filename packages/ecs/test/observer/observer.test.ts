@@ -1,18 +1,18 @@
-import { Observer, ObserverState } from '../../src/observer/runner';
-import { OnAdd, OnInsert, OnRemove, OnReplace } from '../../src/world/component_constants';
-import { DeferredWorld } from '../../src/world/deferred';
-import { EntityRef } from '../../src/world/entity_ref/ref';
-import { derive, implTrait, Option, Some, Vec } from 'rustable';
+import { EntityCell } from 'packages/ecs/src/world/entity_ref/cell';
+import { Default, derive, implTrait, Option, Some, Vec } from 'rustable';
 import { Component, ComponentId, Res, Resource, World } from '../../src';
-import { component } from '../../src/component/decorator';
+import { component } from '../../src/component';
 import { Entity } from '../../src/entity/base';
 import { Event } from '../../src/event';
+import { Observer, ObserverState } from '../../src/observer/runner';
 import { ObserverDescriptor, Trigger } from '../../src/observer/types';
 import { StorageType } from '../../src/storage';
-import { Commands } from '../../src/system/commands/base';
 import { observer } from '../../src/system';
+import { Commands } from '../../src/system/commands/base';
 import { Query } from '../../src/system/param/query';
 import { Traversal } from '../../src/traversal';
+import { OnAdd, OnInsert, OnRemove, OnReplace } from '../../src/world/component_constants';
+import { DeferredWorld } from '../../src/world/deferred';
 
 @derive([Component])
 class A {}
@@ -34,7 +34,7 @@ class EventWithData {
   counter: number = 0;
 }
 
-@derive([Resource])
+@derive([Resource, Default])
 class Order {
   private orders: string[] = [];
 
@@ -257,7 +257,7 @@ describe('Observer Tests', () => {
     );
 
     const entity = world.spawn(new A()).flush();
-    const entityRef = world.getEntity(entity).unwrap() as EntityRef;
+    const entityRef = world.fetchEntity(entity).unwrap() as EntityCell;
     expect(entityRef?.contains(A)).toBeFalsy();
     expect(entityRef?.contains(B)).toBeFalsy();
     expect(world.resource(Order).get()).toEqual(['add_a', 'add_b', 'remove_a', 'remove_b']);
@@ -795,7 +795,7 @@ describe('Observer Tests', () => {
   });
 
   test('observer_triggered_components', () => {
-    @derive([Resource])
+    @derive([Resource, Default])
     class Counter {
       private counter = new Map<ComponentId, number>();
 

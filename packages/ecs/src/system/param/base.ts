@@ -2,8 +2,7 @@ import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import { Constructor, defaultVal, implTrait, macroTrait, trait, useTrait } from 'rustable';
 import { Archetype } from '../../archetype/base';
 import { Tick } from '../../change_detection/tick';
-import { World } from '../../world/base';
-import { WorldCell } from '../../world/cell';
+import { World } from '../../world';
 import { DeferredWorld } from '../../world/deferred';
 import { SystemMeta } from '../types';
 
@@ -69,7 +68,7 @@ class SystemParamTrait<State = any, Item = any> extends TraitValid {
   /**
    * Validates that the param can be acquired by the getParam.
    */
-  validateParam(_state: State, _systemMeta: SystemMeta, _world: WorldCell): boolean {
+  validateParam(_state: State, _systemMeta: SystemMeta, _world: World): boolean {
     return true;
   }
 
@@ -79,7 +78,7 @@ class SystemParamTrait<State = any, Item = any> extends TraitValid {
   getParam(
     _state: State,
     _systemMeta: SystemMeta,
-    _world: WorldCell,
+    _world: World,
     _changeTick: Tick,
     _input: any,
   ): Item {
@@ -133,7 +132,7 @@ export const SystemParam = macroTrait<
     this: SystemParamClass,
     state: FetchState,
     systemMeta: SystemMeta,
-    world: WorldCell,
+    world: World,
   ): boolean {
     return Object.entries(this.getOptions()).every(([key, param]) => {
       return into(param).validateParam(state.state[key], systemMeta, world);
@@ -144,7 +143,7 @@ export const SystemParam = macroTrait<
     this: SystemParamClass,
     state: FetchState,
     systemMeta: SystemMeta,
-    world: WorldCell,
+    world: World,
     changeTick: Tick,
     input: any,
   ): any {
@@ -197,7 +196,7 @@ implTrait(Array<SystemParam>, SystemParam, {
     this: Array<SystemParam>,
     state: any[],
     systemMeta: SystemMeta,
-    world: WorldCell,
+    world: World,
   ): boolean {
     return this.map((param, i) => into(param).validateParam(state[i], systemMeta, world)).every(
       (result) => result,
@@ -208,7 +207,7 @@ implTrait(Array<SystemParam>, SystemParam, {
     this: Array<SystemParam>,
     state: any[],
     systemMeta: SystemMeta,
-    world: WorldCell,
+    world: World,
     changeTick: Tick,
     input: any,
   ): any[] {

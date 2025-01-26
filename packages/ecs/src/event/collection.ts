@@ -2,8 +2,10 @@ import { logger } from '@sciurus/utils';
 import {
   Constructor,
   createFactory,
+  Default,
   derive,
   iter,
+  named,
   None,
   Option,
   RustIter,
@@ -22,13 +24,16 @@ export class EventSequence<E extends object> extends Vec<EventInstance<E>> {
   }
 }
 
-@derive([Resource])
+@derive([Resource, Default])
+@named('Events')
 export class EventsInner<E extends object> {
   eventsA: EventSequence<E>;
   eventsB: EventSequence<E>;
   eventCount: number;
+  private eventType: Constructor<E>;
 
-  constructor(private event: Constructor<E>) {
+  constructor(eventType: Constructor<E> | [Constructor<E>]) {
+    this.eventType = Array.isArray(eventType) ? eventType[0] : eventType;
     this.eventsA = new EventSequence<E>();
     this.eventsB = new EventSequence<E>();
     this.eventCount = 0;
@@ -55,7 +60,7 @@ export class EventsInner<E extends object> {
   }
 
   public sendDefault(): EventId {
-    return this.send(new this.event());
+    return this.send(new this.eventType());
   }
 
   public getCursor(): EventCursor<E> {
@@ -146,7 +151,7 @@ export class EventsInner<E extends object> {
 export function eventsType<T extends object>(
   eventType: Constructor<T>,
 ): Constructor<EventsInner<T>> {
-  return Type(EventsInner, [eventType]);
+  return Type(EventsInner, [eventType], true);
 }
 
 export const Events = createFactory(EventsInner, eventsType) as typeof EventsInner & {

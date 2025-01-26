@@ -1,7 +1,5 @@
 import { Default, derive, Vec } from 'rustable';
-import { Component } from '../component';
-import { ComponentCloneHandler } from '../component/clone_handler';
-import { ComponentHooks } from '../component/hooks';
+import { Component, ComponentCloneHandler, ComponentHooks } from '../component';
 import { Entity } from '../entity';
 import { StorageType } from '../storage';
 import { DeferredWorld } from '../world/deferred';

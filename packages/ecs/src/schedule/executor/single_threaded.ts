@@ -76,9 +76,8 @@ export class SingleThreadedExecutor implements SystemExecutor {
         if (system.isExclusive()) {
           system.run(undefined, world);
         } else {
-          const unsafeWorld = world.asWorldCell();
-          system.updateArchetypeComponentAccess(unsafeWorld);
-          system.runUnsafe(undefined, unsafeWorld);
+          system.updateArchetypeComponentAccess(world);
+          system.runUnsafe(undefined, world);
         }
       } catch (e) {
         this.resume(e as Error);

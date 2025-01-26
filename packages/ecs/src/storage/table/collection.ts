@@ -1,7 +1,6 @@
 import { HashMap, Option, Ptr, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
-import { Components } from '../../component/collection';
-import { ComponentId } from '../../component/types';
+import { ComponentId, Components } from '../../component';
 import { TableId } from '../types';
 import { Table } from './base';
 import { TableBuilder } from './builder';

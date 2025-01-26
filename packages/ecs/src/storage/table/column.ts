@@ -1,6 +1,6 @@
 import { None, Option, Ptr, Some } from 'rustable';
 import { ComponentTicks, type Tick } from '../../change_detection/tick';
-import { type ComponentInfo } from '../../component/info';
+import { type ComponentInfo } from '../../component';
 import { BlobArray, DataArray } from '../data_array';
 import { type TableRow } from '../types';
 

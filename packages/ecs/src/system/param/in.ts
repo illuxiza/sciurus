@@ -1,9 +1,9 @@
 import { Constructor, createFactory, implTrait } from 'rustable';
 import { Tick } from '../../change_detection';
-import { WorldCell } from '../../world/cell';
 import { SystemMeta } from '../types';
 import { SystemParam } from './base';
 import { ExclusiveSystemParam } from './exclusive';
+import { World } from '../../world';
 
 class InParam<T> {
   constructor(public valueType: Constructor<T>) {}
@@ -11,7 +11,7 @@ class InParam<T> {
 
 implTrait(InParam, SystemParam, {
   initParamState() {},
-  getParam(_state: any, _systemMeta: SystemMeta, _world: WorldCell, _changeTick: Tick, input: any) {
+  getParam(_state: any, _systemMeta: SystemMeta, _world: World, _changeTick: Tick, input: any) {
     return input;
   },
 });

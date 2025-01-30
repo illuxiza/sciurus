@@ -1,13 +1,11 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { implTrait, macroTrait, trait } from 'rustable';
+import { macroTrait, NotImplementedError, Trait } from 'rustable';
 import { App } from './app';
 
 /** A collection of Bevy app logic and configuration */
-@trait
-class PluginTrait extends TraitValid {
+class PluginTrait extends Trait {
   /** Configures the App to which this plugin is added */
   build(_app: App): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /** Has the plugin finished its setup? */
@@ -54,21 +52,20 @@ export enum PluginsState {
 /** A dummy plugin that's to temporarily occupy an entry in an app's plugin registry */
 export class PlaceholderPlugin {}
 
-implTrait(PlaceholderPlugin, Plugin, {
+Plugin.implFor(PlaceholderPlugin, {
   build(_app: App): void {},
 });
 
 export interface PlaceholderPlugin extends Plugin {}
 
-@trait
-export class Plugins extends TraitValid {
+export class Plugins extends Trait {
   addToApp(_app: App): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
 // Implement Plugins for Plugin
-implTrait(Plugin, Plugins, {
+Plugins.implFor(Plugin, {
   addToApp(app: App): void {
     const result = app.addBoxedPlugin(this);
     if (result.isErr()) {
@@ -85,7 +82,7 @@ implTrait(Plugin, Plugins, {
 
 interface PluginTrait extends Plugins {}
 
-implTrait(Array<Plugin>, Plugins, {
+Plugins.implFor(Array<Plugin>, {
   addToApp(app: App): void {
     for (const plugin of this) {
       plugin.addToApp(app);
@@ -99,10 +96,9 @@ export class PluginGroupMarker {}
 export class PluginsTupleMarker {}
 
 /** Plugin group trait */
-@trait
-class PluginGroupTrait extends TraitValid {
+class PluginGroupTrait extends Trait {
   build(): PluginGroupBuilder {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
@@ -139,7 +135,7 @@ export class FnPlugin {
   constructor(public fn: (app: App) => void) {}
 }
 
-implTrait(FnPlugin, Plugin, {
+Plugin.implFor(FnPlugin, {
   build(app: App): void {
     this.fn(app);
   },

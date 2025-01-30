@@ -1,5 +1,4 @@
-import { TraitValid } from '@sciurus/utils';
-import { Constructor, HashMap, implTrait, Ptr, trait, Vec } from 'rustable';
+import { Constructor, HashMap, Ptr, Trait, Vec } from 'rustable';
 import { ComponentId } from '../component';
 import { Entity } from '../entity/base';
 import { DeferredWorld } from '../world/deferred';
@@ -45,8 +44,7 @@ export class Trigger<E, B extends object = {}> {
   }
 }
 
-@trait
-export class TriggerTargets extends TraitValid {
+export class TriggerTargets extends Trait {
   /** The components the trigger should target. */
   components(): Vec<ComponentId> {
     return Vec.new();
@@ -58,19 +56,19 @@ export class TriggerTargets extends TraitValid {
   }
 }
 
-implTrait(Entity, TriggerTargets, {
+TriggerTargets.implFor(Entity, {
   entities(): Vec<Entity> {
     return Vec.from([this]);
   },
 });
 
-implTrait(Number, TriggerTargets, {
+TriggerTargets.implFor(Number, {
   components(): Vec<ComponentId> {
     return Vec.from([this.valueOf()]);
   },
 });
 
-implTrait(Array, TriggerTargets, {
+TriggerTargets.implFor(Array, {
   components(): Vec<ComponentId> {
     return Vec.from<number>(
       this.filter((c) => c !== undefined && Number.isInteger(c)).map((c) => c as number),

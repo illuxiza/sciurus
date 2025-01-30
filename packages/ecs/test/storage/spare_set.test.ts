@@ -2,6 +2,7 @@ import { derive, iter, None, Some } from 'rustable';
 import { Component, ComponentDescriptor, ComponentInfo } from '../../src/component';
 import { Entity, EntityIndex } from '../../src/entity';
 import { SparseSet, SparseSets } from '../../src/storage';
+import '@rustable/iter/advanced'
 
 class Foo {
   constructor(public value: number) {}
@@ -81,7 +82,7 @@ describe('SparseSets', () => {
 
     const collectedSets = iter(sets.iter())
       .map(([id, set]) => [id, set.len()])
-      .sortBy((a, b) => a[0] - b[0]);
+      .sort((a, b) => a[0] - b[0]);
 
     expect(collectedSets.collect()).toEqual([
       [1, 0],

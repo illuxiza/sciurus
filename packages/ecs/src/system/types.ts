@@ -1,5 +1,5 @@
-import { logger, NOT_IMPLEMENTED } from '@sciurus/utils';
-import { trait } from 'rustable';
+import { logger } from '@sciurus/utils';
+import { NotImplementedError, Trait } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access, FilteredAccessSet } from '../query/access';
 
@@ -34,10 +34,9 @@ export namespace ParamWarnPolicy {
   }
 }
 
-@trait
-export class WithParamWarnPolicy {
+export class WithParamWarnPolicy extends Trait {
   withParamWarnPolicy(_warnPolicy: ParamWarnPolicy): this {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   warnParamMissing(): this {
     return this.withParamWarnPolicy(ParamWarnPolicy.Warn);

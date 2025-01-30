@@ -9,7 +9,7 @@ import {
   SystemSet,
   World,
 } from '@sciurus/ecs';
-import { Default, derive, implTrait, Ptr, Vec } from 'rustable';
+import { Default, derive, Ptr, Vec } from 'rustable';
 import { App } from './app';
 import { Plugin } from './plugin';
 
@@ -43,7 +43,7 @@ import { Plugin } from './plugin';
  * [`PipelinedRenderingPlugin`]: https://docs.rs/bevy/latest/bevy/render/pipelined_rendering/struct.PipelinedRenderingPlugin.html
  * [`SubApp`]: crate::SubApp
  */
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class Main {
   static runMain = system([World, Local(Boolean)], (world: World, runAtLeastOnce: Ptr<Boolean>) => {
     if (!runAtLeastOnce.valueOf()) {
@@ -66,52 +66,52 @@ export class Main {
  *
  * See the [`Main`] schedule for some details about how schedules are run.
  */
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class PreStartup {}
 
 /** The schedule that runs once when the app starts.
  *
  * See the `Main` schedule for some details about how schedules are run.
  */
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class Startup {}
 
 /** The schedule that runs once after `Startup`.
  *
  * See the `Main` schedule for some details about how schedules are run.
  */
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class PostStartup {}
 
 /** Runs first in the schedule.
  *
  * See the `Main` schedule for some details about how schedules are run.
  */
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class First {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class PreUpdate {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class RunFixedMainLoop {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class FixedFirst {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class FixedPreUpdate {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class FixedUpdate {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class FixedPostUpdate {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class FixedLast {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class FixedMain {
   static runFixedMain = system([World], (world: World) => {
     world.resourceScope(FixedMainScheduleOrder, (world, order: Mut<FixedMainScheduleOrder>) => {
@@ -122,16 +122,16 @@ export class FixedMain {
   });
 }
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class Update {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class SpawnScene {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class PostUpdate {}
 
-@derive([ScheduleLabel])
+@derive([Default, ScheduleLabel])
 export class Last {}
 
 @derive([SystemSet])
@@ -241,7 +241,9 @@ export class FixedMainScheduleOrder {
 }
 
 /** Initializes the [`Main`] schedule, sub schedules, and resources */
-export class MainSchedulePlugin {
+export class MainSchedulePlugin {}
+
+Plugin.implFor(MainSchedulePlugin, {
   build(app: App): void {
     // Simple "facilitator" schedules benefit from simpler single threaded scheduling
     const mainSchedule = new Schedule(Main);
@@ -269,10 +271,8 @@ export class MainSchedulePlugin {
           RunFixedMainLoopSystem.AfterFixedMainLoop,
         ].chain(),
       );
-  }
-}
-
-implTrait(MainSchedulePlugin, Plugin);
+  },
+});
 
 /** Set enum for the systems that want to run inside [`RunFixedMainLoop`] */
 @derive([SystemSet])

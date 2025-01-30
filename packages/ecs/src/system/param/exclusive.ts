@@ -1,13 +1,11 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { Constructor, implTrait, trait, useTrait } from 'rustable';
+import { Constructor, NotImplementedError, Trait } from 'rustable';
 import { World } from '../../world/base';
 import { SystemMeta } from '../types';
 
 /**
  * A trait implemented for all exclusive system parameters.
  */
-@trait
-export class ExclusiveSystemParam<State = any, Item = any> extends TraitValid {
+export class ExclusiveSystemParam<State = any, Item = any> extends Trait {
   isWorld(): boolean {
     return false;
   }
@@ -15,18 +13,21 @@ export class ExclusiveSystemParam<State = any, Item = any> extends TraitValid {
    * Creates a new instance of this param's State.
    */
   initExclusiveState(_world: World, _systemMeta: SystemMeta): State {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /**
    * Creates a parameter to be passed into an ExclusiveSystemParamFunction.
    */
   getExclusiveParam(_state: State, _systemMeta: SystemMeta, _input: any): Item {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-implTrait(Array<ExclusiveSystemParam>, ExclusiveSystemParam, {
+ExclusiveSystemParam.implFor<
+  typeof ExclusiveSystemParam<any[]>,
+  typeof Array<ExclusiveSystemParam>
+>(Array<ExclusiveSystemParam>, {
   initExclusiveState(
     this: Array<ExclusiveSystemParam>,
     world: World,
@@ -47,15 +48,14 @@ implTrait(Array<ExclusiveSystemParam>, ExclusiveSystemParam, {
 
 function into(param: Constructor<IntoExclusiveSystemParam> | ExclusiveSystemParam) {
   if (typeof param === 'function') {
-    return useTrait(param, IntoExclusiveSystemParam).intoExclusiveSystemParam();
+    return IntoExclusiveSystemParam.wrap(param).intoExclusiveSystemParam();
   } else {
     return param;
   }
 }
 
-@trait
-export class IntoExclusiveSystemParam {
+export class IntoExclusiveSystemParam extends Trait {
   static intoExclusiveSystemParam(): ExclusiveSystemParam {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }

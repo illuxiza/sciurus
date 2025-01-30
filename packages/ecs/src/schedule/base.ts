@@ -31,7 +31,7 @@ import { ScheduleGraph } from './schedule_graph';
 import { IntoSystemSet, ScheduleLabel, SystemSet } from './set';
 import { ScheduleBuildError, ScheduleBuildSettings } from './types';
 
-@derive(ScheduleLabel)
+@derive([Default, ScheduleLabel])
 export class DefaultSchedule {
   static new() {
     return new DefaultSchedule();
@@ -46,14 +46,10 @@ export class Schedule {
   executorInitialized = false;
 
   constructor(label: any = DefaultSchedule) {
-    if (typeof label === 'function') {
-      this.label = ScheduleLabel.wrap(new (label as new () => object)());
-    } else {
-      this.label = ScheduleLabel.wrap(label);
-    }
+    this.label = ScheduleLabel.label(label);
   }
 
-  addSystems(systems: any): Schedule {
+  addSystems(systems: IntoConfigs): Schedule {
     this.graph.processConfigs(ScheduleSystem, IntoConfigs.wrap(systems).intoConfigs(), false);
     return this;
   }
@@ -200,23 +196,28 @@ export class Schedules {
     return this.inner.insert(schedule.label, schedule);
   }
 
-  remove<T extends object>(label: T): Option<Schedule> {
+  remove(label: any): Option<Schedule> {
+    label = ScheduleLabel.label(label);
     return this.inner.remove(label);
   }
 
   removeEntry<T extends object>(label: T): Option<[T, Schedule]> {
+    label = ScheduleLabel.label(label) as T;
     return this.inner.removeEntry(label) as Option<[T, Schedule]>;
   }
 
-  contains<T extends object>(label: T): boolean {
+  contains(label: any): boolean {
+    label = ScheduleLabel.label(label);
     return this.inner.containsKey(label);
   }
 
-  get<T extends object>(label: T): Option<Schedule> {
+  get(label: any): Option<Schedule> {
+    label = ScheduleLabel.label(label);
     return this.inner.get(label);
   }
 
-  entry<T>(label: T): Schedule {
+  entry(label: any): Schedule {
+    label = ScheduleLabel.label(label);
     return this.inner.entry(label).orInsertWith(() => new Schedule(label));
   }
 
@@ -257,12 +258,12 @@ export class Schedules {
     logger.info(message);
   }
 
-  addSystems<T extends object>(label: T, system: any) {
+  addSystems(label: any, system: any) {
     this.entry(label).addSystems(system);
     return this;
   }
 
-  configureSets<T extends object>(label: T, sets: any): this {
+  configureSets(label: any, sets: any): this {
     this.entry(label).configureSets(sets);
     return this;
   }

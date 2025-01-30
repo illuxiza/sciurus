@@ -77,7 +77,7 @@ class TarjanScc {
   }
 
   private visitOnce(v: NodeId, vIsLocalRoot: boolean): Option<number> {
-    const nodeV = this.nodes[this.graph.toIndex(v)];
+    const nodeV = this.nodes.getUnchecked(this.graph.toIndex(v));
 
     if (nodeV.rootIndex.isNone()) {
       const vIndex = this.index;
@@ -104,18 +104,18 @@ class TarjanScc {
           if (wOpt.isNone()) continue;
           const w = wOpt.unwrap();
           if (
-            nodes[this.graph.toIndex(v)].rootIndex.unwrap() >
-            nodes[this.graph.toIndex(w)].rootIndex.unwrap()
+            nodes.getUnchecked(this.graph.toIndex(v)).rootIndex.unwrap() >
+            nodes.getUnchecked(this.graph.toIndex(w)).rootIndex.unwrap()
           ) {
             start = i + 1;
             break;
           } else {
-            nodes[this.graph.toIndex(w)].rootIndex = Some(c);
+            nodes.getUnchecked(this.graph.toIndex(w)).rootIndex = Some(c);
             indexAdjustment += 1;
           }
         }
 
-        nodes[this.graph.toIndex(v)].rootIndex = Some(c);
+        nodes.getUnchecked(this.graph.toIndex(v)).rootIndex = Some(c);
         this.stack.push(v);
 
         this.start = Some(start);
@@ -127,7 +127,7 @@ class TarjanScc {
     }
 
     // If a neighbor hasn't been visited yet...
-    if (this.nodes[this.graph.toIndex(w)].rootIndex.isNone()) {
+    if (this.nodes.getUnchecked(this.graph.toIndex(w)).rootIndex.isNone()) {
       // Push the current node and the neighbor back onto the visitation stack
       this.visitationStack.push([v, vIsLocalRoot]);
       this.visitationStack.push([w, true]);
@@ -135,10 +135,10 @@ class TarjanScc {
     }
 
     if (
-      this.nodes[this.graph.toIndex(w)].rootIndex.unwrap() <
-      this.nodes[this.graph.toIndex(v)].rootIndex.unwrap()
+      this.nodes.getUnchecked(this.graph.toIndex(w)).rootIndex.unwrap() <
+      this.nodes.getUnchecked(this.graph.toIndex(v)).rootIndex.unwrap()
     ) {
-      this.nodes[this.graph.toIndex(v)].rootIndex = this.nodes[this.graph.toIndex(w)].rootIndex;
+      this.nodes.getUnchecked(this.graph.toIndex(v)).rootIndex = this.nodes.getUnchecked(this.graph.toIndex(w)).rootIndex;
       vIsLocalRoot = false;
     }
 

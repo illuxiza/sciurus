@@ -1,5 +1,5 @@
-import { getCaller, logger } from '@sciurus/utils';
-import { Constructor, Default, derive, implTrait, None, Option, Some } from 'rustable';
+import { logger } from '@sciurus/utils';
+import { Constructor, Default, derive, Location, None, Option, Some } from 'rustable';
 import { InsertMode } from '../../bundle/types';
 import { Resource } from '../../component';
 import { Entity } from '../../entity/base';
@@ -76,7 +76,7 @@ export class Commands {
   getOrSpawn(entity: Entity, caller?: string): EntityCommands {
     this.queue(
       commandFn((world: World) => {
-        world.getOrSpawn(entity, caller || getCaller());
+        world.getOrSpawn(entity, caller || new Location().caller()!.name);
       }),
     );
     return new EntityCommands(entity, this);
@@ -114,7 +114,7 @@ export class Commands {
   spawnBatch<T extends object>(components: IterableIterator<T>): void {
     this.queue(
       commandFn((world: World) => {
-        SpawnBatchIter.new(world, components, getCaller(1)).flush();
+        SpawnBatchIter.new(world, components, new Location().caller(1)!.name).flush();
       }),
     );
   }
@@ -321,7 +321,7 @@ export class Commands {
   }
 }
 
-implTrait(Commands, IntoSystemParam, {
+IntoSystemParam.implFor(Commands, {
   static: {
     intoSystemParam(): CommandsSystemParam {
       return new CommandsSystemParam();

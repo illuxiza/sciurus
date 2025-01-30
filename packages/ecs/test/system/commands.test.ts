@@ -1,4 +1,4 @@
-import { Default, derive, implTrait, Type, typeId } from 'rustable';
+import { Default, derive,  Type, typeId } from 'rustable';
 import { Component, component, Resource } from '../../src/component';
 import { QueryData } from '../../src/query/fetch';
 import { Commands } from '../../src/system/commands';
@@ -66,7 +66,7 @@ describe('Commands', () => {
 
     const StringW = Type(W<String>, [String]);
 
-    implTrait(StringW, FromWorld, {
+    FromWorld.implFor(StringW, {
       static: {
         fromWorld(world: World) {
           const v = world.resource(W<number>);

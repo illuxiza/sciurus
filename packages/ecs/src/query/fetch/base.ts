@@ -1,27 +1,23 @@
-import { NOT_IMPLEMENTED } from '@sciurus/utils';
-import { Constructor, implTrait, trait } from 'rustable';
+import { Constructor, NotImplementedError, Trait } from 'rustable';
 import { ComponentId } from '../../component';
 import { WorldQuery } from '../world_query';
 
-@trait
 export class QueryData<Item = any, Fetch = any, State = any> extends WorldQuery<
   Item,
   Fetch,
   State
 > {}
 
-@trait
 export class ReadonlyQueryData<Item = any, Fetch = any, State = any> extends QueryData<
   Item,
   Fetch,
   State
 > {}
 
-@trait
-export class IntoFetch<D> {
+export class IntoFetch<D> extends Trait {
   DATA!: QueryData<D>;
   static intoFetch<D extends object>(): QueryData<D> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   static shrink(item: any): any {
     return this.intoFetch().shrink(item);
@@ -64,7 +60,9 @@ export class IntoFetch<D> {
   }
 }
 
-implTrait(Array, QueryData);
+QueryData.implFor(Array);
+
+export const EMPTY_QUERY_DATA = QueryData.wrap([]) as QueryData<any, any, any>;
 
 type Item<D> = D extends QueryData<infer I> ? I : D extends Constructor<infer I> ? I : never;
 

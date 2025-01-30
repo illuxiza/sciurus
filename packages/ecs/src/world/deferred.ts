@@ -1,4 +1,4 @@
-import { Constructor, None, Option, Ptr, Result, RustIter, useTrait, Vec } from 'rustable';
+import { Constructor, None, Option, Ptr, Result, RustIter, Vec } from 'rustable';
 import { Archetype } from '../archetype/base';
 import { ComponentHook, ComponentHooks, ComponentId } from '../component';
 import { Entity } from '../entity/base';
@@ -160,7 +160,7 @@ export class DeferredWorld {
       const op = this.getEntity(target)
         .ok()
         .andThen((entity: EntityWorld) => entity.getComponents(t))
-        .andThen((item) => useTrait(t, Traversal).traverse(item, data));
+        .andThen((item) => Traversal.wrap(t).traverse(item, data));
       if (op.isSome()) {
         target = op.unwrap();
       } else {

@@ -1,9 +1,10 @@
-import { Constructor, implTrait, Ptr, useTrait, Vec } from 'rustable';
+import { Constructor, Ptr, Vec } from 'rustable';
 import { Bundle } from '../bundle/base';
 import { Component, ComponentHook, ComponentHooks, ComponentId } from '../component';
 import { Entity } from '../entity';
 import { Event } from '../event';
 import { StorageType } from '../storage';
+import { System } from '../system';
 import { IntoObserverSystem, ObserverSystem } from '../system/observer';
 import { World } from '../world';
 import { DeferredWorld } from '../world/deferred';
@@ -46,7 +47,7 @@ export class ObserverState {
   }
 }
 
-implTrait(ObserverState, Component, {
+Component.implFor(ObserverState, {
   static: {
     storageType(): StorageType {
       return StorageType.SparseSet;
@@ -70,11 +71,11 @@ implTrait(ObserverState, Component, {
 });
 
 export class Observer {
-  public system: any;
+  public system: System;
   public descriptor: ObserverDescriptor;
   public hookOnAdd: ComponentHook;
 
-  constructor(eventType: Constructor, bundleType: any, system: any) {
+  constructor(eventType: Constructor, bundleType: any, system: IntoObserverSystem) {
     this.system = IntoObserverSystem.wrap(system).intoSystem();
     this.descriptor = new ObserverDescriptor();
     this.hookOnAdd = hookOnAdd(eventType, bundleType);
@@ -100,7 +101,7 @@ export class Observer {
   }
 }
 
-implTrait(Observer, Component, {
+Component.implFor(Observer, {
   static: {
     storageType(): StorageType {
       return StorageType.SparseSet;
@@ -154,15 +155,11 @@ function hookOnAdd<E extends Event, B extends Bundle, S extends ObserverSystem<E
 ): ComponentHook {
   return (world: DeferredWorld, entity: Entity, _: ComponentId) => {
     world.commands.queue((world: World) => {
-      const eventId = useTrait(eventType, Event).registerComponentId(world);
+      const eventId = Event.wrap(eventType).registerComponentId(world);
       const components = Vec.new<ComponentId>();
-      useTrait(bundleType, Bundle).componentIds(
-        world.components,
-        world.storages,
-        (id: ComponentId) => {
-          components.push(id);
-        },
-      );
+      Bundle.wrap(bundleType).componentIds(world.components, world.storages, (id: ComponentId) => {
+        components.push(id);
+      });
       const descriptor = new ObserverDescriptor(Vec.from([eventId]), Vec.from(components));
 
       // Initialize System

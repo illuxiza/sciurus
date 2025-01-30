@@ -1,22 +1,21 @@
-import { implTrait } from 'rustable';
 import { Tick } from '../../change_detection';
 import { Entities } from '../../entity/collection';
 import { World } from '../../world';
 import { SystemMeta } from '../types';
 import { IntoSystemParam, SystemParam } from './base';
 
-class EntitiesSystemParam {
-  initParamState(_world: World, _systemMeta: SystemMeta): void {}
-  getParam(_state: void, _systemMeta: SystemMeta, world: World, _changeTick: Tick): Entities {
-    return world.entities;
-  }
-}
+class EntitiesSystemParam {}
 
-implTrait(EntitiesSystemParam, SystemParam);
+SystemParam.implFor(EntitiesSystemParam, {
+  initParamState(_world: World, _systemMeta: SystemMeta): void {},
+  getParam(_state: unknown, _systemMeta: SystemMeta, world: World, _changeTick: Tick): Entities {
+    return world.entities;
+  },
+});
 
 interface EntitiesSystemParam extends SystemParam<void, Entities> {}
 
-implTrait(Entities, IntoSystemParam, {
+IntoSystemParam.implFor(Entities, {
   static: {
     intoSystemParam(): EntitiesSystemParam {
       return new EntitiesSystemParam();

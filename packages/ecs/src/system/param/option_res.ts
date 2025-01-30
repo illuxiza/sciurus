@@ -1,4 +1,4 @@
-import { Constructor, createFactory, implTrait, None, Option, Some } from 'rustable';
+import { Constructor, createFactory, None, Option, Some } from 'rustable';
 import { Tick, Ticks } from '../../change_detection';
 import { Res as ResValue } from '../../change_detection/res';
 import { ComponentId } from '../../component';
@@ -30,7 +30,7 @@ class OptionResParam<T extends object = any> {
   }
 }
 
-implTrait(OptionResParam, SystemParam, {
+SystemParam.implFor<typeof SystemParam<ComponentId>, typeof OptionResParam>(OptionResParam, {
   initParamState(this: OptionResParam, _world: World, _systemMeta: SystemMeta): ComponentId {
     const componentId = _world.components.registerResource(this.valueType);
     const archetypeComponentId = _world.initializeResourceInternal(componentId).id;
@@ -63,7 +63,7 @@ implTrait(OptionResParam, SystemParam, {
 
 interface OptionResParam<T extends object> extends SystemParam<ComponentId, OptionRes<T>> {}
 
-implTrait(OptionResParam, ReadonlySystemParam);
+ReadonlySystemParam.implFor(OptionResParam);
 
 function createParam<T extends object>(valueType: Constructor<T>): OptionResParam<T> {
   return new OptionResParam<T>(valueType);

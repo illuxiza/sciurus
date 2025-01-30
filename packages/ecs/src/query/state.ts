@@ -1,3 +1,4 @@
+import '@rustable/iter/advanced';
 import { FixedBitSet, logger } from '@sciurus/utils';
 import { Err, iter, None, Ok, Option, Ptr, Result, RustIter, Some, Vec } from 'rustable';
 import { Archetype } from '../archetype/base';
@@ -11,7 +12,7 @@ import { Access, FilteredAccess } from './access';
 import { QueryBuilder } from './builder';
 import { QueryEntityError, QuerySingleError } from './error';
 import { QueryData } from './fetch';
-import { QueryFilter } from './filter/base';
+import { EMPTY_QUERY_FILTER, QueryFilter } from './filter/base';
 import { QueryIter } from './iter';
 
 /**
@@ -268,7 +269,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
             .get(componentId)
             .map((index) => Vec.from(index.keys())),
         )
-        .minByKey((v) => v.len());
+        .minBy((v) => v.len());
 
       if (potentialArchetypes.isSome()) {
         for (const archetypeId of potentialArchetypes.unwrap()) {
@@ -389,7 +390,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   }
 
   transmute(newD: QueryData, world: World): QueryState {
-    return this.transmuteFiltered(newD, [], world);
+    return this.transmuteFiltered(newD, EMPTY_QUERY_FILTER, world);
   }
 
   transmuteFiltered<NewD extends QueryData, NewF extends QueryFilter>(
@@ -445,7 +446,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   }
 
   join(orderD: QueryData, newD: QueryData, world: World, other: QueryState): QueryState {
-    return this.joinFiltered(orderD, [], newD, [], world, other);
+    return this.joinFiltered(orderD, EMPTY_QUERY_FILTER, newD, EMPTY_QUERY_FILTER, world, other);
   }
 
   joinFiltered<

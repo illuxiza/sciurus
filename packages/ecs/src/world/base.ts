@@ -1,11 +1,11 @@
-import { getCaller, logger } from '@sciurus/utils';
+import { logger } from '@sciurus/utils';
 import {
   Constructor,
   defaultVal,
   Enum,
   Err,
   HashMap,
-  implTrait,
+  Location,
   None,
   Ok,
   Option,
@@ -262,7 +262,7 @@ export class World {
   }
 
   getOrSpawn(entity: Entity, caller?: string): Option<EntityWorld> {
-    return this.getOrSpawnWithCaller(entity, caller || getCaller());
+    return this.getOrSpawnWithCaller(entity, caller || new Location().caller()!.name);
   }
 
   protected getOrSpawnWithCaller(entity: Entity, caller?: string): Option<EntityWorld> {
@@ -324,7 +324,7 @@ export class World {
     this.flush();
     const entity = this.entities.alloc();
     // SAFETY: entity was just allocated
-    return this.spawnAtEmptyInternal(entity, getCaller());
+    return this.spawnAtEmptyInternal(entity, new Location().caller()!.name);
   }
 
   spawn<B extends object>(bundle: B): EntityWorld {
@@ -332,13 +332,17 @@ export class World {
     const changeTick = this.changeTick;
     const entity = this.entities.alloc();
     const bundleSpawner = BundleSpawner.new(bundle, this, changeTick);
-    let entityLocation = bundleSpawner.spawnNonExistent(entity, bundle, getCaller());
+    let entityLocation = bundleSpawner.spawnNonExistent(
+      entity,
+      bundle,
+      new Location().caller()!.name,
+    );
 
     if (!this._command_queue.isEmpty()) {
       this.flushCommands();
       entityLocation = this.entities.get(entity).unwrapOr(EntityLocation.INVALID);
     }
-    this.entities.setSpawnedOrDespawnedBy(entity.index, getCaller());
+    this.entities.setSpawnedOrDespawnedBy(entity.index, new Location().caller()!.name);
     return new EntityWorld(this, entity, entityLocation);
   }
 
@@ -347,7 +351,7 @@ export class World {
     const tableRow = this.storages.tables.getUnchecked(archetype.tableId).allocate(entity);
     const location = archetype.allocate(entity, tableRow);
     this.entities.set(entity.index, location);
-    this.entities.setSpawnedOrDespawnedBy(entity.index, caller ?? getCaller(1));
+    this.entities.setSpawnedOrDespawnedBy(entity.index, caller || new Location().caller(1)!.name);
     return new EntityWorld(this, entity, location);
   }
 
@@ -386,11 +390,11 @@ export class World {
   }
 
   despawn(entity: Entity): boolean {
-    return this.despawnWithCaller(entity, getCaller(), true);
+    return this.despawnWithCaller(entity, new Location().caller()!.name, true);
   }
 
   tryDespawn(entity: Entity): boolean {
-    return this.despawnWithCaller(entity, getCaller(), false);
+    return this.despawnWithCaller(entity, new Location().caller()!.name, false);
   }
 
   protected despawnWithCaller(entity: Entity, caller: string, logWarning: boolean): boolean {
@@ -433,7 +437,7 @@ export class World {
   initResource<R extends object>(res: Constructor<R>, caller?: string): ComponentId {
     const componentId = this.components.registerResource(res);
     if (this.storages.resources.get(componentId).mapOr(true, (v) => v.isPresent())) {
-      const value = FromWorld.staticWrap(res).fromWorld(this);
+      const value = FromWorld.wrap(res).fromWorld(this);
       this.insertResourceById(componentId, value, caller);
     }
     return componentId;
@@ -589,6 +593,7 @@ export class World {
       Some: (schedules) => {
         schedules.checkChangeTicks(changeTick);
       },
+      None: () => {},
     });
 
     this._lastCheckTick = changeTick;
@@ -703,7 +708,7 @@ export class World {
     const componentId = this.components.registerResource(resType);
     let data = this.initializeResourceInternal(componentId);
     if (!data.isPresent()) {
-      const value = FromWorld.staticWrap(resType).fromWorld(this);
+      const value = FromWorld.wrap(resType).fromWorld(this);
       data.insert(value, changeTick, caller);
     }
     const value = data.getMut(lastChangeTick, changeTick).unwrap();
@@ -774,7 +779,7 @@ export class World {
       this.storages,
     );
 
-    class SpawnOrInsert extends Enum {
+    class SpawnOrInsert extends Enum<typeof SpawnOrInsert> {
       @variant
       static Spawn(_spawner: BundleSpawner): SpawnOrInsert {
         throw new Error();
@@ -832,8 +837,7 @@ export class World {
         DidNotExist: () => {
           spawnOrInsert.match({
             Spawn: (spawner) => {
-              const newSpawner = spawner.spawnNonExistent(entity, bundle, caller);
-              spawnOrInsert = SpawnOrInsert.Spawn(newSpawner);
+              spawner.spawnNonExistent(entity, bundle, caller);
             },
             Insert: () => {
               const spawner = BundleSpawner.newWithId(this, bundleId, changeTick);
@@ -1244,7 +1248,7 @@ export class World {
               const byComponent = this.archetypes.byComponent.get(component);
               if (byComponent.isSome()) {
                 for (const [archetype] of byComponent.unwrap()) {
-                  const archetypeObj = this.archetypes.archetypes[archetype];
+                  const archetypeObj = this.archetypes.archetypes.getUnchecked(archetype);
                   if (archetypeObj.contains(component)) {
                     const noLongerObserved = archetypeObj.components.all(
                       (id) => !cache.componentObservers.containsKey(id),
@@ -1298,7 +1302,7 @@ export class World {
   }
 
   flushEntities() {
-    const emptyArchetype = this.archetypes.emptyMut();
+    const emptyArchetype = this.archetypes.empty();
     const table = this.storages.tables.getUnchecked(emptyArchetype.tableId);
     // PERF: consider pre-allocating space for flushed entities
     this.entities.flush((entity, location) => {
@@ -1334,11 +1338,8 @@ class LastTickGuard {
   }
 }
 
-implTrait(World, RunSystemOnce, {
-  runSystemOnceWith(this: World, system: any, input: any): Result<any, Error> {
-    if (!IntoSystem.is(system)) {
-      throw new Error('System must implement IntoSystem.');
-    }
+RunSystemOnce.implFor(World, {
+  runSystemOnceWith<System>(this: World, system: System, input: any): Result<any, Error> {
     const into = IntoSystem.wrap(system).intoSystem();
     into.initialize(this);
     if (into.validateParam(this)) {
@@ -1358,12 +1359,12 @@ class WorldSystemParam {
   }
 }
 
-implTrait(WorldSystemParam, SystemParam);
-implTrait(WorldSystemParam, ExclusiveSystemParam);
+SystemParam.implFor(WorldSystemParam);
+ExclusiveSystemParam.implFor(WorldSystemParam);
 
 interface WorldSystemParam extends SystemParam<void, World> {}
 
-implTrait(World, IntoSystemParam, {
+IntoSystemParam.implFor(World, {
   static: {
     intoSystemParam(): WorldSystemParam {
       return new WorldSystemParam();

@@ -1,4 +1,4 @@
-import { Constructor, createFactory, derive, implTrait, iter, Option, RustIter } from 'rustable';
+import { Constructor, createFactory, derive, iter, Option, RustIter } from 'rustable';
 import { Tick } from './change_detection';
 import { Component, ComponentId } from './component';
 import { Entity } from './entity';
@@ -126,7 +126,7 @@ class RemovedComponentsParam<T extends Component> {
   }
 }
 
-implTrait(RemovedComponentsParam, SystemParam);
+SystemParam.implFor(RemovedComponentsParam);
 
 interface RemovedComponentsParam<T extends Component>
   extends SystemParam<[ComponentId, RemovedComponentReader<T>], RemovedComponentsInner<T>> {}

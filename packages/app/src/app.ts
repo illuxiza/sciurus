@@ -42,11 +42,11 @@ export class SubApp {
   /** The data of this application */
   public world: World;
   /** List of plugins that have been added */
-  private __pluginRegistry = Vec.new<Plugin>();
+  private _plugReg = Vec.new<Plugin>();
   /** The names of plugins that have been added to this app */
   private __pluginNames = new HashSet<string>();
   /** Panics if an update is attempted while plugins are building */
-  private __pluginBuildDepth: number = 0;
+  private _plugBuildDep: number = 0;
   private __pluginsState: PluginsState = PluginsState.Adding;
   /** The schedule that will be run by update */
   public updateSchedule: Option<ScheduleLabel> = None;
@@ -219,7 +219,7 @@ export class SubApp {
 
   /** Get added plugins of a specific type */
   getAddedPlugins<T extends object>(pluginType: Constructor<T>): T[] {
-    return this.__pluginRegistry
+    return this._plugReg
       .iter()
       .filter((p) => p instanceof pluginType)
       .map((p) => p as T)
@@ -228,15 +228,15 @@ export class SubApp {
 
   /** Check if plugins are being built */
   private isBuildingPlugins(): boolean {
-    return this.__pluginBuildDepth > 0;
+    return this._plugBuildDep > 0;
   }
 
   /** Get the state of plugins */
   pluginsState(): PluginsState {
     if (this.__pluginsState === PluginsState.Adding) {
       let state = PluginsState.Ready;
-      const plugins = Vec.from([...this.__pluginRegistry]);
-      this.__pluginRegistry = Vec.new();
+      const plugins = Vec.from([...this._plugReg]);
+      this._plugReg = Vec.new();
 
       this.runAsApp((app) => {
         for (const plugin of plugins) {
@@ -247,7 +247,7 @@ export class SubApp {
         }
       });
 
-      this.__pluginRegistry = plugins;
+      this._plugReg = plugins;
       return state;
     }
     return this.__pluginsState;
@@ -255,27 +255,27 @@ export class SubApp {
 
   /** Finish plugin setup */
   finish(): void {
-    const plugins = Vec.from([...this.__pluginRegistry]);
-    this.__pluginRegistry = Vec.new();
+    const plugins = Vec.from([...this._plugReg]);
+    this._plugReg = Vec.new();
     this.runAsApp((app) => {
       for (const p of plugins) {
         p.finish(app);
       }
     });
-    this.__pluginRegistry = plugins;
+    this._plugReg = plugins;
     this.__pluginsState = PluginsState.Finished;
   }
 
   /** Clean up plugins */
   cleanup(): void {
-    const plugins = Vec.from([...this.__pluginRegistry]);
-    this.__pluginRegistry = Vec.new();
+    const plugins = Vec.from([...this._plugReg]);
+    this._plugReg = Vec.new();
     this.runAsApp((app) => {
       for (const p of plugins) {
         p.cleanup(app);
       }
     });
-    this.__pluginRegistry = plugins;
+    this._plugReg = plugins;
     this.__pluginsState = PluginsState.Cleaned;
   }
 }
@@ -471,7 +471,7 @@ export class App {
     let overallState = this.main().pluginsState();
     if (overallState === PluginsState.Adding) {
       overallState = PluginsState.Ready;
-      let plugins = this.main()['__pluginRegistry'];
+      let plugins = this.main()['_plugReg'];
       for (let plugin of plugins) {
         // plugins installed to main need to see all sub-apps
         if (!plugin.ready(this)) {
@@ -492,7 +492,7 @@ export class App {
   /** Finishes plugin setup */
   finish(): void {
     // Finish plugins in main app
-    const plugins = this.main()['__pluginRegistry'];
+    const plugins = this.main()['_plugReg'];
     for (const plugin of plugins) {
       plugin.finish(this);
     }
@@ -508,7 +508,7 @@ export class App {
   /** Cleans up plugins */
   cleanup(): void {
     // Cleanup plugins in main app
-    const plugins = this.main()['__pluginRegistry'];
+    const plugins = this.main()['_plugReg'];
     for (const plugin of plugins) {
       plugin.cleanup(this);
     }
@@ -571,19 +571,19 @@ export class App {
       return Err(AppError.duplicatePlugin(plugin.name()));
     }
 
-    const index = this.main()['__pluginRegistry'].len();
-    this.main()['__pluginRegistry'].push(new PlaceholderPlugin());
+    const index = this.main()['_plugReg'].len();
+    this.main()['_plugReg'].push(new PlaceholderPlugin());
 
-    this.main()['__pluginBuildDepth']++;
+    this.main()['_plugBuildDep']++;
 
     try {
       plugin.build(this);
     } finally {
       this.main()['__pluginNames'].insert(plugin.name());
-      this.main()['__pluginBuildDepth']--;
+      this.main()['_plugBuildDep']--;
     }
 
-    this.main()['__pluginRegistry'][index] = plugin;
+    this.main()['_plugReg'].set(index, plugin);
     return Ok(undefined);
   }
 

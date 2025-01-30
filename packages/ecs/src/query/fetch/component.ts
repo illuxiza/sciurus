@@ -1,4 +1,4 @@
-import { Constructor, implTrait, None, Option, Ptr, Some, useTrait } from 'rustable';
+import { Constructor, None, Option, Ptr, Some } from 'rustable';
 import { Archetype } from '../../archetype';
 import { Component, ComponentId, Components } from '../../component';
 import { Entity } from '../../entity/base';
@@ -15,7 +15,7 @@ export class StorageSwitch<C extends object, T, S> {
 
   constructor(component: Constructor<C>, table: () => T, sparseSet: () => S) {
     this.component = component;
-    if (useTrait(component, Component).storageType() === StorageType.Table) {
+    if (Component.wrap(component).storageType() === StorageType.Table) {
       this.table = table();
     } else {
       this.sparseSet = sparseSet();
@@ -23,14 +23,14 @@ export class StorageSwitch<C extends object, T, S> {
   }
 
   setTable(table: T): void {
-    if (useTrait(this.component, Component).storageType() !== StorageType.Table) {
+    if (Component.wrap(this.component).storageType() !== StorageType.Table) {
       throw new Error('Component must be a table component');
     }
     this.table = table;
   }
 
   extract<R>(table: (t: T) => R, sparseSet: (s: S) => R): R {
-    if (useTrait(this.component, Component).storageType() === StorageType.Table) {
+    if (Component.wrap(this.component).storageType() === StorageType.Table) {
       return table(this.table);
     } else {
       return sparseSet(this.sparseSet);
@@ -57,7 +57,7 @@ export class ComponentFetch<C extends object> {
 
 export interface ComponentFetch<C extends object> extends QueryData<C> {}
 
-implTrait(Component, IntoFetch, {
+IntoFetch.implFor(Component, {
   static: {
     intoFetch<C extends object>(this: Constructor<C>): ComponentFetch<C> {
       return new ComponentFetch<C>(this);
@@ -65,7 +65,7 @@ implTrait(Component, IntoFetch, {
   },
 });
 
-implTrait(ComponentFetch, WorldQuery, {
+WorldQuery.implFor<typeof WorldQuery<ComponentId>, typeof ComponentFetch>(ComponentFetch, {
   shrink(item: any): any {
     return item;
   },
@@ -83,7 +83,7 @@ implTrait(ComponentFetch, WorldQuery, {
     );
   },
   isDense(this: ComponentFetch<any>): boolean {
-    if (useTrait(this.component, Component).storageType() === StorageType.Table) {
+    if (Component.wrap(this.component).storageType() === StorageType.Table) {
       return true;
     }
     return false;
@@ -127,4 +127,4 @@ implTrait(ComponentFetch, WorldQuery, {
   },
 });
 
-implTrait(ComponentFetch, QueryData);
+QueryData.implFor(ComponentFetch);

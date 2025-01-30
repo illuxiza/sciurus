@@ -1,26 +1,22 @@
-import { TraitValid } from '@sciurus/utils';
 import {
   Clone,
   Constructor,
-  Default,
+  deepClone,
   defaultVal,
   derive,
   EnumInstance,
   Enums,
   HashMap,
   HashSet,
-  hasTrait,
-  implTrait,
   macroTrait,
   None,
   Ok,
   Option,
   Result,
   Some,
-  trait,
+  Trait,
   typeId,
   TypeId,
-  useTrait,
   Vec,
 } from 'rustable';
 import { ArchetypeFlags } from './archetype/types';
@@ -35,23 +31,22 @@ const storageSymbol = Symbol('COMPONENT_STORAGE');
 const dropSymbol = Symbol('COMPONENT_DROP');
 const mutSymbol = Symbol('COMPONENT_MUT');
 
-export class ComponentDescriptor {
+export class ComponentDescriptor<T = any> {
   name: string;
   storageType: StorageType;
   typeId: Option<TypeId>;
   mutable: boolean;
   drop: Option<(value: any) => void>;
 
-  constructor(component: any) {
+  constructor(component: Constructor<T>) {
     this.name = component.name;
-    this.storageType =
-      component[storageSymbol] || component['storageType']?.() || StorageType.Table;
+    this.storageType = Component.staticWrap(component).storageType();
     this.typeId = Some(typeId(component));
-    this.mutable = component[mutSymbol] ?? true;
-    this.drop = component[dropSymbol] ? Some(component.drop) : None;
+    this.mutable = (component as any)[mutSymbol] ?? true;
+    this.drop = (component as any)[dropSymbol] ? Some((component as any)[dropSymbol]) : None;
   }
 
-  static new(component: any): ComponentDescriptor {
+  static new<T>(component: Constructor<T>): ComponentDescriptor<T> {
     return new ComponentDescriptor(component);
   }
 }
@@ -74,8 +69,7 @@ export class RequiredComponentsError extends Error {
   }
 }
 
-@trait
-class ComponentTrait extends TraitValid {
+class ComponentTrait extends Trait {
   static [storageSymbol]?: StorageType;
   static registerRequiredComponents(
     _componentId: number,
@@ -98,7 +92,6 @@ export const Component = macroTrait(ComponentTrait);
 
 export interface Component extends ComponentTrait {}
 
-@trait
 class ResourceTrait extends Component {}
 
 export const Resource = macroTrait(ResourceTrait);
@@ -109,8 +102,6 @@ export interface Resource extends ResourceTrait {}
  * Stores metadata for a type of component or resource stored in a specific World.
  */
 export class ComponentInfo {
-  id: ComponentId;
-  descriptor: ComponentDescriptor;
   hooks: ComponentHooks;
   requiredComponents: RequiredComponents;
   requiredBy: HashSet<ComponentId>;
@@ -118,9 +109,10 @@ export class ComponentInfo {
   /**
    * Create a new ComponentInfo.
    */
-  constructor(id: ComponentId, descriptor: ComponentDescriptor) {
-    this.id = id;
-    this.descriptor = descriptor;
+  constructor(
+    public id: ComponentId,
+    public descriptor: ComponentDescriptor,
+  ) {
     this.hooks = new ComponentHooks();
     this.requiredComponents = new RequiredComponents();
     this.requiredBy = new HashSet();
@@ -199,18 +191,18 @@ export type ComponentHook = (
  * and are not intended for general-purpose logic.
  */
 export class ComponentHooks {
-  private __onAdd: Option<ComponentHook>;
-  private __onInsert: Option<ComponentHook>;
-  private __onReplace: Option<ComponentHook>;
-  private __onRemove: Option<ComponentHook>;
-  private __onDespawn: Option<ComponentHook>;
+  private _onAdd: Option<ComponentHook>;
+  private _onInsert: Option<ComponentHook>;
+  private _onReplace: Option<ComponentHook>;
+  private _onRemove: Option<ComponentHook>;
+  private _onDespawn: Option<ComponentHook>;
 
   constructor() {
-    this.__onAdd = None;
-    this.__onInsert = None;
-    this.__onReplace = None;
-    this.__onRemove = None;
-    this.__onDespawn = None;
+    this._onAdd = None;
+    this._onInsert = None;
+    this._onReplace = None;
+    this._onRemove = None;
+    this._onDespawn = None;
   }
 
   /**
@@ -218,10 +210,10 @@ export class ComponentHooks {
    * Returns None if the component already has an onAdd hook.
    */
   tryOnAdd(hook: ComponentHook): Option<this> {
-    if (this.__onAdd.isSome()) {
+    if (this._onAdd.isSome()) {
       return None;
     }
-    this.__onAdd = Some(hook);
+    this._onAdd = Some(hook);
     return Some(this);
   }
 
@@ -230,10 +222,10 @@ export class ComponentHooks {
    * Returns None if the component already has an onInsert hook.
    */
   tryOnInsert(hook: ComponentHook): Option<this> {
-    if (this.__onInsert.isSome()) {
+    if (this._onInsert.isSome()) {
       return None;
     }
-    this.__onInsert = Some(hook);
+    this._onInsert = Some(hook);
     return Some(this);
   }
 
@@ -242,10 +234,10 @@ export class ComponentHooks {
    * Returns None if the component already has an onReplace hook.
    */
   tryOnReplace(hook: ComponentHook): Option<this> {
-    if (this.__onReplace.isSome()) {
+    if (this._onReplace.isSome()) {
       return None;
     }
-    this.__onReplace = Some(hook);
+    this._onReplace = Some(hook);
     return Some(this);
   }
 
@@ -254,18 +246,18 @@ export class ComponentHooks {
    * Returns None if the component already has an onRemove hook.
    */
   tryOnRemove(hook: ComponentHook): Option<this> {
-    if (this.__onRemove.isSome()) {
+    if (this._onRemove.isSome()) {
       return None;
     }
-    this.__onRemove = Some(hook);
+    this._onRemove = Some(hook);
     return Some(this);
   }
 
   tryOnDespawn(hook: ComponentHook): Option<this> {
-    if (this.__onDespawn.isSome()) {
+    if (this._onDespawn.isSome()) {
       return None;
     }
-    this.__onDespawn = Some(hook);
+    this._onDespawn = Some(hook);
     return Some(this);
   }
 
@@ -329,44 +321,32 @@ export class ComponentHooks {
    */
   hasHooks(): boolean {
     return (
-      this.__onAdd.isSome() ||
-      this.__onInsert.isSome() ||
-      this.__onReplace.isSome() ||
-      this.__onRemove.isSome() ||
-      this.__onDespawn.isSome()
+      this._onAdd.isSome() ||
+      this._onInsert.isSome() ||
+      this._onReplace.isSome() ||
+      this._onRemove.isSome() ||
+      this._onDespawn.isSome()
     );
   }
 
-  /**
-   * Get the registered onAdd hook if any
-   */
   get onAddHook(): Option<ComponentHook> {
-    return this.__onAdd;
+    return this._onAdd;
   }
 
-  /**
-   * Get the registered onInsert hook if any
-   */
   get onInsertHook(): Option<ComponentHook> {
-    return this.__onInsert;
+    return this._onInsert;
   }
 
-  /**
-   * Get the registered onReplace hook if any
-   */
   get onReplaceHook(): Option<ComponentHook> {
-    return this.__onReplace;
+    return this._onReplace;
   }
 
-  /**
-   * Get the registered onRemove hook if any
-   */
   get onRemoveHook(): Option<ComponentHook> {
-    return this.__onRemove;
+    return this._onRemove;
   }
 
   get onDespawnHook(): Option<ComponentHook> {
-    return this.__onDespawn;
+    return this._onDespawn;
   }
 }
 
@@ -419,7 +399,7 @@ export function component<T extends object>(options: Partial<ComponentOptions> =
         writable: false,
       });
     }
-    implTrait(target, Component, {
+    Component.implFor(target, {
       static: {
         registerRequiredComponents(
           requiree: ComponentId,
@@ -439,10 +419,7 @@ export function component<T extends object>(options: Partial<ComponentOptions> =
                   Closure: (func) => func,
                 })
               : () => {
-                  if (hasTrait(required.type, Default)) {
-                    return defaultVal(required.type);
-                  }
-                  return new required.type();
+                  return defaultVal(required.type);
                 };
             components.registerRequiredComponentsManual(
               target,
@@ -455,7 +432,7 @@ export function component<T extends object>(options: Partial<ComponentOptions> =
             );
           }
           for (const required of requires) {
-            useTrait(required.type, Component).registerRequiredComponents(
+            Component.wrap(required.type).registerRequiredComponents(
               requiree,
               components,
               storages,
@@ -513,11 +490,9 @@ function componentCloneViaClone<C extends object>(
   world: DeferredWorld,
   entityCloner: EntityCloner,
 ): void {
-  const component = world
-    .entity(entityCloner.source)
-    .get(this)
-    .expect('Component must exist on source entity')
-    .clone();
+  const component = deepClone(
+    world.entity(entityCloner.source).get(this).expect('Component must exist on source entity'),
+  );
 
   world.commands.entity(entityCloner.target).insert(component);
 }
@@ -601,14 +576,14 @@ export class RequiredComponents {
     customCreator: () => C,
     inheritanceDepth: number,
   ): void {
-    const erased: RequiredComponentConstructor = (
+    function erased(
       table: Table,
       sparseSets: SparseSets,
       changeTick: Tick,
       tableRow: TableRow,
       entity: Entity,
       caller?: string,
-    ) => {
+    ) {
       const component = customCreator();
       initializeRequiredComponent(
         table,
@@ -621,7 +596,7 @@ export class RequiredComponents {
         component,
         caller,
       );
-    };
+    }
 
     this.registerDynamic(componentId, erased, inheritanceDepth);
   }
@@ -630,7 +605,7 @@ export class RequiredComponents {
    * Iterates the ids of all required components. This includes recursive required components.
    */
   iterIds(): ComponentId[] {
-    return Array.from(this.components.keys());
+    return [...this.components.keys()];
   }
 
   /**
@@ -656,7 +631,7 @@ export class RequiredComponents {
   }
 
   toString(): string {
-    return `RequiredComponents(${Array.from(this.components.keys()).join(', ')})`;
+    return `RequiredComponents(${this.iterIds().join(', ')})`;
   }
 }
 
@@ -761,7 +736,6 @@ export class Components {
     storages: Storages,
     recursionCheckStack: Vec<ComponentId>,
   ): ComponentId {
-    Component.validType(component);
     let isNewRegistration = false;
     const tid = typeId(component);
     let id = this.indices.get(tid).unwrapOrElse(() => {
@@ -772,7 +746,7 @@ export class Components {
     });
     if (isNewRegistration) {
       const requiredComponents = new RequiredComponents();
-      useTrait(component, Component).registerRequiredComponents(
+      Component.wrap(component).registerRequiredComponents(
         id,
         this,
         storages,
@@ -780,10 +754,10 @@ export class Components {
         0,
         recursionCheckStack,
       );
-      const info = this.components[id];
-      useTrait(component, Component).registerComponentHooks(info.hooks);
+      const info = this.components.getUnchecked(id);
+      Component.wrap(component).registerComponentHooks(info.hooks);
       info.requiredComponents = requiredComponents;
-      const cloneHandler = useTrait(component, Component).getComponentCloneHandler();
+      const cloneHandler = Component.wrap(component).getComponentCloneHandler();
       this.componentCloneHandlers.setComponentHandler(id, cloneHandler);
     }
     return id;
@@ -819,7 +793,7 @@ export class Components {
   }
 
   getInfoUnchecked(id: ComponentId): ComponentInfo {
-    return this.components[id];
+    return this.components.getUnchecked(id);
   }
 
   getName(id: ComponentId): Option<string> {
@@ -858,11 +832,7 @@ export class Components {
 
     const requiredByRequiree = this.getRequiredBy(requiree);
     if (requiredByRequiree.isSome()) {
-      for (const id of requiredByRequiree.unwrap()) {
-        requiredBy.insert(id);
-      }
-      // requiredBy.extend(requiredByRequiree.unwrap());
-
+      requiredBy.extend(requiredByRequiree.unwrap());
       for (const requiredById of requiredByRequiree.unwrap()) {
         const parentRequiredComponents = this.getRequiredComponents(requiredById).unwrap();
         const depth = parentRequiredComponents.components
@@ -931,8 +901,6 @@ export class Components {
     inheritanceDepth: number,
     recursionCheckStack: Vec<ComponentId>,
   ): void {
-    Component.validType(component);
-    Component.validType(requiredComponent);
     const requiree = this.registerComponentInternal(component, storages, recursionCheckStack);
     const required = this.registerComponentInternal(
       requiredComponent,
@@ -960,12 +928,9 @@ export class Components {
     if (required === requiree) {
       return;
     }
-
     requiredComponents.registerById(required, customCreator, inheritanceDepth);
-
     const requiredBy = this.getInfoUnchecked(required).requiredBy;
     requiredBy.insert(requiree);
-
     const inherited = this.getInfoUnchecked(required)
       .requiredComponents.components.iter()
       .map(([id, component]) => {
@@ -990,7 +955,7 @@ export class Components {
   }
 
   componentId(component: any): Option<ComponentId> {
-    Component.validType(component);
+    Component.validFor(component);
     return this.getId(typeId(component));
   }
 
@@ -1003,7 +968,7 @@ export class Components {
   }
 
   registerResource<T>(resource: Constructor<T>): ComponentId {
-    Resource.validType(resource);
+    Resource.validFor(resource);
     return this.getOrInsertResourceWith(typeId(resource), () => {
       return ComponentDescriptor.new(resource);
     });

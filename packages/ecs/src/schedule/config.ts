@@ -1,5 +1,4 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { Enum, implTrait, trait, variant, Vec } from 'rustable';
+import { Enum, NotImplementedError, Trait, variant, Vec } from 'rustable';
 import { IntoSystem } from '../system';
 import { System } from '../system/base';
 import { Ambiguity, DependencyKind, GraphInfo } from './graph';
@@ -50,7 +49,7 @@ export class NodeConfigs<T> extends Enum {
   }
   @variant
   static NodeConfig<T>(_config: NodeConfig<T>): NodeConfigs<T> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   @variant
@@ -59,18 +58,11 @@ export class NodeConfigs<T> extends Enum {
     _collectiveConditions: Vec<Condition>,
     _chained: Chain,
   ): NodeConfigs<T> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   match<U>(patterns: Partial<NodeConfigsMatch<T, U>>): U {
-    return super.match(patterns, {
-      NodeConfig: (): U => {
-        return undefined as any;
-      },
-      Configs: (): U => {
-        return undefined as any;
-      },
-    });
+    return super.match({ ...patterns, _: undefined! });
   }
 
   intoConfigs(): NodeConfigs<T> {
@@ -251,10 +243,9 @@ export namespace SystemSetConfigs {
   }
 }
 
-@trait
-export class IntoConfigs<T = any> extends TraitValid {
+export class IntoConfigs<T = any> extends Trait {
   intoConfigs(): NodeConfigs<T> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   inSet(set: IntoSystemSet): NodeConfigs<T> {
@@ -302,21 +293,21 @@ export class IntoConfigs<T = any> extends TraitValid {
   }
 }
 
-implTrait(NodeConfigs, IntoConfigs);
+IntoConfigs.implFor(NodeConfigs);
 
-implTrait(IntoSystem, IntoConfigs, {
+IntoConfigs.implFor(IntoSystem, {
   intoConfigs(): SystemConfigs {
     return SystemConfigs.newSystem(this.intoSystem());
   },
 });
 
-implTrait(SystemSet, IntoConfigs, {
+IntoConfigs.implFor(SystemSet, {
   intoConfigs(): SystemSetConfigs {
     return SystemSetConfigs.newSet(this as SystemSet);
   },
 });
 
-implTrait(Array, IntoConfigs, {
+IntoConfigs.implFor(Array, {
   intoConfigs(): SystemConfigs {
     return NodeConfigs.Configs(
       Vec.from(this.map((config) => IntoConfigs.wrap(config).intoConfigs())),

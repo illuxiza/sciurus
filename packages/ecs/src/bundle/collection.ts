@@ -19,7 +19,7 @@ export class Bundles {
   }
 
   getUnchecked(bundleId: BundleId): BundleInfo {
-    return this.bundleInfos[bundleId];
+    return this.bundleInfos.getUnchecked(bundleId);
   }
 
   getId(typeId: TypeId): Option<BundleId> {
@@ -98,7 +98,7 @@ export class Bundles {
         components,
         Vec.from([componentId]),
       );
-      this.dynamicComponentStorages.insert(id, storageTypes[0]);
+      this.dynamicComponentStorages.insert(id, storageTypes.getUnchecked(0));
       return id;
     });
     return bundleId;

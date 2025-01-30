@@ -1,24 +1,13 @@
-import {
-  Constructor,
-  Err,
-  None,
-  Ok,
-  Option,
-  Ptr,
-  Result,
-  TypeId,
-  typeId,
-  useTrait,
-} from 'rustable';
+import { Constructor, Err, None, Ok, Option, Ptr, Result, TypeId, typeId } from 'rustable';
 import { Archetype } from '../../archetype';
 import { ComponentTicks, Mut, MutUntyped, Ref, Tick, Ticks } from '../../change_detection';
 import { Component, ComponentId } from '../../component';
 import { Entity, EntityLocation } from '../../entity';
 import { ReadonlyQueryData } from '../../query/fetch';
-import { getComponent, getComponentAndTicks, getTicks } from './func';
+import { StorageType } from '../../storage';
+import { World } from '../base';
 import { GetEntityMutByIdError, QUERY_MISMATCH_ERROR } from './types';
 import { EntityWorld } from './world';
-import { World } from '../base';
 
 type DynamicComponentFetch = (
   cell: EntityCell,
@@ -96,7 +85,7 @@ export class EntityCell {
         getComponent(
           this.world,
           componentId,
-          useTrait(component, Component).storageType(),
+          Component.wrap(component).storageType(),
           this.entity,
           this.location,
         ),
@@ -112,7 +101,7 @@ export class EntityCell {
         getComponentAndTicks(
           this.world,
           componentId,
-          useTrait(component, Component).storageType(),
+          Component.wrap(component).storageType(),
           this.entity,
           this.location,
         ).map(
@@ -133,7 +122,7 @@ export class EntityCell {
         getTicks(
           this.world,
           componentId,
-          useTrait(component, Component).storageType(),
+          Component.wrap(component).storageType(),
           this.entity,
           this.location,
         ),
@@ -172,7 +161,7 @@ export class EntityCell {
         getComponentAndTicks(
           this.world,
           componentId,
-          useTrait(component, Component).storageType(),
+          Component.wrap(component).storageType(),
           this.entity,
           this.location,
         ).map(([value, cells, caller]) =>
@@ -260,5 +249,60 @@ export class EntityCell {
 
   spawnedBy(): string | undefined {
     return this.world.entities.entityGetSpawnedOrDespawnedBy(this.entity).unwrapOr(undefined);
+  }
+}
+
+function getComponent<T>(
+  world: World,
+  componentId: ComponentId,
+  storageType: StorageType,
+  entity: Entity,
+  location: EntityLocation,
+): Option<T> {
+  if (storageType === StorageType.Table) {
+    const table = world.fetchTable(location);
+    return table.andThen((t) => t.getComponent(componentId, location.tableRow).map((c) => c as T));
+  } else {
+    return world.fetchSparseSet(componentId).andThen((s) => s.get(entity));
+  }
+}
+
+function getComponentAndTicks(
+  world: World,
+  componentId: ComponentId,
+  storageType: StorageType,
+  entity: Entity,
+  location: EntityLocation,
+): Option<[Ptr<any>, ComponentTicks, Ptr<string>]> {
+  if (storageType === StorageType.Table) {
+    const table = world.fetchTable(location);
+    return table.andThen((t) => {
+      const component = t.getComponent(componentId, location.tableRow);
+      return component.map((c) => [
+        c,
+        ComponentTicks.new(
+          t.getAddedTick(componentId, location.tableRow).unwrap(),
+          t.getChangedTick(componentId, location.tableRow).unwrap(),
+        ),
+        t.getChangedByMut(componentId, location.tableRow).unwrap(),
+      ]);
+    });
+  } else {
+    return world.fetchSparseSet(componentId).andThen((s) => s.getWithTicks(entity));
+  }
+}
+
+function getTicks(
+  world: World,
+  componentId: ComponentId,
+  storageType: StorageType,
+  entity: Entity,
+  location: EntityLocation,
+): Option<ComponentTicks> {
+  if (storageType === StorageType.Table) {
+    const table = world.fetchTable(location);
+    return table.andThen((t) => t.getTicksUnchecked(componentId, location.tableRow));
+  } else {
+    return world.fetchSparseSet(componentId).andThen((s) => s.getTicks(entity));
   }
 }

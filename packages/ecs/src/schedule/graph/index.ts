@@ -129,7 +129,10 @@ export function checkGraph(graph: DiGraph, topologicalOrder: Vec<NodeId>): Check
     // reachable is upper triangular because the nodes were topsorted
     for (let j = index(i, i + 1, n); j <= index(i, n - 1, n); j++) {
       const [a, b] = rowCol(j, n);
-      const pair: [NodeId, NodeId] = [topologicalOrder[a], topologicalOrder[b]];
+      const pair: [NodeId, NodeId] = [
+        topologicalOrder.getUnchecked(a),
+        topologicalOrder.getUnchecked(b),
+      ];
       if (reachable.get(j)) {
         connected.insert(pair);
       } else {
@@ -177,7 +180,7 @@ export function simpleCyclesInComponent(graph: DiGraph, scc: Vec<NodeId>): Vec<V
     const stack: Vec<[NodeId, Iterator<NodeId>]> = Vec.new();
 
     // we're going to look for all cycles that begin and end at this node
-    const root = currentScc[currentScc.len() - 1];
+    const root = currentScc.getUnchecked(currentScc.len() - 1);
     // start a path at the root
     path.push(root);
     // mark this node as blocked

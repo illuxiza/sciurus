@@ -1,20 +1,20 @@
-import { NOT_IMPLEMENTED } from '@sciurus/utils';
-import { implTrait, None, Option, trait } from 'rustable';
+import { None, NotImplementedError, Option, Trait } from 'rustable';
 import { Entity } from './entity/base';
 
-@trait
-export class Traversal {
+export class Traversal extends Trait {
   static traverse<D>(_item: any, _data: D): Option<Entity> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-export class EmptyTraversal {
-  static traverse<D>(_item: any, _data: D): Option<Entity> {
-    return None;
-  }
-}
+export class EmptyTraversal {}
 
-implTrait(EmptyTraversal, Traversal);
+Traversal.implFor(EmptyTraversal, {
+  static: {
+    traverse<D>(_item: any, _data: D): Option<Entity> {
+      return None;
+    },
+  },
+});
 
 export interface EmptyTraversal extends Traversal {}

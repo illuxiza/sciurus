@@ -1,5 +1,5 @@
-import { getCaller, logger } from '@sciurus/utils';
-import { Constructor, implTrait, iter, Result, trait } from 'rustable';
+import { logger } from '@sciurus/utils';
+import { Constructor, iter, Location, Result, Trait } from 'rustable';
 import { InsertMode } from '../../bundle/types';
 import { Mut } from '../../change_detection/mut';
 import { ComponentId } from '../../component';
@@ -78,7 +78,7 @@ export class EntityCommands {
   }
 
   insertById<T extends object>(componentId: ComponentId, value: T): this {
-    const c = getCaller();
+    const c = new Location().caller()!.name;
     this.queue(
       entityCommandFn((entity: Entity, world: World) => {
         const entityMut = world.fetchEntityMut(entity) as Result<EntityWorld, Error>;
@@ -237,8 +237,7 @@ export class EntityCommands {
   }
 }
 
-@trait
-export class EntityCommand {
+export class EntityCommand extends Trait {
   apply(_entity: Entity, _world: World): void {
     throw new Error('EntityCommand.apply must be implemented');
   }
@@ -249,14 +248,15 @@ export class EntityCommand {
 
 class EntityWorldFunctionCommand {
   constructor(public fn: (entity: EntityWorld) => void) {}
-  apply(entity: Entity, world: World): void {
-    this.fn(world.entity(entity));
-  }
 }
 
 interface EntityWorldFunctionCommand extends EntityCommand {}
 
-implTrait(EntityWorldFunctionCommand, EntityCommand);
+EntityCommand.implFor(EntityWorldFunctionCommand, {
+  apply(entity: Entity, world: World): void {
+    this.fn(world.entity(entity));
+  },
+});
 
 export const entityWorldCommandFn = (command: (entity: EntityWorld) => void) => {
   return new EntityWorldFunctionCommand(command);
@@ -264,9 +264,6 @@ export const entityWorldCommandFn = (command: (entity: EntityWorld) => void) => 
 
 class EntityFunctionCommand {
   constructor(public fn: (entity: Entity, world: World) => void) {}
-  apply(entity: Entity, world: World): void {
-    this.fn(entity, world);
-  }
 }
 
 interface EntityFunctionCommand extends EntityCommand {}
@@ -275,7 +272,11 @@ export const entityCommandFn = (command: (entity: Entity, world: World) => void)
   return new EntityFunctionCommand(command);
 };
 
-implTrait(EntityFunctionCommand, EntityCommand);
+EntityCommand.implFor(EntityFunctionCommand, {
+  apply(entity: Entity, world: World): void {
+    this.fn(entity, world);
+  },
+});
 
 export class EntityEntryCommands<T extends object> {
   private entityCommands: EntityCommands;
@@ -333,14 +334,14 @@ export class EntityEntryCommands<T extends object> {
   }
 }
 function despawn(logWarning: boolean): EntityCommand {
-  const caller = getCaller(1);
+  const caller = new Location().caller(1)!.name;
   return entityCommandFn((entity: Entity, world: World) => {
     world['despawnWithCaller'](entity, caller, logWarning);
   });
 }
 
 function insert<T extends object>(bundle: T, mode: InsertMode): EntityCommand {
-  const c = getCaller(1);
+  const c = new Location().caller(1)!.name;
   return entityCommandFn((entity: Entity, world: World) => {
     const entityRef = world.fetchEntityMut(entity) as Result<EntityWorld, Error>;
     if (entityRef.isOk()) {
@@ -354,7 +355,7 @@ function insert<T extends object>(bundle: T, mode: InsertMode): EntityCommand {
 }
 
 function tryInsert<T extends object>(bundle: T, mode: InsertMode): EntityCommand {
-  const c = getCaller(1);
+  const c = new Location().caller(1)!.name;
   return entityCommandFn((entity: Entity, world: World) => {
     const entityRef = world.fetchEntityMut(entity) as Result<EntityWorld, Error>;
     if (entityRef.isOk()) {

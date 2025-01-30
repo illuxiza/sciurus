@@ -1,22 +1,11 @@
-import {
-  Constructor,
-  createFactory,
-  hasTrait,
-  implTrait,
-  Ptr,
-  Result,
-  RustIter,
-  TypeId,
-  typeId,
-  useTrait,
-} from 'rustable';
+import { Constructor, createFactory, Ptr, Result, RustIter, TypeId, typeId } from 'rustable';
 import { Archetype } from '../../archetype/base';
 import { Tick } from '../../change_detection/tick';
 import { Entity } from '../../entity';
 import { FilteredAccess, FilteredAccessSet } from '../../query/access';
 import { QueryEntityError } from '../../query/error';
 import { IntoFetch, QueryData } from '../../query/fetch';
-import { QueryFilter } from '../../query/filter/base';
+import { EMPTY_QUERY_FILTER, QueryFilter } from '../../query/filter/base';
 import { QueryState } from '../../query/state';
 import { World } from '../../world';
 import { SystemMeta } from '../types';
@@ -30,15 +19,15 @@ class QueryParam<D = any> {
   #lastRun?: Tick;
   #thisRun?: Tick;
   constructor(data: Constructor<D> | QueryData<D>, filter?: QueryFilter) {
-    if (hasTrait(data as Constructor<any>, IntoFetch)) {
-      this.data = useTrait(data as Constructor<any>, IntoFetch).intoFetch();
+    if (IntoFetch.isImplFor(data as Constructor<any>)) {
+      this.data = IntoFetch.wrap(data as Constructor<any>).intoFetch();
     } else {
       this.data = QueryData.wrap(data);
     }
     if (filter) {
       this.filter = QueryFilter.wrap(filter);
     } else {
-      this.filter = [];
+      this.filter = EMPTY_QUERY_FILTER;
     }
   }
   init(world: World, state: QueryState, lastRun: Tick, thisRun: Tick): this {
@@ -88,7 +77,7 @@ export const Query = createFactory(QueryParam) as typeof QueryParam & {
 
 export interface Query<D = any> extends QueryParam<D>, SystemParam<QueryState, Query<D>> {}
 
-implTrait(Query, SystemParam, {
+SystemParam.implFor<typeof SystemParam<QueryState, Query>, typeof Query>(Query, {
   initParamState(this: Query, world: World, systemMeta: SystemMeta): QueryState {
     const state = QueryState.newWithAccess(
       this.data,
@@ -116,7 +105,7 @@ implTrait(Query, SystemParam, {
   },
 });
 
-implTrait(Query, ReadonlySystemParam);
+ReadonlySystemParam.implFor(Query);
 
 export function initQueryParam(
   data: QueryData,

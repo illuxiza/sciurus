@@ -1,5 +1,4 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { Constructor, implTrait, Option, trait, TypeId, typeId, useTrait, Vec } from 'rustable';
+import { Constructor, NotImplementedError, Option, Trait, TypeId, typeId, Vec } from 'rustable';
 import {
   Component,
   type ComponentId,
@@ -8,14 +7,12 @@ import {
 } from '../component';
 import { type Storages, type StorageType } from '../storage';
 
-@trait
-export class DynamicBundle extends TraitValid {
+export class DynamicBundle extends Trait {
   getComponents(_ids: (storageType: StorageType, component: Component) => void) {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-@trait
 export class Bundle extends DynamicBundle {
   getBundleType(): BundleType {
     return (this.constructor as typeof Bundle).staticBundleType();
@@ -45,7 +42,7 @@ export class Bundle extends DynamicBundle {
     );
   }
   static staticBundleType(): BundleType {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   static componentIds(
     components: Components,
@@ -73,33 +70,32 @@ export class Bundle extends DynamicBundle {
   }
 }
 
-@trait
-export class BundleType extends TraitValid {
+export class BundleType extends Trait {
   componentIds(
     _components: Components,
     _storages: Storages,
     _ids: (componentId: ComponentId) => void,
   ) {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   getComponentIds(_components: Components, _ids: (id: Option<ComponentId>) => void): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   fromComponents<T>(_ctx: T, _func: (t: T) => Bundle): any {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   bundleRegisterRequiredComponents(
     _components: Components,
     _storages: Storages,
     _requiredComponents: RequiredComponents,
   ): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-implTrait(Component, DynamicBundle, {
+DynamicBundle.implFor(Component, {
   getComponents(this: Component, ids: (storageType: StorageType, component: Component) => void) {
-    ids(useTrait(this.constructor as Constructor<Component>, Component).storageType(), this);
+    ids(Component.staticWrap(this).storageType(), this);
   },
 });
 
@@ -135,11 +131,11 @@ class ComponentBundleType {
   }
 }
 
-implTrait(ComponentBundleType, BundleType);
+BundleType.implFor(ComponentBundleType);
 
-implTrait(ComponentBundleType, DynamicBundle);
+DynamicBundle.implFor(ComponentBundleType);
 
-implTrait(Component, Bundle, {
+Bundle.implFor(Component, {
   static: {
     staticBundleType(this: Constructor<Component>): BundleType {
       return new ComponentBundleType(this);
@@ -147,7 +143,7 @@ implTrait(Component, Bundle, {
   },
 });
 
-implTrait(Array, DynamicBundle, {
+DynamicBundle.implFor(Array, {
   getComponents(this: Array<any>, ids: (storageType: StorageType, component: Component) => void) {
     this.forEach((component) => component.getComponents(ids));
   },
@@ -155,7 +151,7 @@ implTrait(Array, DynamicBundle, {
 
 const arrayBundleTypeMap = new Map<TypeId, any>();
 
-implTrait(Array<any>, Bundle, {
+Bundle.implFor(Array, {
   getBundleType(this: Array<any>): BundleType {
     const types = this.map((component) => {
       if (typeof component === 'object') {
@@ -193,7 +189,7 @@ implTrait(Array<any>, Bundle, {
         );
       }
     }
-    implTrait(ArrayBundleType, BundleType);
+    BundleType.implFor(ArrayBundleType);
     const bundleType = new ArrayBundleType(types);
     arrayBundleTypeMap.set(typeId(this, types), bundleType);
     return bundleType;

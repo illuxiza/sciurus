@@ -35,15 +35,15 @@ export class SingleThreadedExecutor implements SystemExecutor {
   run(schedule: SystemSchedule, world: World, _skipSystems: Option<FixedBitSet>): void {
     for (const systemIndex of range(0, schedule.systems.len())) {
       let shouldRun = !this.completedSystems.contains(systemIndex);
-      for (const setIdx of schedule.setsWithConditionsOfSystems[systemIndex].ones()) {
+      for (const setIdx of schedule.setsWithConditionsOfSystems.getUnchecked(systemIndex).ones()) {
         if (this.evaluatedSets.contains(setIdx)) {
           continue;
         }
 
-        const setConditionsMet = evaluateAndFoldConditions(schedule.setConditions[setIdx], world);
+        const setConditionsMet = evaluateAndFoldConditions(schedule.setConditions.getUnchecked(setIdx), world);
 
         if (!setConditionsMet) {
-          this.completedSystems.unionWith(schedule.systemsInSetsWithConditions[setIdx]);
+          this.completedSystems.unionWith(schedule.systemsInSetsWithConditions.getUnchecked(setIdx));
         }
 
         shouldRun = shouldRun && setConditionsMet;
@@ -51,13 +51,13 @@ export class SingleThreadedExecutor implements SystemExecutor {
       }
 
       const systemConditionsMet = evaluateAndFoldConditions(
-        schedule.systemConditions[systemIndex],
+        schedule.systemConditions.getUnchecked(systemIndex),
         world,
       );
 
       shouldRun = shouldRun && systemConditionsMet;
 
-      const system = schedule.systems[systemIndex];
+      const system = schedule.systems.getUnchecked(systemIndex);
       if (shouldRun) {
         const validParams = system.validateParam(world);
         shouldRun = shouldRun && validParams;
@@ -97,7 +97,7 @@ export class SingleThreadedExecutor implements SystemExecutor {
 
   private applyDeferred(schedule: SystemSchedule, world: World) {
     for (const systemIndex of this.unappliedSystems.ones()) {
-      const system = schedule.systems[systemIndex];
+      const system = schedule.systems.getUnchecked(systemIndex);
       system.applyDeferred(world);
     }
     this.unappliedSystems.clear();

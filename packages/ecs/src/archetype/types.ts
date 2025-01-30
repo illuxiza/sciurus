@@ -74,7 +74,7 @@ export class ArchetypeAfterBundleInsert implements BundleComponentStatus {
   ) {}
 
   getStatus(index: number): ComponentStatus {
-    return this.bundleStatus[index];
+    return this.bundleStatus.getUnchecked(index);
   }
 
   iterInserted(): RustIter<ComponentId> {

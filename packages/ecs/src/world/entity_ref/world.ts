@@ -1,29 +1,37 @@
-import { getCaller, INVALID_VALUE } from '@sciurus/utils';
+import { INVALID_VALUE } from '@sciurus/utils';
 import {
   Constructor,
   defaultVal,
+  iter,
+  Location,
   None,
   Option,
   Result,
   Some,
   typeId,
   TypeId,
-  useTrait,
   Vec,
 } from 'rustable';
 import { Archetype, ArchetypeId, Archetypes } from '../../archetype';
-import { Bundle, BundleId, BundleInfo, BundleInserter, InsertMode } from '../../bundle';
+import {
+  Bundle,
+  BundleId,
+  BundleInfo,
+  BundleInserter,
+  DynamicBundle,
+  InsertMode,
+} from '../../bundle';
 import { ComponentTicks, Mut, Ref } from '../../change_detection';
-import { ComponentId } from '../../component';
+import { Component, ComponentId, Components } from '../../component';
 import { Entities, Entity, EntityLocation } from '../../entity';
 import { Observer } from '../../observer/runner';
+import { RemovedComponentEvents } from '../../removal_detection';
 import { Storages, StorageType } from '../../storage';
 import { IntoObserverSystem } from '../../system';
 import { World } from '../base';
 import { ON_DESPAWN, ON_REMOVE, ON_REPLACE } from '../component_constants';
 import { DeferredWorld } from '../deferred';
 import { EntityCell } from './cell';
-import { insertDynamicBundle, takeComponent } from './func';
 
 export class EntityWorld {
   __world: World;
@@ -224,7 +232,7 @@ export class EntityWorld {
     );
 
     let bundleComponents = bundleInfo.iterExplicitComponents();
-    const result = useTrait(bundle, Bundle)
+    const result = Bundle.wrap(bundle)
       .staticBundleType()
       .fromComponents(world.storages, (storages) => {
         const componentId = bundleComponents.next().unwrap();
@@ -280,6 +288,7 @@ export class EntityWorld {
           ),
         );
       },
+      None: () => {},
     });
 
     const oldTableRow = removeResult.tableRow;
@@ -312,6 +321,7 @@ export class EntityWorld {
             .getUnchecked(swappedLocation.archetypeId)
             .setEntityTableRow(swappedLocation.archetypeRow, oldTableRow);
         },
+        None: () => {},
       });
     }
 
@@ -353,6 +363,7 @@ export class EntityWorld {
               world.storages.sparseSets.get(componentId).unwrap().remove(entity);
             }
           },
+          None: () => {},
         });
       }
     }
@@ -446,7 +457,7 @@ export class EntityWorld {
   }
 
   despawn(): void {
-    this.despawnWithCaller(getCaller());
+    this.despawnWithCaller(new Location().caller()!.name);
   }
 
   protected despawnWithCaller(caller?: string): void {
@@ -493,6 +504,7 @@ export class EntityWorld {
           ),
         );
       },
+      None: () => {},
     });
 
     for (const componentId of archetype.sparseSetComponents) {
@@ -520,6 +532,7 @@ export class EntityWorld {
           .getUnchecked(movedLocation.archetypeId)
           .setEntityTableRow(movedLocation.archetypeRow, removeResult.tableRow);
       },
+      None: () => {},
     });
 
     world.flush();
@@ -724,4 +737,60 @@ function triggerOnReplaceAndOnRemoveHooksAndObservers(
     deferredWorld.triggerObservers(ON_REMOVE, entity, bundleInfo.iterExplicitComponents());
   }
   deferredWorld.triggerOnRemove(archetype, entity, bundleInfo.iterExplicitComponents());
+}
+
+function insertDynamicBundle<T>(
+  bundleInserter: BundleInserter,
+  entity: Entity,
+  location: EntityLocation,
+  components: Iterable<T>,
+  storageTypes: Iterable<StorageType>,
+  caller?: string,
+): EntityLocation {
+  class DynamicInsertBundle {
+    components: Vec<[StorageType, T]>;
+
+    constructor(components: Vec<[StorageType, T]>) {
+      this.components = components;
+    }
+  }
+
+  DynamicBundle.implFor(DynamicInsertBundle, {
+    getComponents(
+      this: DynamicInsertBundle,
+      func: (storageType: StorageType, component: Component) => void,
+    ): void {
+      this.components
+        .iter()
+        .forEach(([storageType, component]) => func(storageType, component as Component));
+    },
+  });
+
+  Bundle.implFor(DynamicInsertBundle);
+
+  const bundle = new DynamicInsertBundle(
+    iter(storageTypes)
+      .zip(iter(components))
+      .collectInto((v) => Vec.from(v)),
+  );
+
+  return bundleInserter.insert(entity, location, bundle, InsertMode.Replace, caller);
+}
+
+function takeComponent(
+  storages: Storages,
+  components: Components,
+  removedComponents: RemovedComponentEvents,
+  componentId: ComponentId,
+  entity: Entity,
+  location: EntityLocation,
+) {
+  const componentInfo = components.getInfoUnchecked(componentId);
+  removedComponents.send(componentId, entity);
+  if (componentInfo.storageType === StorageType.Table) {
+    const table = storages.tables.getUnchecked(location.tableId);
+    return table.takeComponent(componentId, location.tableRow);
+  } else {
+    return storages.sparseSets.get(componentId).unwrap().removeAndForget(entity).unwrap();
+  }
 }

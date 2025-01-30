@@ -1,4 +1,4 @@
-import { Constructor, implTrait, None, Option, Some, Vec } from 'rustable';
+import { Constructor, None, Option, Some, Vec } from 'rustable';
 import { Tick } from '../../change_detection';
 import { Access } from '../../query/access';
 import { IntoSystemSet, SystemSet, SystemTypeSet } from '../../schedule/set';
@@ -118,11 +118,11 @@ export class ExclusiveFunctionSystem {
   }
 }
 
-implTrait(ExclusiveFunctionSystem, System);
+System.implFor(ExclusiveFunctionSystem);
 
 export interface ExclusiveFunctionSystem extends System {}
 
-implTrait(ExclusiveFunctionSystem, IntoSystemSet, {
+IntoSystemSet.implFor(ExclusiveFunctionSystem, {
   intoSystemSet(): SystemSet {
     return new SystemTypeSet(this.type());
   },

@@ -1,4 +1,4 @@
-import { Constructor, createFactory, implTrait, Ptr, useTrait } from 'rustable';
+import { Constructor, createFactory, Ptr } from 'rustable';
 import { Component, ComponentId, Components } from '../../component';
 import { StorageType } from '../../storage';
 import { World } from '../../world/base';
@@ -9,7 +9,7 @@ import { QueryFilter } from './base';
 class WithoutFilter {
   __isDense: boolean = false;
   constructor(public value: Constructor<any>) {
-    const storageType = useTrait(value, Component).storageType();
+    const storageType = Component.wrap(value).storageType();
     this.__isDense = storageType === StorageType.Table;
   }
   static of(value: Constructor<any>) {
@@ -17,37 +17,42 @@ class WithoutFilter {
   }
 }
 
-interface WithoutFilter extends WorldQuery<void, void, boolean>, QueryFilter<void, void, boolean> {}
+interface WithoutFilter
+  extends WorldQuery<void, void, ComponentId>,
+    QueryFilter<void, void, ComponentId> {}
 
 export const Without = createFactory(WithoutFilter);
 
 export interface Without extends WithoutFilter {}
 
-implTrait(WithoutFilter, WorldQuery, {
-  isDense() {
-    return this.__isDense;
+WorldQuery.implFor<typeof WorldQuery<void, void, ComponentId>, typeof WithoutFilter>(
+  WithoutFilter,
+  {
+    isDense() {
+      return this.__isDense;
+    },
+    shrink() {},
+    shrinkFetch() {},
+    initFetch() {},
+    setArchetype() {},
+    setTable() {},
+    fetch() {},
+    updateComponentAccess(state: ComponentId, access: Ptr<FilteredAccess>) {
+      access.andWithout(state);
+    },
+    initState(this: WithoutFilter, world: World) {
+      return world.registerComponent(this.value);
+    },
+    getState(this: WithoutFilter, components: Components) {
+      return components.componentId(this.value);
+    },
+    matchesComponentSet(state: ComponentId, setContainsId: (componentId: ComponentId) => boolean) {
+      return !setContainsId(state);
+    },
   },
-  shrink() {},
-  shrinkFetch() {},
-  initFetch() {},
-  setArchetype() {},
-  setTable() {},
-  fetch() {},
-  updateComponentAccess(state: ComponentId, access: Ptr<FilteredAccess>) {
-    access.andWithout(state);
-  },
-  initState(this: WithoutFilter, world: World) {
-    return world.registerComponent(this.value);
-  },
-  getState(this: WithoutFilter, components: Components) {
-    return components.componentId(this.value);
-  },
-  matchesComponentSet(state: ComponentId, setContainsId: (componentId: ComponentId) => boolean) {
-    return !setContainsId(state);
-  },
-});
+);
 
-implTrait(WithoutFilter, QueryFilter, {
+QueryFilter.implFor(WithoutFilter, {
   isArchetypal() {
     return true;
   },

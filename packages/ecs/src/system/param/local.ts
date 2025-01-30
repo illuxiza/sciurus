@@ -1,5 +1,5 @@
 import { Cell } from '@sciurus/utils';
-import { Constructor, createFactory, implTrait, Ptr } from 'rustable';
+import { Constructor, createFactory, Ptr } from 'rustable';
 import { Tick } from '../../change_detection';
 import { World } from '../../world';
 import { FromWorld } from '../../world/from';
@@ -27,9 +27,9 @@ export class LocalParam<T extends object> {
   }
 }
 
-implTrait(LocalParam, SystemParam);
+SystemParam.implFor(LocalParam);
 
-implTrait(LocalParam, ExclusiveSystemParam);
+ExclusiveSystemParam.implFor(LocalParam);
 
 export interface LocalParam<T extends object> extends SystemParam<Cell<T>, Ptr<T>> {}
 

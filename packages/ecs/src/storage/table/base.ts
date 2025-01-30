@@ -40,7 +40,7 @@ export class Table {
     }
     const isLast = row === lastElementIndex;
     this.__entities.swapRemove(row);
-    return isLast ? None : Some(this.__entities[row]);
+    return isLast ? None : Some(this.__entities.getUnchecked(row));
   }
 
   moveToAndForgetMissing(row: TableRow, newTable: Table) {
@@ -55,7 +55,7 @@ export class Table {
         column.swapRemove(lastElementIndex, row);
       }
     }
-    return TableMoveResult.new(newRow, isLast ? None : Some(this.__entities[row]));
+    return TableMoveResult.new(newRow, isLast ? None : Some(this.__entities.getUnchecked(row)));
   }
 
   moveToAndDropMissing(row: TableRow, newTable: Table): TableMoveResult {
@@ -70,7 +70,7 @@ export class Table {
         column.swapRemoveAndDrop(lastElementIndex, row);
       }
     }
-    return TableMoveResult.new(newRow, isLast ? None : Some(this.__entities[row]));
+    return TableMoveResult.new(newRow, isLast ? None : Some(this.__entities.getUnchecked(row)));
   }
 
   moveToSuperset(row: TableRow, newTable: Table) {
@@ -83,7 +83,7 @@ export class Table {
         .unwrap()
         .initializeFrom(column, lastElementIndex, row, newRow);
     }
-    return TableMoveResult.new(newRow, isLast ? None : Some(this.__entities[row]));
+    return TableMoveResult.new(newRow, isLast ? None : Some(this.__entities.getUnchecked(row)));
   }
 
   getDataSliceFor<T>(componentId: ComponentId): Option<T[]> {

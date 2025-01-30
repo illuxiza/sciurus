@@ -1,5 +1,4 @@
-import { getCaller } from '@sciurus/utils';
-import { derive, implFrom, Into, Option, Ptr } from 'rustable';
+import { derive, From, Into, Location, Option, Ptr } from 'rustable';
 import { DetectChanges, DetectChangesMut, proxyValue } from './detect_changes';
 import { Ref } from './ref';
 import { Tick, Ticks } from './tick';
@@ -57,7 +56,7 @@ class MutValue<T> {
 
   protected set __val__(value: T) {
     this.setChanged();
-    this.__changeBy__ = getCaller();
+    this.__changeBy__ = new Location().caller()!.name;
     this.__value[Ptr.ptr] = value;
   }
 
@@ -165,7 +164,7 @@ export class MutUntyped {
 
   protected set __val__(value: unknown) {
     this.setChanged();
-    this.__changeBy[Ptr.ptr] = getCaller();
+    this.__changeBy[Ptr.ptr] = new Location().caller()!.name;
     this.__value[Ptr.ptr] = value;
   }
 
@@ -221,7 +220,7 @@ export class MutUntyped {
   }
 }
 
-implFrom(MutUntyped, MutValue, {
+From(MutValue).implInto(MutUntyped, {
   from(source: MutValue<any>): MutUntyped {
     return MutUntyped.new(
       source['__value'],

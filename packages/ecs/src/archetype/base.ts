@@ -133,11 +133,11 @@ export class Archetype {
   }
 
   entityTableRow(row: ArchetypeRow): TableRow {
-    return this.__entities[row].tableRow;
+    return this.__entities.getUnchecked(row).tableRow;
   }
 
   setEntityTableRow(row: ArchetypeRow, tableRow: TableRow): void {
-    this.__entities[row].tableRow = tableRow;
+    this.__entities.getUnchecked(row).tableRow = tableRow;
   }
 
   allocate(entity: Entity, tableRow: TableRow): EntityLocation {
@@ -155,7 +155,7 @@ export class Archetype {
     const isLast = row === this.__entities.len() - 1;
     const entity = this.__entities.swapRemove(row);
     return new ArchetypeSwapRemoveResult(
-      isLast ? None : Some(this.__entities[row].entity),
+      isLast ? None : Some(this.__entities.getUnchecked(row).entity),
       entity.tableRow,
     );
   }

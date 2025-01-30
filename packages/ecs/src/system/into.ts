@@ -1,13 +1,11 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { implTrait, trait } from 'rustable';
+import { NotImplementedError, Trait } from 'rustable';
 import { AdapterSystem, AdaptFunc } from './adapt';
 import { ReadonlySystem, System } from './base';
 import { PipeSystem } from './combinator';
 
-@trait
-export class IntoSystem<In = any, Out = any> extends TraitValid {
+export class IntoSystem<In = any, Out = any> extends Trait {
   intoSystem(): System<In, Out> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   pipe<B>(system: B): IntoPipeSystem<this, B> {
     return new IntoPipeSystem(this, system);
@@ -17,14 +15,13 @@ export class IntoSystem<In = any, Out = any> extends TraitValid {
   }
 }
 
-@trait
 export class IntoReadonlySystem<In = any, Out = any> extends IntoSystem<In, Out> {
   intoReadonlySystem(): ReadonlySystem<In, Out> {
     return this.intoSystem() as ReadonlySystem;
   }
 }
 
-implTrait(System, IntoSystem, {
+IntoSystem.implFor(System, {
   intoSystem(this: System): System {
     return this;
   },
@@ -45,7 +42,7 @@ export class IntoPipeSystem<A, B> {
   ) {}
 }
 
-implTrait(IntoPipeSystem, IntoSystem, {
+IntoSystem.implFor(IntoPipeSystem, {
   intoSystem(): System {
     const systemA = IntoSystem.wrap(this.a).intoSystem();
     const systemB = IntoSystem.wrap(this.b).intoSystem();
@@ -67,7 +64,7 @@ export class IntoAdapterSystem<Func> {
   ) {}
 }
 
-implTrait(IntoAdapterSystem<any>, IntoSystem, {
+IntoSystem.implFor(IntoAdapterSystem<any>, {
   intoSystem(): System {
     const system = IntoSystem.wrap(this.system).intoSystem();
     const name = system.name();

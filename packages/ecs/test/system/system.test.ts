@@ -1,4 +1,4 @@
-import { Constructor, Default, derive, hasTrait, implTrait } from 'rustable';
+import { Constructor, Default, derive } from 'rustable';
 import { Resource } from '../../../ecs/src/component';
 import { Commands } from '../../../ecs/src/system/commands';
 import { System } from '../../src/system/base';
@@ -28,7 +28,7 @@ class FnSystem<T extends (...args: any[]) => any> {
 
   validateParam(_world: World): boolean {
     for (let i = 0; i < this.paramTypes.length; i++) {
-      if (hasTrait(this.paramTypes[i], Resource)) {
+      if (Resource.isImplFor(this.paramTypes[i])) {
         if (_world.getResource(this.paramTypes[i]).isNone()) {
           return false;
         }
@@ -39,7 +39,7 @@ class FnSystem<T extends (...args: any[]) => any> {
 
   initialize(_world: World): void {
     for (let i = 0; i < this.paramTypes.length; i++) {
-      if (hasTrait(this.paramTypes[i], Resource)) {
+      if (Resource.isImplFor(this.paramTypes[i])) {
         this.params[i] = () => _world.resource(this.paramTypes[i]);
       }
     }
@@ -49,7 +49,7 @@ class FnSystem<T extends (...args: any[]) => any> {
 const systemFn = (paramtypes: Constructor<any>[], func: (...args: any[]) => any) =>
   new FnSystem(func, paramtypes);
 
-implTrait(FnSystem, System);
+System.implFor(FnSystem);
 describe('System', () => {
   it('should run system once', () => {
     @derive(Resource)

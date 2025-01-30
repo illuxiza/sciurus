@@ -1,5 +1,5 @@
 import { FixedBitSet } from '@sciurus/utils';
-import { implTrait, Ok, Option, typeId, Vec } from 'rustable';
+import { Ok, Option, typeId, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
 import { Access } from '../../query/access';
 import { type ScheduleSystem, System } from '../../system';
@@ -38,7 +38,7 @@ export enum ExecutorKind {
 
 export class ApplyDeferred {}
 
-implTrait(ApplyDeferred, System, {
+System.implFor(ApplyDeferred, {
   name(): string {
     return 'applyDeferred';
   },
@@ -54,10 +54,10 @@ implTrait(ApplyDeferred, System, {
   hasDeferred(): boolean {
     return false;
   },
-  runUnsafe(_input: any[], _world: World) {
+  runUnsafe(_input: any, _world: World) {
     return Ok(undefined);
   },
-  run(_input: any[], _world: World) {
+  run(_input: any, _world: World) {
     return Ok(undefined);
   },
   applyDeferred(_world: World): void {},
@@ -77,7 +77,7 @@ implTrait(ApplyDeferred, System, {
   setLastRun(_lastRun: Tick): void {},
 });
 
-implTrait(ApplyDeferred, IntoSystemSet, {
+IntoSystemSet.implFor(ApplyDeferred, {
   intoSystemSet(): SystemSet {
     return new SystemTypeSet(ApplyDeferred);
   },

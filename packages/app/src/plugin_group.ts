@@ -1,13 +1,13 @@
-import { logger, NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
+import { logger } from '@sciurus/utils';
 import {
   Constructor,
   Err,
   HashMap,
-  implTrait,
+  NotImplementedError,
   Ok,
   Option,
   Result,
-  trait,
+  Trait,
   typeId,
   TypeId,
   Vec,
@@ -24,11 +24,10 @@ class PluginEntry {
 }
 
 /** Combines multiple Plugins into a single unit */
-@trait
-export class PluginGroup extends TraitValid {
+export class PluginGroup extends Trait {
   /** Configures the Plugins that are to be added */
   build(): PluginGroupBuilder {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   /** Configures a name for the PluginGroup */
   name(): string {
@@ -41,7 +40,7 @@ export class PluginGroup extends TraitValid {
 }
 
 // Implement Plugins for PluginGroup
-implTrait(PluginGroup, Plugins, {
+Plugins.implFor(PluginGroup, {
   addToApp(app: App): void {
     this.build().finish(app);
   },
@@ -109,7 +108,7 @@ export class PluginGroupBuilder {
   trySet<T extends Plugin>(plugin: T): Result<PluginGroupBuilder, [PluginGroupBuilder, T]> {
     return this.plugins.entry(typeId(plugin)).match({
       Occupied: (entry) => {
-        entry.plugin = plugin;
+        entry.get().plugin = plugin;
         return Ok(this);
       },
       Vacant: () => {
@@ -120,9 +119,10 @@ export class PluginGroupBuilder {
 
   /** Adds the plugin at the end of this PluginGroupBuilder */
   add<T extends object>(plugin: T): PluginGroupBuilder {
+    Plugin.validFor(plugin);
     const targetIndex = this.order.len();
     this.order.push(typeId(plugin));
-    this.upsertPluginState(Plugin.wrap(plugin), targetIndex);
+    this.upsertPluginState(plugin as Plugin, targetIndex);
     return this;
   }
 
@@ -135,7 +135,7 @@ export class PluginGroupBuilder {
   }
 
   /** Adds a PluginGroup at the end of this PluginGroupBuilder */
-  addGroup(group: any): PluginGroupBuilder {
+  addGroup<T>(group: T): PluginGroupBuilder {
     const { plugins, order } = PluginGroup.wrap(group).build();
     for (const pluginId of order) {
       this.upsertPluginEntryState(pluginId, plugins.remove(pluginId).unwrap(), this.order.len());
@@ -169,6 +169,7 @@ export class PluginGroupBuilder {
     target: Constructor<Target>,
     plugin: Insert,
   ): Result<PluginGroupBuilder, [PluginGroupBuilder, Insert]> {
+    Plugin.validFor(plugin);
     const targetIndex = this.indexOf(target as Constructor<Plugin>);
     if (targetIndex.isNone()) {
       return Err([this, plugin]);
@@ -176,7 +177,7 @@ export class PluginGroupBuilder {
 
     const index = targetIndex.unwrap();
     this.order.insert(index, typeId(plugin));
-    this.upsertPluginState(Plugin.wrap(plugin), index);
+    this.upsertPluginState(plugin as Plugin, index);
     return Ok(this);
   }
 
@@ -205,6 +206,7 @@ export class PluginGroupBuilder {
     target: Constructor<Target>,
     plugin: Insert,
   ): Result<PluginGroupBuilder, [PluginGroupBuilder, Insert]> {
+    Plugin.validFor(plugin);
     const targetIndex = this.indexOf(target as Constructor<Plugin>);
     if (targetIndex.isNone()) {
       return Err([this, plugin]);
@@ -212,7 +214,7 @@ export class PluginGroupBuilder {
 
     const index = targetIndex.unwrap() + 1;
     this.order.insert(index, typeId(plugin));
-    this.upsertPluginState(Plugin.wrap(plugin), index);
+    this.upsertPluginState(plugin as Plugin, index);
     return Ok(this);
   }
 
@@ -260,7 +262,7 @@ export class PluginGroupBuilder {
   }
 }
 
-implTrait(PluginGroupBuilder, PluginGroup);
+PluginGroup.implFor(PluginGroupBuilder);
 
 export interface PluginGroupBuilder extends PluginGroup {}
 
@@ -271,6 +273,6 @@ export class NoopPluginGroup {
   }
 }
 
-implTrait(NoopPluginGroup, PluginGroup);
+PluginGroup.implFor(NoopPluginGroup);
 
 export interface NoopPluginGroup extends PluginGroup {}

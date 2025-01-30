@@ -52,7 +52,7 @@ export class SparseArray<I extends number, V> {
     if (index >= this.__values.len()) {
       this.__values.resizeWith(index + 1, () => None);
     }
-    this.__values[index] = Some(value);
+    this.__values.set(index, Some(value));
   }
 
   remove(index: I): Option<V> {
@@ -90,20 +90,20 @@ export class ImmutableSparseSet<I extends number, V> {
   }
 
   get(index: I): Option<V> {
-    return this.__sparse.get(index).map((denseIndex) => this.__dense[denseIndex]);
+    return this.__sparse.get(index).map((denseIndex) => this.__dense.getUnchecked(denseIndex));
   }
 
   getMut(index: I): Option<Ptr<V>> {
     return this.__sparse.get(index).map((denseIndex) => {
       return Ptr({
-        get: () => this.__dense[denseIndex],
-        set: (value) => (this.__dense[denseIndex] = value),
+        get: () => this.__dense.getUnchecked(denseIndex),
+        set: (value) => this.__dense.set(denseIndex, value),
       });
     });
   }
 
   getUnchecked(index: I): V {
-    return this.__dense[this.__sparse.get(index).unwrap()];
+    return this.__dense.getUnchecked(this.__sparse.get(index).unwrap());
   }
 
   indices(): RustIter<I> {
@@ -242,7 +242,7 @@ export class SparseSet<I extends number, V> {
 
   get(index: I): Option<V> {
     return this.__sparse.get(index).map((denseIndex) => {
-      return this.__dense[denseIndex];
+      return this.__dense.getUnchecked(denseIndex);
     });
   }
 
@@ -279,7 +279,7 @@ export class SparseSet<I extends number, V> {
   getOrInsertWith(index: I, func: () => V) {
     return this.__sparse.get(index).match({
       Some: (denseIndex) => {
-        return this.__dense[denseIndex];
+        return this.__dense.getUnchecked(denseIndex);
       },
       None: () => {
         const value = func();
@@ -287,7 +287,7 @@ export class SparseSet<I extends number, V> {
         this.__sparse.insert(index, denseIndex);
         this.__indices.push(index);
         this.__dense.push(value);
-        return this.__dense[denseIndex];
+        return this.__dense.getUnchecked(denseIndex);
       },
     });
   }

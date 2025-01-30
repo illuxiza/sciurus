@@ -1,5 +1,4 @@
-import { NOT_IMPLEMENTED } from '@sciurus/utils';
-import { implTrait, trait } from 'rustable';
+import { NotImplementedError } from 'rustable';
 import { Entity } from '../../entity/base';
 import { TableRow } from '../../storage';
 import { WorldQuery } from '../world_query';
@@ -7,7 +6,6 @@ import { WorldQuery } from '../world_query';
 /**
  * A query filter that can be applied to query results.
  */
-@trait
 export class QueryFilter<Item = any, Fetch = any, State = any> extends WorldQuery<
   Item,
   Fetch,
@@ -24,15 +22,17 @@ export class QueryFilter<Item = any, Fetch = any, State = any> extends WorldQuer
    * @returns A boolean indicating whether the entity passes the filter.
    */
   filterFetch(_fetch: Fetch, _entity: Entity, _tableRow: TableRow): boolean {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-implTrait(Array<QueryFilter>, QueryFilter, {
+QueryFilter.implFor(Array<QueryFilter>, {
   filterFetch(fetch: any, entity: Entity, tableRow: TableRow): boolean {
     return this.every((f) => f.filterFetch(fetch, entity, tableRow));
   },
 });
+
+export const EMPTY_QUERY_FILTER = QueryFilter.wrap([]) as QueryFilter<any, any, any>;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

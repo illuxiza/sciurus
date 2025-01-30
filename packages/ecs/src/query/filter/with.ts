@@ -1,4 +1,4 @@
-import { Constructor, createFactory, implTrait, Ptr, useTrait } from 'rustable';
+import { Constructor, createFactory, Ptr } from 'rustable';
 import { Component, ComponentId, Components } from '../../component';
 import { StorageType } from '../../storage';
 import { World } from '../../world/base';
@@ -9,18 +9,20 @@ import { QueryFilter } from './base';
 class WithFilter {
   __isDense: boolean = false;
   constructor(public value: Constructor<any>) {
-    const storageType = useTrait(value, Component).storageType();
+    const storageType = Component.wrap(value).storageType();
     this.__isDense = storageType === StorageType.Table;
   }
 }
 
-interface WithFilter extends WorldQuery<void, void, boolean>, QueryFilter<void, void, boolean> {}
+interface WithFilter
+  extends WorldQuery<void, void, ComponentId>,
+    QueryFilter<void, void, ComponentId> {}
 
 export const With = createFactory(WithFilter);
 
 export interface With extends WithFilter {}
 
-implTrait(WithFilter, WorldQuery, {
+WorldQuery.implFor<typeof WorldQuery<void, void, ComponentId>, typeof WithFilter>(WithFilter, {
   isDense() {
     return this.__isDense;
   },
@@ -44,7 +46,7 @@ implTrait(WithFilter, WorldQuery, {
   },
 });
 
-implTrait(WithFilter, QueryFilter, {
+QueryFilter.implFor(WithFilter, {
   isArchetypal() {
     return true;
   },

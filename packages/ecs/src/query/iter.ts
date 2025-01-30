@@ -353,10 +353,10 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
     if (this.currentRow > 0) {
       const index = this.currentRow - 1;
       if (this.isDense) {
-        const entity = this.tableEntities[index];
+        const entity = this.tableEntities.getUnchecked(index);
         return Some(this.queryData.fetch(this.fetch, entity, index));
       } else {
-        const archetypeEntity = this.archetypeEntities[index];
+        const archetypeEntity = this.archetypeEntities.getUnchecked(index);
         return Some(this.queryData.fetch(this.fetch, archetypeEntity.id, archetypeEntity.tableRow));
       }
     } else {
@@ -387,7 +387,7 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
           this.currentLen = table.entityCount();
           this.currentRow = 0;
         }
-        const entity = this.tableEntities[this.currentRow];
+        const entity = this.tableEntities.getUnchecked(this.currentRow);
         const row = this.currentRow;
         if (!this.queryFilter.filterFetch(this.filter, entity, row)) {
           this.currentRow++;
@@ -412,7 +412,7 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
           this.currentLen = archetype.len();
           this.currentRow = 0;
         }
-        const archetypeEntity = this.archetypeEntities[this.currentRow];
+        const archetypeEntity = this.archetypeEntities.getUnchecked(this.currentRow);
         if (
           !this.queryFilter.filterFetch(this.filter, archetypeEntity.id, archetypeEntity.tableRow)
         ) {

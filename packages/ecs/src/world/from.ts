@@ -1,17 +1,15 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { Default, implTrait, trait } from 'rustable';
+import { Default, NotImplementedError, Trait } from 'rustable';
 import { type World } from './base';
 
-@trait
-export class FromWorld extends TraitValid {
+export class FromWorld extends Trait {
   static fromWorld<T extends object>(_world: World): T {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-implTrait(Default, FromWorld, {
+FromWorld.implFor(Default, {
   static: {
-    fromWorld() {
+    fromWorld<T extends object>(this: typeof Default): T {
       return this.default();
     },
   },

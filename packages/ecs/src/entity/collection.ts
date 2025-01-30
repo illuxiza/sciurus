@@ -26,8 +26,8 @@ export class Entities {
   reserveEntity() {
     const n = this.freeCursor--;
     if (n > 0) {
-      const index = this.pending[n - 1];
-      return Entity.fromRawAndGeneration(index, this.meta[index].generation);
+      const index = this.pending.getUnchecked(n - 1);
+      return Entity.fromRawAndGeneration(index, this.meta.getUnchecked(index).generation);
     } else {
       return Entity.fromRaw(this.meta.len() - n);
     }
@@ -45,7 +45,7 @@ export class Entities {
     const index = this.pending.pop();
     if (index.isSome()) {
       this.freeCursor = this.pending.len();
-      return Entity.fromRawAndGeneration(index.unwrap(), this.meta[index.unwrap()].generation);
+      return Entity.fromRawAndGeneration(index.unwrap(), this.meta.getUnchecked(index.unwrap()).generation);
     } else {
       const index = this.meta.len();
       this.meta.push(EntityMeta.EMPTY.clone());
@@ -70,13 +70,13 @@ export class Entities {
         this.length += 1;
         return None;
       } else {
-        const value = this.meta[entity.index].location;
-        this.meta[entity.index].generation = EntityMeta.EMPTY.generation;
+        const value = this.meta.getUnchecked(entity.index).location;
+        this.meta.getUnchecked(entity.index).generation = EntityMeta.EMPTY.generation;
         return Some(value);
       }
     };
     const loc = locFn();
-    this.meta[entity.index].generation = entity.generation;
+    this.meta.getUnchecked(entity.index).generation = entity.generation;
     return loc;
   }
 
@@ -97,7 +97,7 @@ export class Entities {
         this.length += 1;
         return AllocAtWithoutReplacement.DidNotExist();
       } else {
-        const currentMeta = this.meta[entity.index];
+        const currentMeta = this.meta.getUnchecked(entity.index);
         if (currentMeta.location.archetypeId === INVALID_VALUE) {
           return AllocAtWithoutReplacement.DidNotExist();
         } else if (currentMeta.generation === entity.generation) {
@@ -108,13 +108,13 @@ export class Entities {
       }
     };
     const result = resultFn();
-    this.meta[entity.index].generation = entity.generation;
+    this.meta.getUnchecked(entity.index).generation = entity.generation;
     return result;
   }
 
   free(entity: Entity) {
     this.verifyFlushed();
-    const meta = this.meta[entity.index];
+    const meta = this.meta.getUnchecked(entity.index);
     if (meta.generation !== entity.generation) {
       return None;
     }
@@ -161,14 +161,14 @@ export class Entities {
   }
 
   set(index: EntityIndex, entityLocation: EntityLocation) {
-    this.meta[index].location = entityLocation;
+    this.meta.getUnchecked(index).location = entityLocation;
   }
 
   reserveGenerations(index: number, generations: number) {
     if (index >= this.meta.len()) {
       return false;
     }
-    const meta = this.meta[index];
+    const meta = this.meta.getUnchecked(index);
     if (meta.location.archetypeId === INVALID_VALUE) {
       meta.generation = meta.generation + generations;
       return true;
@@ -213,7 +213,7 @@ export class Entities {
             this.meta.resize(newMetaLen, EntityMeta.EMPTY.clone());
             this.length += -currentFreeCursor;
             for (let i = oldMetaLen; i < newMetaLen; i++) {
-              const meta = this.meta[i];
+              const meta = this.meta.getUnchecked(i);
               init(
                 Entity.fromRawAndGeneration(i, meta.generation),
                 Ptr({
@@ -229,7 +229,7 @@ export class Entities {
           })();
     this.length += this.pending.len() - newFreeCursor;
     for (const index of this.pending.iter().skip(newFreeCursor)) {
-      const meta = this.meta[index];
+      const meta = this.meta.getUnchecked(index);
       init(
         Entity.fromRawAndGeneration(index, meta.generation),
         Ptr({
@@ -257,7 +257,7 @@ export class Entities {
   }
 
   setSpawnedOrDespawnedBy(index: number, caller: string): void {
-    const meta = this.meta[index];
+    const meta = this.meta.getUnchecked(index);
     if (!meta) {
       throw new Error('Entity index invalid');
     }

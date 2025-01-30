@@ -1,38 +1,48 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
 import {
   Constructor,
+  defaultVal,
   Eq,
-  implTrait,
   macroTrait,
+  named,
   None,
+  NotImplementedError,
   Option,
   Some,
   stringify,
-  trait,
+  Trait,
   typeId,
   TypeId,
   typeName,
 } from 'rustable';
 
-@trait
-class ScheduleLabelTrait extends TraitValid {
+@named('ScheduleLabel')
+class ScheduleLabelImpl extends Trait {
   toString() {
     return typeName(this);
   }
+
+  static label(val: any): ScheduleLabelImpl {
+    ScheduleLabelImpl.validFor(val);
+    if (typeof val === 'function') {
+      return defaultVal(val);
+    } else {
+      return val as ScheduleLabelImpl;
+    }
+  }
 }
 
-implTrait(ScheduleLabelTrait, Eq, {
+Eq.implFor(ScheduleLabelImpl, {
   eq(other: any): boolean {
     return typeId(this) === typeId(other) && stringify(this) === stringify(other);
   },
 });
 
-export const ScheduleLabel = macroTrait(ScheduleLabelTrait);
+export const ScheduleLabel = macroTrait(ScheduleLabelImpl);
 
-export interface ScheduleLabel extends ScheduleLabelTrait {}
+export interface ScheduleLabel extends ScheduleLabelImpl {}
 
-@trait
-class SystemSetTrait extends TraitValid {
+@named('SystemSet')
+class SystemSetTrait extends Trait {
   systemType(): Option<TypeId> {
     return None;
   }
@@ -50,7 +60,7 @@ export class SystemTypeSet {
   constructor(public data: Constructor) {}
 }
 
-implTrait(SystemTypeSet, Eq, {
+Eq.implFor(SystemTypeSet, {
   eq(this: SystemTypeSet, other: SystemTypeSet): boolean {
     return typeId(this.data) === typeId(other.data);
   },
@@ -58,7 +68,7 @@ implTrait(SystemTypeSet, Eq, {
 
 export interface SystemTypeSet extends SystemSet {}
 
-implTrait(SystemTypeSet, SystemSet, {
+SystemSet.implFor(SystemTypeSet, {
   systemType(): Option<TypeId> {
     return Some(typeId(this.data));
   },
@@ -70,22 +80,21 @@ export class AnonymousSet {
 
 export interface AnonymousSet extends SystemSet {}
 
-implTrait(AnonymousSet, SystemSet, {
+SystemSet.implFor(AnonymousSet, {
   isAnonymous(): boolean {
     return true;
   },
 });
 
-@trait
-export class IntoSystemSet extends TraitValid {
+export class IntoSystemSet extends Trait {
   intoSystemSet(): SystemSet {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
 export interface SystemSet extends IntoSystemSet {}
 
-implTrait(SystemSet, IntoSystemSet, {
+IntoSystemSet.implFor(SystemSet, {
   intoSystemSet(): SystemSet {
     return this as SystemSet;
   },

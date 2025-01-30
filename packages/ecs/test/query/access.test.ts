@@ -71,7 +71,7 @@ describe('Access', () => {
     expect(cloned.hasComponentWrite(1)).toBe(original.hasComponentWrite(1));
     expect(cloned.hasComponentRead(2)).toBe(original.hasComponentRead(2));
     expect(cloned.required.contains(3)).toBe(original.required.contains(3));
-    expect(cloned.filterSets[0].with.contains(4)).toBe(original.filterSets[0].with.contains(4));
+    expect(cloned.filterSets.getUnchecked(0).with.contains(4)).toBe(original.filterSets.getUnchecked(0).with.contains(4));
   });
 
   test('access_filters_clone', () => {
@@ -92,7 +92,7 @@ describe('Access', () => {
     expect(cloned.hasComponentWrite(1)).toBe(original.hasComponentWrite(1));
     expect(cloned.hasComponentRead(2)).toBe(original.hasComponentRead(2));
     expect(cloned.required.contains(3)).toBe(original.required.contains(3));
-    expect(cloned.filterSets[0].with.contains(4)).toBe(original.filterSets[0].with.contains(4));
+    expect(cloned.filterSets.getUnchecked(0).with.contains(4)).toBe(original.filterSets.getUnchecked(0).with.contains(4));
   });
 
   test('read_all_access_conflicts', () => {
@@ -227,8 +227,8 @@ describe('Access', () => {
     // Compare the filter sets individually to avoid size mismatches
     expect(accessA.filterSets.len()).toBe(expected.filterSets.len());
     for (let i = 0; i < accessA.filterSets.len(); i++) {
-      const actualFilter = accessA.filterSets[i];
-      const expectedFilter = expected.filterSets[i];
+      const actualFilter = accessA.filterSets.getUnchecked(i);
+      const expectedFilter = expected.filterSets.getUnchecked(i);
 
       // Compare with bits
       for (

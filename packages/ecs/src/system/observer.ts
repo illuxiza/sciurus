@@ -1,5 +1,4 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { implTrait, trait, Type } from 'rustable';
+import { NotImplementedError, Trait, Type } from 'rustable';
 import { Trigger } from '../observer/types';
 import { System } from './base';
 import { IntoSystem } from './into';
@@ -7,9 +6,14 @@ import { IntoSystem } from './into';
 /**
  * Implemented for Systems that have a Trigger as the first argument.
  */
-@trait
+export class ObserverSystem<
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export class ObserverSystem<E extends object = any, B extends object = any, Out = void> {
+  E extends object = any,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  B extends object = any,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  Out = void,
+> extends Trait {
   // This is a marker trait in TypeScript
   // The actual implementation is done through the System trait
 }
@@ -25,22 +29,21 @@ export interface ObserverSystem<E extends object = any, B extends object = any, 
  * argument to a function. If an observer system needs to be returned from a
  * function or stored somewhere, use ObserverSystem instead of this trait.
  */
-@trait
 export class IntoObserverSystem<
   E extends object = any,
   B extends object = any,
   Out = void,
-> extends TraitValid {
+> extends Trait {
   intoSystem(): System<Trigger<E, B>, Out> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
 // Implementation for any System that has Trigger as input
-implTrait(Type(System, [Trigger]), ObserverSystem);
+ObserverSystem.implFor(Type(System, [Trigger]))
 
 // Implementation for any IntoSystem that can convert to an ObserverSystem
-implTrait(Type(IntoSystem, [Trigger]), IntoObserverSystem, {
+IntoObserverSystem.implFor(Type(IntoSystem, [Trigger]), {
   intoSystem(this: IntoSystem): System {
     return IntoSystem.wrap(this).intoSystem();
   },

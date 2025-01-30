@@ -1,5 +1,5 @@
 import { EntityCell } from 'packages/ecs/src/world/entity_ref/cell';
-import { Default, derive, implTrait, Option, Some, Vec } from 'rustable';
+import { Default, derive, Option, Some, Vec } from 'rustable';
 import { Component, ComponentId, Res, Resource, World } from '../../src';
 import { component } from '../../src/component';
 import { Entity } from '../../src/entity/base';
@@ -52,7 +52,7 @@ class Parent {
   constructor(public entity: Entity) {}
 }
 
-implTrait(Parent, Traversal, {
+Traversal.implFor(Parent, {
   static: {
     traverse<D>(item: Parent, _: D): Option<Entity> {
       return Some(item.entity);

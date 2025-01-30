@@ -1,5 +1,4 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { implTrait, None, Option, Ptr, Some, trait } from 'rustable';
+import { None, NotImplementedError, Option, Ptr, Some, Trait } from 'rustable';
 import { Archetype } from '../archetype/base';
 import { Tick } from '../change_detection/tick';
 import { ComponentId, Components } from '../component';
@@ -11,8 +10,7 @@ import { FilteredAccess } from './access';
 /**
  * A query that can be run on a World to get a set of components.
  */
-@trait
-export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid {
+export class WorldQuery<Item = any, Fetch = any, State = any> extends Trait {
   ITEM!: Item;
   FETCH!: Fetch;
   STATE!: State;
@@ -23,33 +21,33 @@ export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid
    * This function manually implements subtyping for the query items.
    */
   shrink(_item: Item): Item {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /**
    * This function manually implements subtyping for the query fetches.
    */
   shrinkFetch(_fetch: Fetch): Fetch {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   /**
    * Initializes the fetch for the query.
    */
   initFetch(_world: World, _state: State, _lastRun: Tick, _thisRun: Tick): Fetch {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
   /**
    * Sets the archetype for the fetch.
    */
   setArchetype(_fetch: Fetch, _state: State, _archetype: Archetype, _table: Table): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /**
    * Sets the table for the fetch.
    */
   setTable(_fetch: Fetch, _state: State, _table: Table): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /**
@@ -67,7 +65,7 @@ export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid
    * @returns The fetched item.
    */
   fetch(_fetch: Fetch, _entity: Entity, _tableRow: TableRow): Item {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /**
@@ -76,29 +74,29 @@ export class WorldQuery<Item = any, Fetch = any, State = any> extends TraitValid
    * @param access The filtered access to update.
    */
   updateComponentAccess(_state: State, _access: Ptr<FilteredAccess>): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /**
    * Initializes the query state.
    */
   initState(_world: World): State {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   getState(_components: Components): Option<State> {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   matchesComponentSet(
     _state: State,
     _setContainsId: (componentId: ComponentId) => boolean,
   ): boolean {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-implTrait(Array<WorldQuery>, WorldQuery, {
+WorldQuery.implFor(Array<WorldQuery>, {
   shrink(this: Array<WorldQuery>, item: any): any {
     return this.map((q, i) => q.shrink(item[i]));
   },

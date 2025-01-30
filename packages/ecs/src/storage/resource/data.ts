@@ -1,9 +1,8 @@
-import { None, Option, Ptr, Some } from 'rustable';
+import { Location, None, Option, Ptr, Some } from 'rustable';
 import { ArchetypeComponentId } from '../../archetype/types';
 import { MutUntyped } from '../../change_detection/mut';
 import { ComponentTicks, Tick, Ticks } from '../../change_detection/tick';
 import { BlobArray } from '../data_array';
-import { getCaller } from '@sciurus/utils';
 
 export class ResourceData {
   private __data: BlobArray;
@@ -81,7 +80,7 @@ export class ResourceData {
       this.__addedTicks.set(changeTick.get());
     }
     this.__changedTicks.set(changeTick.get());
-    this.__changedBy = caller ?? getCaller();
+    this.__changedBy = caller ?? new Location().caller()!.name;
   }
 
   insertWithTicks(value: any, changeTicks: ComponentTicks, caller?: string): void {
@@ -92,7 +91,7 @@ export class ResourceData {
     }
     this.__addedTicks.set(changeTicks.added.get());
     this.__changedTicks.set(changeTicks.changed.get());
-    this.__changedBy = caller ?? getCaller();
+    this.__changedBy = caller ?? new Location().caller()!.name;
   }
 
   remove(): Option<[any, ComponentTicks, Ptr<string>]> {

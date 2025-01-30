@@ -4,4 +4,4 @@ import { system } from '@sciurus/ecs';
 const bar = system([], () => {
   document.getElementById('app')!.innerHTML = 'Hello, Sciurus!';
 });
-App.new().addSystems(new Update(), bar).run();
+App.new().addSystems(Update, bar).run();

@@ -1,4 +1,4 @@
-import { implTrait, Option, Ptr, Some } from 'rustable';
+import { Option, Ptr, Some } from 'rustable';
 import { ComponentId, Components } from '../../component';
 import { Entities, Entity, EntityLocation } from '../../entity';
 import { TableRow } from '../../storage';
@@ -13,7 +13,7 @@ class EntityFetch {
 
 interface EntityFetch extends QueryData<Entity> {}
 
-implTrait(Entity, IntoFetch<Entity>, {
+IntoFetch.implFor(Entity, {
   static: {
     intoFetch(this: typeof Entity): EntityFetch {
       return new EntityFetch();
@@ -21,7 +21,7 @@ implTrait(Entity, IntoFetch<Entity>, {
   },
 });
 
-implTrait(EntityFetch, WorldQuery, {
+WorldQuery.implFor<typeof WorldQuery<Entity>, typeof EntityFetch>(EntityFetch, {
   isDense() {
     return true;
   },
@@ -56,8 +56,8 @@ implTrait(EntityFetch, WorldQuery, {
   },
 });
 
-implTrait(EntityFetch, QueryData);
-implTrait(EntityFetch, ReadonlyQueryData);
+QueryData.implFor(EntityFetch);
+ReadonlyQueryData.implFor(EntityFetch);
 
 class EntityLocationFetch {
   constructor() {}
@@ -65,7 +65,7 @@ class EntityLocationFetch {
 
 interface EntityLocationFetch extends QueryData<EntityLocation> {}
 
-implTrait(EntityLocation, IntoFetch<EntityLocation>, {
+IntoFetch.implFor(EntityLocation, {
   static: {
     intoFetch(this: typeof EntityLocation): EntityLocationFetch {
       return new EntityLocationFetch();
@@ -73,44 +73,48 @@ implTrait(EntityLocation, IntoFetch<EntityLocation>, {
   },
 });
 
-implTrait(EntityLocationFetch, WorldQuery, {
-  isDense() {
-    return true;
+WorldQuery.implFor<typeof WorldQuery<EntityLocation, Entities>, typeof EntityLocationFetch>(
+  EntityLocationFetch,
+  {
+    isDense() {
+      return true;
+    },
+    shrink(item: EntityLocation): EntityLocation {
+      return item;
+    },
+    shrinkFetch(fetch: Entities): Entities {
+      return fetch;
+    },
+
+    initFetch(world: World) {
+      return world.entities;
+    },
+
+    setArchetype() {},
+
+    setTable() {},
+
+    fetch(fetch: Entities, entity: Entity, _tableRow: TableRow): EntityLocation {
+      return fetch.get(entity).unwrap();
+    },
+
+    updateComponentAccess(_state: void, _access: Ptr<FilteredAccess>): void {},
+
+    initState(_world: World): void {},
+
+    getState(_components: Components): Option<void> {
+      return Some(undefined);
+    },
+
+    matchesComponentSet(
+      _state: void,
+      _setContainsId: (componentId: ComponentId) => boolean,
+    ): boolean {
+      return true;
+    },
   },
-  shrink(item: EntityLocation): EntityLocation {
-    return item;
-  },
-  shrinkFetch(fetch: Entities): Entities {
-    return fetch;
-  },
+);
 
-  initFetch(world: World) {
-    return world.entities;
-  },
+QueryData.implFor(EntityLocationFetch);
 
-  setArchetype() {},
-
-  setTable() {},
-
-  fetch(fetch: Entities, entity: Entity, _tableRow: TableRow): Entity {
-    return fetch.get(entity).unwrap();
-  },
-
-  updateComponentAccess(_state: void, _access: Ptr<FilteredAccess>): void {},
-
-  initState(_world: World): void {},
-
-  getState(_components: Components): Option<void> {
-    return Some(undefined);
-  },
-
-  matchesComponentSet(
-    _state: void,
-    _setContainsId: (componentId: ComponentId) => boolean,
-  ): boolean {
-    return true;
-  },
-});
-
-implTrait(EntityLocationFetch, QueryData);
-implTrait(EntityLocationFetch, ReadonlyQueryData);
+ReadonlyQueryData.implFor(EntityLocationFetch);

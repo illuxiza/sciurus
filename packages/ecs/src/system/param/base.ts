@@ -1,5 +1,4 @@
-import { NOT_IMPLEMENTED, TraitValid } from '@sciurus/utils';
-import { Constructor, defaultVal, implTrait, macroTrait, trait, useTrait } from 'rustable';
+import { Constructor, defaultVal, macroTrait, NotImplementedError, Trait } from 'rustable';
 import { Archetype } from '../../archetype/base';
 import { Tick } from '../../change_detection/tick';
 import { World } from '../../world';
@@ -33,8 +32,7 @@ class FetchState implements SystemParamState<Record<string, any>> {
 /**
  * A parameter that can be used in a System.
  */
-@trait
-class SystemParamTrait<State = any, Item = any> extends TraitValid {
+class SystemParamTrait<State = any, Item = any> extends Trait {
   STATE!: State;
   ITEM!: Item;
   /**
@@ -42,7 +40,7 @@ class SystemParamTrait<State = any, Item = any> extends TraitValid {
    * and creates a new instance of this param's State.
    */
   initParamState(_world: World, _systemMeta: SystemMeta): State {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   /**
@@ -82,13 +80,13 @@ class SystemParamTrait<State = any, Item = any> extends TraitValid {
     _changeTick: Tick,
     _input: any,
   ): Item {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
 export const SystemParam = macroTrait<
   SystemParamConstructor<SystemParamClass>,
-  typeof SystemParamTrait
+  typeof SystemParamTrait<FetchState>
 >(SystemParamTrait, {
   initParamState(world: World, systemMeta: SystemMeta): FetchState {
     // Initialize state for each property's SystemParam
@@ -156,16 +154,15 @@ export const SystemParam = macroTrait<
     }
     return instance;
   },
-});
+}) as typeof SystemParamTrait & ((target: any) => void);
 
 export interface SystemParam<State = any, Item = any> extends SystemParamTrait<State, Item> {}
 /**
  * A SystemParam that only reads a given World.
  */
-@trait
 export class ReadonlySystemParam<State = any, Item = any> extends SystemParam<State, Item> {}
 
-implTrait(Array<SystemParam>, SystemParam, {
+SystemParam.implFor<typeof SystemParam<any[]>, typeof Array<SystemParam>>(Array, {
   initParamState(this: Array<SystemParam>, world: World, systemMeta: SystemMeta): any[] {
     return this.map((param) => into(param).initParamState(world, systemMeta));
   },
@@ -219,16 +216,15 @@ implTrait(Array<SystemParam>, SystemParam, {
 
 function into(param: Constructor<IntoSystemParam> | SystemParam) {
   if (typeof param === 'function') {
-    return useTrait(param, IntoSystemParam).intoSystemParam();
+    return IntoSystemParam.wrap(param).intoSystemParam();
   } else {
     return param;
   }
 }
 
-@trait
-export class IntoSystemParam<Item = any> {
+export class IntoSystemParam<Item = any> extends Trait {
   ITEM!: Item;
   static intoSystemParam<P extends SystemParam>(): P {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }

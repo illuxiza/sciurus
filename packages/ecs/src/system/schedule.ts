@@ -1,4 +1,4 @@
-import { implTrait, Ok, Result, Vec } from 'rustable';
+import { Ok, Result, Vec } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
@@ -15,7 +15,7 @@ export class ScheduleSystem {
 
 export interface ScheduleSystem extends System<void, Result<void, Error>> {}
 
-implTrait(ScheduleSystem, System<void, Result<void, Error>>, {
+System.implFor(ScheduleSystem, {
   name(this: ScheduleSystem): string {
     return this.inner.name();
   },
@@ -35,8 +35,9 @@ implTrait(ScheduleSystem, System<void, Result<void, Error>>, {
   hasDeferred(this: ScheduleSystem): boolean {
     return this.inner.hasDeferred();
   },
-  runUnsafe(this: ScheduleSystem, world: World): Result<void, Error> {
-    const ret = (this.inner as System<void, Result<void, Error>>).runUnsafe(void 0, world);
+
+  runUnsafe(this: ScheduleSystem, input: any, world: World): Result<void, Error> {
+    const ret = (this.inner as System<void, Result<void, Error>>).runUnsafe(input, world);
     if (!ret) {
       return Ok(void 0);
     }

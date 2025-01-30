@@ -1,10 +1,9 @@
-import { FixedBitSet, logger, NOT_IMPLEMENTED } from '@sciurus/utils';
+import { FixedBitSet, logger } from '@sciurus/utils';
 import {
   Constructor,
   Err,
   HashMap,
   HashSet,
-  implTrait,
   iter,
   None,
   Ok,
@@ -13,8 +12,6 @@ import {
   Result,
   RustIter,
   Some,
-  trait,
-  useTrait,
   Vec,
 } from 'rustable';
 import { ComponentId, Components } from '../component';
@@ -49,28 +46,14 @@ import {
   SystemSetNode,
 } from './types';
 
-@trait
-export class ProcessNodeConfig {
-  static processConfig(_scheduleGraph: ScheduleGraph, _config: NodeConfig<any>): NodeId {
-    throw NOT_IMPLEMENTED;
-  }
+function processConfig(
+  type: Constructor,
+  scheduleGraph: ScheduleGraph,
+  config: NodeConfig<any>,
+): NodeId {
+  if (type === ScheduleSystem) return scheduleGraph.addSystemInner(config).unwrap();
+  else return scheduleGraph.configureSetInner(config).unwrap();
 }
-
-implTrait(ScheduleSystem, ProcessNodeConfig, {
-  static: {
-    processConfig(scheduleGraph: ScheduleGraph, config: NodeConfig<ScheduleSystem>): NodeId {
-      return scheduleGraph.addSystemInner(config).unwrap();
-    },
-  },
-});
-
-implTrait(SystemSet, ProcessNodeConfig, {
-  static: {
-    processConfig(scheduleGraph: ScheduleGraph, config: NodeConfig<SystemSet>): NodeId {
-      return scheduleGraph.configureSetInner(config).unwrap();
-    },
-  },
-});
 
 export class ScheduleGraph {
   __systems: Vec<SystemNode> = Vec.new();
@@ -131,9 +114,9 @@ export class ScheduleGraph {
 
   systemSets(): RustIter<[NodeId, SystemSet, Condition[]]> {
     return this.__systemSetIds.iter().map(([_, id]) => {
-      const setMode = this.__systemSets[id.index];
+      const setMode = this.__systemSets.getUnchecked(id.index);
       let set = setMode.inner;
-      const conditions = this.__systemSetConditions[id.index].asSlice();
+      const conditions = this.__systemSetConditions.getUnchecked(id.index).asSlice();
       return [id, set, conditions];
     });
   }
@@ -159,7 +142,7 @@ export class ScheduleGraph {
     config: NodeConfig<T>,
     collectNodes: boolean,
   ): ProcessConfigsResult {
-    const node = useTrait(type, ProcessNodeConfig).processConfig(this, config);
+    const node = processConfig(type, this, config);
     return new ProcessConfigsResult(collectNodes ? Vec.from([node]) : Vec.new(), true);
   }
 
@@ -257,7 +240,7 @@ export class ScheduleGraph {
     return Ok(id);
   }
 
-  configureSets(sets: any) {
+  configureSets(sets: IntoConfigs) {
     this.processConfigs(SystemSet, IntoConfigs.wrap(sets).intoConfigs(), false);
   }
 
@@ -273,7 +256,7 @@ export class ScheduleGraph {
       return res as unknown as Result<NodeId, ScheduleBuildError>;
     }
 
-    const systemSetConditions = this.__systemSetConditions[id.index];
+    const systemSetConditions = this.__systemSetConditions.getUnchecked(id.index);
     this.__uninit.push([id, systemSetConditions.len()]);
     systemSetConditions.append(conditions);
 
@@ -418,12 +401,12 @@ export class ScheduleGraph {
   initialize(world: World) {
     for (const [id, i] of this.__uninit.drain()) {
       if (id.isSystem()) {
-        this.__systems[id.index].get().unwrap().initialize(world);
-        for (const condition of this.__systemConditions[id.index]) {
+        this.__systems.getUnchecked(id.index).get().unwrap().initialize(world);
+        for (const condition of this.__systemConditions.getUnchecked(id.index).iter().skip(i)) {
           condition.initialize(world);
         }
       } else {
-        for (const condition of this.__systemSetConditions[id.index].iter().skip(i)) {
+        for (const condition of this.__systemSetConditions.getUnchecked(id.index).iter().skip(i)) {
           condition.initialize(world);
         }
       }
@@ -538,11 +521,11 @@ export class ScheduleGraph {
     let topo = topoResult.unwrap();
     let distances = new HashMap<number, Option<number>>();
     for (let node of topo) {
-      let addSyncAfter = this.__systems[node.index].get().unwrap().hasDeferred();
+      let addSyncAfter = this.__systems.getUnchecked(node.index).get().unwrap().hasDeferred();
       for (let target of dependencyFlattened.neighborsDirected(node, Direction.Outgoing)) {
         let addSyncOnEdge =
           addSyncAfter &&
-          !isApplyDeferred(this.__systems[target.index].get().unwrap()) &&
+          !isApplyDeferred(this.__systems.getUnchecked(target.index).get().unwrap()) &&
           !this.__noSyncEdges.contains([node, target]);
         let weight = addSyncOnEdge ? 1 : 0;
         let distance = distances
@@ -689,8 +672,8 @@ export class ScheduleGraph {
       ) {
         continue;
       }
-      let systemA = this.__systems[a.index].get().unwrap();
-      let systemB = this.__systems[b.index].get().unwrap();
+      let systemA = this.__systems.getUnchecked(a.index).get().unwrap();
+      let systemB = this.__systems.getUnchecked(b.index).get().unwrap();
       if (systemA.isExclusive() || systemB.isExclusive()) {
         conflictingSystems.push([a, b, Vec.new()]);
       } else {
@@ -709,6 +692,7 @@ export class ScheduleGraph {
                 conflictingSystems.push([a, b, c]);
               }
             },
+            _: () => {},
           });
         }
       }
@@ -737,7 +721,9 @@ export class ScheduleGraph {
       .iter()
       .cloned()
       .enumerate()
-      .filter(([_i, id]) => id.isSet() && !this.__systemSetConditions[id.index].isEmpty())
+      .filter(
+        ([_i, id]) => id.isSet() && !this.__systemSetConditions.getUnchecked(id.index).isEmpty(),
+      )
       .unzip();
 
     const hgSetWithConditionsIdxs = Vec.from(hgSetWithConditionsIdxsArray);
@@ -764,7 +750,7 @@ export class ScheduleGraph {
     const systemsInSetsWithConditions = Vec.new<FixedBitSet>();
     systemsInSetsWithConditions.resize(setWithConditionsCount, new FixedBitSet(sysCount));
     for (const [i, row] of hgSetWithConditionsIdxs.iter().enumerate()) {
-      const bitset = systemsInSetsWithConditions[i];
+      const bitset = systemsInSetsWithConditions.getUnchecked(i);
       for (const [col, sysId] of hgSystems) {
         const idx = dgSystemIdxMap.get(sysId).unwrap();
         const isDescendant = hierResultsReachable.get(index(row, col, hgNodeCount));
@@ -776,7 +762,7 @@ export class ScheduleGraph {
     setsWithConditionsOfSystems.resize(sysCount, new FixedBitSet(setWithConditionsCount));
     for (const [col, sysId] of hgSystems) {
       const i = dgSystemIdxMap.get(sysId).unwrap();
-      const bitset = setsWithConditionsOfSystems[i];
+      const bitset = setsWithConditionsOfSystems.getUnchecked(i);
       for (const [idx, row] of hgSetWithConditionsIdxs
         .iter()
         .enumerate()
@@ -814,15 +800,15 @@ export class ScheduleGraph {
       .iter()
       .zip(schedule.systems.drain().iter())
       .zip(schedule.systemConditions.drain().iter())) {
-      this.__systems[id.index].inner = Some(system);
-      this.__systemConditions[id.index] = conditions;
+      this.__systems.getUnchecked(id.index).inner = Some(system);
+      this.__systemConditions.set(id.index, conditions);
     }
 
     for (const [id, conditions] of schedule.setIds
       .drain()
       .iter()
       .zip(schedule.setConditions.drain().iter())) {
-      this.__systemSetConditions[id.index] = conditions;
+      this.__systemSetConditions.set(id.index, conditions);
     }
 
     const buildResult = this.buildSchedule(components, scheduleLabel, ignoredAmbiguities);
@@ -833,17 +819,17 @@ export class ScheduleGraph {
     schedule[Ptr.ptr] = buildResult.unwrap();
 
     for (const id of schedule.systemIds) {
-      const system = this.__systems[id.index].inner.unwrap();
-      this.__systems[id.index].inner = None;
-      const conditions = this.__systemConditions[id.index];
-      this.__systemConditions[id.index] = Vec.new();
+      const system = this.__systems.getUnchecked(id.index).inner.unwrap();
+      this.__systems.getUnchecked(id.index).inner = None;
+      const conditions = this.__systemConditions.getUnchecked(id.index);
+      this.__systemConditions.set(id.index, Vec.new());
       schedule.systems.push(system as ScheduleSystem);
       schedule.systemConditions.push(conditions);
     }
 
     for (const id of schedule.setIds) {
-      const conditions = this.__systemSetConditions[id.index];
-      this.__systemSetConditions[id.index] = Vec.new();
+      const conditions = this.__systemSetConditions.getUnchecked(id.index);
+      this.__systemSetConditions.set(id.index, Vec.new());
       schedule.setConditions.push(conditions);
     }
 
@@ -869,7 +855,7 @@ export class ScheduleGraph {
       }
       return name;
     } else if (id.isSet()) {
-      let set = this.__systemSets[id.index];
+      let set = this.__systemSets.getUnchecked(id.index);
       if (set.isAnonymous()) {
         return this.anonymousSetName(id);
       } else {
@@ -1031,7 +1017,7 @@ export class ScheduleGraph {
     setSystems: HashMap<NodeId, Vec<NodeId>>,
   ): Result<void, ScheduleBuildError> {
     for (let [id, systems] of setSystems) {
-      let setNode = this.__systemSets[id.index];
+      let setNode = this.__systemSets.getUnchecked(id.index);
       if (setNode.isSystemType()) {
         let instances = systems.len();
         let ambiguousWith = this.__ambiguousWith.edges(id);
@@ -1112,7 +1098,7 @@ export class ScheduleGraph {
   private namesOfSetsContainingNode(id: NodeId): Vec<string> {
     let sets = new HashSet<NodeId>();
     this.traverseSetsContainingNode(id, (setId) => {
-      let ret = this.__systemSets[setId.index].isSystemType() && !sets.contains(setId);
+      let ret = this.__systemSets.getUnchecked(setId.index).isSystemType() && !sets.contains(setId);
       sets.insert(setId);
       return ret;
     });

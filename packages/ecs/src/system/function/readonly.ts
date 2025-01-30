@@ -1,4 +1,4 @@
-import { Constructor, deepClone, implTrait, None, Option, Some, Vec } from 'rustable';
+import { Constructor, deepClone, None, Option, Some, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
 import { Access } from '../../query/access';
 import { SystemSet, SystemTypeSet } from '../../schedule/set';
@@ -142,11 +142,11 @@ export class FunctionReadonlySystem {
   }
 }
 
-implTrait(FunctionReadonlySystem, System);
+System.implFor(FunctionReadonlySystem);
 
-implTrait(FunctionReadonlySystem, ReadonlySystem);
+ReadonlySystem.implFor(FunctionReadonlySystem);
 
-implTrait(FunctionReadonlySystem, WithParamWarnPolicy, {
+WithParamWarnPolicy.implFor(FunctionReadonlySystem, {
   withParamWarnPolicy(warnPolicy: ParamWarnPolicy): FunctionReadonlySystem {
     this.meta.setParamWarnPolicy(warnPolicy);
     return this;

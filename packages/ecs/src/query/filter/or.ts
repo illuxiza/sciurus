@@ -1,5 +1,5 @@
 import { FixedBitSet } from '@sciurus/utils';
-import { implTrait, None, Ptr, Some } from 'rustable';
+import { None, Ptr, Some } from 'rustable';
 import { ComponentId, Components } from '../../component';
 import { Entity } from '../../entity/base';
 import { TableRow } from '../../storage';
@@ -29,7 +29,7 @@ class OrFetch<T extends WorldQuery> {
   }
 }
 
-implTrait(Or, WorldQuery, {
+WorldQuery.implFor<typeof WorldQuery<boolean>, typeof Or>(Or, {
   isDense(this: Or) {
     return this.filters.every((f) => f.isDense());
   },
@@ -109,7 +109,7 @@ implTrait(Or, WorldQuery, {
   },
 });
 
-implTrait(Or, QueryFilter, {
+QueryFilter.implFor<typeof QueryFilter<boolean, OrFetch<any>[]>, typeof Or>(Or, {
   isArchetypal(this: Or) {
     return this.filters.every((f) => f.isArchetypal());
   },

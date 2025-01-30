@@ -1,13 +1,21 @@
-import { getCaller, NOT_IMPLEMENTED } from '@sciurus/utils';
-import { macroTrait, None, Option, Ptr, Some, stringify, trait } from 'rustable';
+import {
+  Location,
+  macroTrait,
+  None,
+  NotImplementedError,
+  Option,
+  Ptr,
+  Some,
+  stringify,
+  Trait,
+} from 'rustable';
 import { Tick, Ticks } from './tick';
 
 /**
  * Types that can read change detection information.
  * This change detection is controlled by DetectChangesMut types.
  */
-@trait
-class DetectChangesTrait<T> {
+class DetectChangesTrait<T> extends Trait {
   protected __val__!: T;
   protected __ticks__!: Ticks;
   protected __changeBy__!: string;
@@ -63,7 +71,6 @@ export interface DetectChanges<T> extends DetectChangesTrait<T> {}
 /**
  * Types that implement reliable change detection.
  */
-@trait
 class DetectChangesMutTrait<T> extends DetectChanges<T> {
   /**
    * Flags this value as having been changed.
@@ -76,7 +83,7 @@ class DetectChangesMutTrait<T> extends DetectChanges<T> {
       return;
     }
     this.__ticks__.changed.set(this.__ticks__.thisRun.get());
-    this.__changeBy__ = getCaller();
+    this.__changeBy__ = new Location().caller()!.name;
   }
 
   /**
@@ -91,7 +98,7 @@ class DetectChangesMutTrait<T> extends DetectChanges<T> {
       return;
     }
     this.__ticks__.changed.set(lastChanged.get());
-    this.__changeBy__ = getCaller();
+    this.__changeBy__ = new Location().caller()!.name;
   }
   /**
    * Manually bypasses change detection, allowing you to mutate the underlying value without updating the change tick.
@@ -102,7 +109,7 @@ class DetectChangesMutTrait<T> extends DetectChanges<T> {
    */
   bypassChangeDetection(): Ptr<T> {
     if (!this.__val__) {
-      throw NOT_IMPLEMENTED;
+      throw new NotImplementedError();
     }
     return Ptr({
       get: () => this.__val__,
@@ -154,7 +161,7 @@ export const proxyValue = (value: any): any => {
         return (target as any)[prop].bind(target);
       }
       target.setChanged();
-      target.__changeBy__ = getCaller();
+      target.__changeBy__ = new Location().caller()!.name;
       return target.get()[prop];
     },
     set(target, prop, value) {

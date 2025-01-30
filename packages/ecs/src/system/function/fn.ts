@@ -1,4 +1,4 @@
-import { Constructor, hasTrait, implTrait, named, Type } from 'rustable';
+import { Constructor, named, Type } from 'rustable';
 import { Trigger } from '../../observer/types';
 import { IntoSystemSet, SystemTypeSet } from '../../schedule/set';
 import { IntoReadonlySystem, IntoSystem } from '../into';
@@ -43,7 +43,7 @@ export function condition<P extends readonly any[], R>(
   params: SystemParamTuple<P>,
   func: SystemFunction<P, R>,
 ): IntoReadonlySystem {
-  return new IntoFunctionReadonlySystem(func, SystemParam.wrap(params as any));
+  return new IntoFunctionReadonlySystem(func, SystemParam.wrap(params));
 }
 
 export function system<P extends readonly any[], R>(
@@ -52,19 +52,19 @@ export function system<P extends readonly any[], R>(
 ): IntoSystem & IntoSystemSet & WithParamWarnPolicy {
   if (
     params.length > 0 &&
-    params.every((v) => hasTrait(v, ExclusiveSystemParam)) &&
+    params.every((v) => ExclusiveSystemParam.isImplFor(v)) &&
     params[0].isWorld()
   ) {
-    return new IntoExclusiveFunctionSystem(func, ExclusiveSystemParam.wrap(params.slice(1) as any));
+    return new IntoExclusiveFunctionSystem(func, ExclusiveSystemParam.wrap(params.slice(1)));
   }
-  return new IntoFunctionSystem(func, SystemParam.wrap(params as any));
+  return new IntoFunctionSystem(func, SystemParam.wrap(params));
 }
 
 export function observer<P extends readonly any[], E extends object, B extends object>(
   params: SystemParamTuple<P>,
   func: (trigger: Trigger<E, B>, ...args: SystemParamValues<P>) => void,
 ): IntoSystem {
-  return new IntoObserverFunctionSystem(func, SystemParam.wrap([In(Trigger), ...params] as any));
+  return new IntoObserverFunctionSystem(func, SystemParam.wrap([In(Trigger), ...params]));
 }
 
 class IntoFunctionSystem {
@@ -78,15 +78,15 @@ class IntoFunctionSystem {
 }
 
 function implInto(constructor: Constructor) {
-  implTrait(constructor, IntoSystem);
+  IntoSystem.implFor(constructor);
 
-  implTrait(constructor, IntoSystemSet, {
+  IntoSystemSet.implFor(constructor, {
     intoSystemSet() {
       return new SystemTypeSet(funcType(this.func));
     },
   });
 
-  implTrait(constructor, WithParamWarnPolicy, {
+  WithParamWarnPolicy.implFor(constructor, {
     withParamWarnPolicy(warnPolicy: ParamWarnPolicy) {
       const system = this.intoSystem();
       system.meta.setParamWarnPolicy(warnPolicy);
@@ -111,7 +111,7 @@ class IntoFunctionReadonlySystem {
 
 implInto(IntoFunctionReadonlySystem);
 
-implTrait(IntoFunctionReadonlySystem, IntoReadonlySystem);
+IntoReadonlySystem.implFor(IntoFunctionReadonlySystem);
 
 interface IntoFunctionReadonlySystem
   extends IntoReadonlySystem,
@@ -142,6 +142,6 @@ class IntoObserverFunctionSystem {
   }
 }
 
-implTrait(IntoObserverFunctionSystem, Type(IntoSystem, [Trigger]));
+Type(IntoSystem, [Trigger]).implFor(IntoObserverFunctionSystem);
 
 interface IntoObserverFunctionSystem extends IntoSystem {}

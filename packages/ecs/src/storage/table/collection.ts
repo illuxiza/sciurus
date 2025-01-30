@@ -30,7 +30,7 @@ export class Tables {
   }
 
   getUnchecked(id: TableId): Table {
-    return this.tables[id];
+    return this.tables.getUnchecked(id);
   }
 
   get2Mut(a: TableId, b: TableId): Ptr<[Table, Table]> {
@@ -38,10 +38,10 @@ export class Tables {
       throw new Error('Cannot get mutable references to the same table');
     }
     return Ptr({
-      get: () => [this.tables[a], this.tables[b]],
+      get: () => [this.tables.getUnchecked(a), this.tables.getUnchecked(b)],
       set: ([tableA, tableB]) => {
-        this.tables[a] = tableA;
-        this.tables[b] = tableB;
+        this.tables.set(a, tableA);
+        this.tables.set(b, tableB);
       },
     });
   }

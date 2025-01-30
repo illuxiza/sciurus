@@ -1,8 +1,13 @@
-import { HashSet, None, Option, RustIter, Some, useTrait, Vec } from 'rustable';
+import { HashSet, None, Option, RustIter, Some, Vec } from 'rustable';
 import { Archetypes } from '../archetype/collection';
 import { ArchetypeId, BundleComponentStatus, ComponentStatus } from '../archetype/types';
 import { Tick } from '../change_detection/tick';
-import { ComponentId, Components, RequiredComponentConstructor, RequiredComponents } from '../component';
+import {
+  ComponentId,
+  Components,
+  RequiredComponentConstructor,
+  RequiredComponents,
+} from '../component';
 import { Entity } from '../entity/base';
 import { Observers } from '../observer/collection';
 import { SparseSets, Storages, StorageType, Table, TableId, TableRow } from '../storage';
@@ -23,9 +28,11 @@ export class BundleInfo {
     componentIds: Vec<ComponentId>,
     id: BundleId,
   ) {
-    const deduped = componentIds.iter().sort().dedup().collect();
+    const deduped = componentIds.clone();
+    deduped.sortUnstable();
+    deduped.dedup();
 
-    if (deduped.length !== componentIds.len()) {
+    if (deduped.len() !== componentIds.len()) {
       const seen = new HashSet();
       const dups = Vec.new<ComponentId>();
       for (let id of componentIds) {
@@ -95,12 +102,12 @@ export class BundleInfo {
     caller?: string,
   ): void {
     let bundleComponent = 0;
-    useTrait(bundle, DynamicBundle).getComponents((storageType, componentPtr) => {
-      const componentId = this.componentIds[bundleComponent];
+    DynamicBundle.wrap(bundle).getComponents((storageType, componentPtr) => {
+      const componentId = this.componentIds.getUnchecked(bundleComponent);
       switch (storageType) {
         case StorageType.Table: {
           const status = bundleComponentStatus.getStatus(bundleComponent);
-          const column = table.getColumnUnchecked(componentId)!;
+          const column = table.getColumnUnchecked(componentId);
           switch (status) {
             case ComponentStatus.Added:
               column.initialize(tableRow, componentPtr, changeTick, caller);
@@ -168,7 +175,7 @@ export class BundleInfo {
 
     for (const [index, componentId] of this.iterRequiredComponents().enumerate()) {
       if (!currentArchetype.contains(componentId)) {
-        addedRequiredComponents.push(this.requiredComponents[index]);
+        addedRequiredComponents.push(this.requiredComponents.getUnchecked(index));
         added.push(componentId);
         const componentInfo = components.getInfoUnchecked(componentId);
         if (componentInfo.storageType === StorageType.Table) {
@@ -267,18 +274,8 @@ export class BundleInfo {
             return None;
           }
         }
-
-        removedTableComponents = removedTableComponents
-          .iter()
-          .sort()
-          .dedup()
-          .collectInto((value) => Vec.from(value));
-        removedSparseSetComponents = removedSparseSetComponents
-          .iter()
-          .sort()
-          .dedup()
-          .collectInto((value) => Vec.from(value));
-
+        removedTableComponents.sortUnstable();
+        removedSparseSetComponents.sortUnstable();
         nextTableComponents = Vec.from(currentArchetype.tableComponents);
         nextSparseSetComponents = Vec.from(currentArchetype.sparseSetComponents);
         sortedRemove(nextTableComponents, removedTableComponents);
@@ -314,11 +311,11 @@ export class BundleInfo {
 function sortedRemove(source: Vec<number>, remove: Vec<number>): void {
   let removeIndex = 0;
   source.retain((value) => {
-    while (removeIndex < remove.len() && value > remove[removeIndex]) {
+    while (removeIndex < remove.len() && value > remove.getUnchecked(removeIndex)) {
       removeIndex += 1;
     }
     if (removeIndex < remove.len()) {
-      return value !== remove[removeIndex];
+      return value !== remove.getUnchecked(removeIndex);
     } else {
       return true;
     }

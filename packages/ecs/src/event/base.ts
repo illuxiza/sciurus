@@ -1,7 +1,5 @@
-import { TraitValid } from '@sciurus/utils';
-import { Constructor, createFactory, derive, macroTrait, Option, trait, Type } from 'rustable';
-import { ComponentId } from '../component';
-import { Component } from '../component';
+import { Constructor, createFactory, derive, macroTrait, Option, Trait, Type } from 'rustable';
+import { Component, ComponentId } from '../component';
 import { EmptyTraversal } from '../traversal';
 import { World } from '../world';
 
@@ -23,8 +21,7 @@ const EventWrapperComponent = createFactory(
   <T extends object>(eventType: Constructor<T>): Constructor<EventWrapperComponentType<T>>;
 };
 
-@trait
-class EventTrait extends TraitValid {
+class EventTrait extends Trait {
   static traversal(): Constructor {
     return EmptyTraversal;
   }

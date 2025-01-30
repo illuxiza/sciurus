@@ -1,5 +1,4 @@
-import { getCaller } from '@sciurus/utils';
-import { derive, Option, Ptr } from 'rustable';
+import { derive, Location, Option, Ptr } from 'rustable';
 import { DetectChanges, DetectChangesMut, proxyValue } from './detect_changes';
 import { Tick, Ticks } from './tick';
 
@@ -56,7 +55,7 @@ export class Res<T> {
 
   protected set __val__(value: T) {
     this.setChanged();
-    this.__changeBy__ = getCaller();
+    this.__changeBy__ = new Location().caller()!.name;
     this.__value[Ptr.ptr] = value;
   }
 

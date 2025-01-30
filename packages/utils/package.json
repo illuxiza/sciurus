@@ -7,6 +7,7 @@
   "main": "lib/index.js",
   "module": "lib/index.mjs",
   "types": "lib/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
@@ -27,7 +28,7 @@
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
   "peerDependencies": {
-    "rustable": "^0.3.14"
+    "rustable": "^0.4.0"
   },
   "publishConfig": {
     "access": "public"

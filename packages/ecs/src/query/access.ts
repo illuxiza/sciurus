@@ -1,5 +1,5 @@
-import { FixedBitSet, NOT_IMPLEMENTED } from '@sciurus/utils';
-import { Clone, derive, Enum, Eq, iter, variant, Vec } from 'rustable';
+import { FixedBitSet } from '@sciurus/utils';
+import { Clone, derive, Enum, Eq, iter, NotImplementedError, variant, Vec } from 'rustable';
 import { ComponentId } from '../component';
 import { World } from '../world/base';
 
@@ -10,22 +10,22 @@ export interface Access extends Clone, Eq {}
 @derive([Clone, Eq])
 export class Access {
   // All accessed components, or forbidden components if componentReadAndWritesInverted is set
-  __componentReadAndWrites: FixedBitSet = new FixedBitSet();
+  private _compRW: FixedBitSet = new FixedBitSet();
 
   // All exclusively-accessed components, or components that may not be exclusively accessed if componentWritesInverted is set
-  __componentWrites: FixedBitSet = new FixedBitSet();
+  private _compW: FixedBitSet = new FixedBitSet();
 
   // All accessed resources
-  __resourceReadAndWrites: FixedBitSet = new FixedBitSet();
+  private _resRW: FixedBitSet = new FixedBitSet();
 
   // The exclusively-accessed resources
-  __resourceWrites: FixedBitSet = new FixedBitSet();
+  private _resW: FixedBitSet = new FixedBitSet();
 
   // Is true if this component can read all components *except* those present in componentReadAndWrites
-  componentReadAndWritesInverted: boolean = false;
+  compRWInverted: boolean = false;
 
   // Is true if this component can write to all components *except* those present in componentWrites
-  componentWritesInverted: boolean = false;
+  compWInverted: boolean = false;
 
   // Is true if this has access to all resources
   readsAllResources: boolean = false;
@@ -34,7 +34,7 @@ export class Access {
   writesAllResources: boolean = false;
 
   // Components that are not accessed, but whose presence in an archetype affect query results
-  __archetypal: FixedBitSet = new FixedBitSet();
+  private _archetypal: FixedBitSet = new FixedBitSet();
 
   /**
    * Creates a new empty access pattern.
@@ -46,22 +46,22 @@ export class Access {
   /**
    * Adds read access to a component by its sparse set index.
    */
-  addComponentSparseSetIndexRead(index: number): void {
-    if (!this.componentReadAndWritesInverted) {
-      this.__componentReadAndWrites.growAndInsert(index);
-    } else if (index < this.__componentReadAndWrites.len()) {
-      this.__componentReadAndWrites.remove(index);
+  private addCompIndexRead(index: number): void {
+    if (!this.compRWInverted) {
+      this._compRW.growAndInsert(index);
+    } else if (index < this._compRW.len()) {
+      this._compRW.remove(index);
     }
   }
 
   /**
    * Adds write access to a component by its sparse set index.
    */
-  addComponentSparseSetIndexWrite(index: number): void {
-    if (!this.componentWritesInverted) {
-      this.__componentWrites.growAndInsert(index);
-    } else if (index < this.__componentWrites.len()) {
-      this.__componentWrites.remove(index);
+  private addCompIndexWrite(index: number): void {
+    if (!this.compWInverted) {
+      this._compW.growAndInsert(index);
+    } else if (index < this._compW.len()) {
+      this._compW.remove(index);
     }
   }
 
@@ -69,51 +69,51 @@ export class Access {
    * Adds read access to the given component.
    */
   addComponentRead(componentId: ComponentId): void {
-    this.addComponentSparseSetIndexRead(componentId);
+    this.addCompIndexRead(componentId);
   }
 
   /**
    * Adds write access to the given component.
    */
   addComponentWrite(componentId: ComponentId): void {
-    this.addComponentSparseSetIndexRead(componentId);
-    this.addComponentSparseSetIndexWrite(componentId);
+    this.addCompIndexRead(componentId);
+    this.addCompIndexWrite(componentId);
   }
 
   /**
    * Adds read access to the given resource.
    */
   addResourceRead(resourceId: number): void {
-    this.__resourceReadAndWrites.growAndInsert(resourceId);
+    this._resRW.growAndInsert(resourceId);
   }
 
   /**
    * Adds write access to the given resource.
    */
   addResourceWrite(resourceId: number): void {
-    this.__resourceReadAndWrites.growAndInsert(resourceId);
-    this.__resourceWrites.growAndInsert(resourceId);
+    this._resRW.growAndInsert(resourceId);
+    this._resW.growAndInsert(resourceId);
   }
 
   /**
    * Removes read access to a component by its sparse set index.
    */
-  removeComponentSparseSetIndexRead(index: number): void {
-    if (this.componentReadAndWritesInverted) {
-      this.__componentReadAndWrites.growAndInsert(index);
-    } else if (index < this.__componentReadAndWrites.len()) {
-      this.__componentReadAndWrites.remove(index);
+  private rmCompIndexRead(index: number): void {
+    if (this.compRWInverted) {
+      this._compRW.growAndInsert(index);
+    } else if (index < this._compRW.len()) {
+      this._compRW.remove(index);
     }
   }
 
   /**
    * Removes write access to a component by its sparse set index.
    */
-  removeComponentSparseSetIndexWrite(index: number): void {
-    if (this.componentWritesInverted) {
-      this.__componentWrites.growAndInsert(index);
-    } else if (index < this.__componentWrites.len()) {
-      this.__componentWrites.remove(index);
+  private rmCompIndexWrite(index: number): void {
+    if (this.compWInverted) {
+      this._compW.growAndInsert(index);
+    } else if (index < this._compW.len()) {
+      this._compW.remove(index);
     }
   }
 
@@ -121,8 +121,8 @@ export class Access {
    * Removes read access to the given component.
    */
   removeComponentRead(componentId: ComponentId): void {
-    this.removeComponentSparseSetIndexWrite(componentId);
-    this.removeComponentSparseSetIndexRead(componentId);
+    this.rmCompIndexWrite(componentId);
+    this.rmCompIndexRead(componentId);
   }
 
   /**
@@ -136,85 +136,83 @@ export class Access {
    * `removeComponentWrite`.
    */
   removeComponentWrite(componentId: ComponentId): void {
-    this.removeComponentSparseSetIndexWrite(componentId);
+    this.rmCompIndexWrite(componentId);
   }
 
   /**
    * Adds an archetypal access to the given component.
    */
   addArchetypal(componentId: ComponentId): void {
-    this.__archetypal.growAndInsert(componentId);
+    this._archetypal.growAndInsert(componentId);
   }
 
   /**
    * Returns true if this access pattern has read access to the given component.
    */
   hasComponentRead(componentId: number): boolean {
-    return (
-      this.componentReadAndWritesInverted !== this.__componentReadAndWrites.contains(componentId)
-    );
+    return this.compRWInverted !== this._compRW.contains(componentId);
   }
   /**
    * Returns true if this access pattern has any component reads.
    */
   hasAnyComponentRead(): boolean {
-    return this.componentReadAndWritesInverted || !this.__componentReadAndWrites.isClear();
+    return this.compRWInverted || !this._compRW.isClear();
   }
 
   /**
    * Returns true if this access pattern has write access to the given component.
    */
   hasComponentWrite(componentId: number): boolean {
-    return this.componentWritesInverted !== this.__componentWrites.contains(componentId);
+    return this.compWInverted !== this._compW.contains(componentId);
   }
   /**
    * Returns true if this access pattern has any component writes.
    */
   hasAnyComponentWrite(): boolean {
-    return this.componentWritesInverted || !this.__componentWrites.isClear();
+    return this.compWInverted || !this._compW.isClear();
   }
 
   /**
    * Returns true if this access pattern has read access to the given resource.
    */
   hasResourceRead(resourceId: number): boolean {
-    return this.readsAllResources || this.__resourceReadAndWrites.contains(resourceId);
+    return this.readsAllResources || this._resRW.contains(resourceId);
   }
 
   /**
    * Returns true if this access pattern has write access to the given resource.
    */
   hasResourceWrite(resourceId: number): boolean {
-    return this.writesAllResources || this.__resourceWrites.contains(resourceId);
+    return this.writesAllResources || this._resW.contains(resourceId);
   }
 
   /**
    * Returns true if this access pattern has any resource read access.
    */
   hasAnyResourceRead(): boolean {
-    return this.readsAllResources || !this.__resourceReadAndWrites.isClear();
+    return this.readsAllResources || !this._resRW.isClear();
   }
 
   /**
    * Returns true if this access pattern has any resource write access.
    */
   hasAnyResourceWrite(): boolean {
-    return this.writesAllResources || !this.__resourceWrites.isClear();
+    return this.writesAllResources || !this._resW.isClear();
   }
 
   /**
    * Returns true if this has an archetypal access to the given component.
    */
   hasArchetypal(componentId: number): boolean {
-    return this.__archetypal.contains(componentId);
+    return this._archetypal.contains(componentId);
   }
 
   /**
    * Sets this as having access to all components.
    */
   readAllComponents(): void {
-    this.componentReadAndWritesInverted = true;
-    this.__componentReadAndWrites.clear();
+    this.compRWInverted = true;
+    this._compRW.clear();
   }
 
   /**
@@ -222,8 +220,8 @@ export class Access {
    */
   writeAllComponents(): void {
     this.readAllComponents();
-    this.componentWritesInverted = true;
-    this.__componentWrites.clear();
+    this.compWInverted = true;
+    this._compW.clear();
   }
 
   /**
@@ -261,14 +259,14 @@ export class Access {
    * Returns true if this has access to all components.
    */
   hasReadAllComponents(): boolean {
-    return this.componentReadAndWritesInverted && this.__componentReadAndWrites.isClear();
+    return this.compRWInverted && this._compRW.isClear();
   }
 
   /**
    * Returns true if this has write access to all components.
    */
   hasWriteAllComponents(): boolean {
-    return this.componentWritesInverted && this.__componentWrites.isClear();
+    return this.compWInverted && this._compW.isClear();
   }
 
   /**
@@ -304,35 +302,25 @@ export class Access {
    */
   isComponentsCompatible(other: Access): boolean {
     // Check write conflicts in both directions
-    for (const [lhsWrites, rhsReadsAndWrites, lhsWritesInverted, rhsReadsAndWritesInverted] of [
-      [
-        this.__componentWrites,
-        other.__componentReadAndWrites,
-        this.componentWritesInverted,
-        other.componentReadAndWritesInverted,
-      ],
-      [
-        other.__componentWrites,
-        this.__componentReadAndWrites,
-        other.componentWritesInverted,
-        this.componentReadAndWritesInverted,
-      ],
+    for (const [lhsW, rhsRW, lhsWInverted, rhsRWInverted] of [
+      [this._compW, other._compRW, this.compWInverted, other.compRWInverted],
+      [other._compW, this._compRW, other.compWInverted, this.compRWInverted],
     ] as [FixedBitSet, FixedBitSet, boolean, boolean][]) {
-      if (lhsWritesInverted && rhsReadsAndWritesInverted) {
+      if (lhsWInverted && rhsRWInverted) {
         return false;
       }
-      if (!lhsWritesInverted && rhsReadsAndWritesInverted) {
-        if (!lhsWrites.isSubset(rhsReadsAndWrites)) {
+      if (!lhsWInverted && rhsRWInverted) {
+        if (!lhsW.isSubset(rhsRW)) {
           return false;
         }
       }
-      if (lhsWritesInverted && !rhsReadsAndWritesInverted) {
-        if (!rhsReadsAndWrites.isSubset(lhsWrites)) {
+      if (lhsWInverted && !rhsRWInverted) {
+        if (!rhsRW.isSubset(lhsW)) {
           return false;
         }
       }
-      if (!lhsWritesInverted && !rhsReadsAndWritesInverted) {
-        if (!lhsWrites.isDisjoint(rhsReadsAndWrites)) {
+      if (!lhsWInverted && !rhsRWInverted) {
+        if (!lhsW.isDisjoint(rhsRW)) {
           return false;
         }
       }
@@ -360,10 +348,7 @@ export class Access {
       return !this.hasAnyResourceWrite();
     }
 
-    return (
-      this.__resourceWrites.isDisjoint(other.__resourceReadAndWrites) &&
-      other.__resourceWrites.isDisjoint(this.__resourceReadAndWrites)
-    );
+    return this._resW.isDisjoint(other._resRW) && other._resW.isDisjoint(this._resRW);
   }
 
   /**
@@ -377,32 +362,22 @@ export class Access {
    * Returns true if this access pattern is a subset of another access pattern for components.
    */
   isSubsetComponents(other: Access): boolean {
-    for (const [ourComponents, theirComponents, ourComponentsInverted, theirComponentsInverted] of [
-      [
-        this.__componentReadAndWrites,
-        other.__componentReadAndWrites,
-        this.componentReadAndWritesInverted,
-        other.componentReadAndWritesInverted,
-      ],
-      [
-        this.__componentWrites,
-        other.__componentWrites,
-        this.componentWritesInverted,
-        other.componentWritesInverted,
-      ],
+    for (const [ourComps, otherComps, ourCompsInverted, otherCompsInverted] of [
+      [this._compRW, other._compRW, this.compRWInverted, other.compRWInverted],
+      [this._compW, other._compW, this.compWInverted, other.compWInverted],
     ] as [FixedBitSet, FixedBitSet, boolean, boolean][]) {
-      if (ourComponentsInverted && theirComponentsInverted) {
-        if (!theirComponents.isSubset(ourComponents)) {
+      if (ourCompsInverted && otherCompsInverted) {
+        if (!otherComps.isSubset(ourComps)) {
           return false;
         }
-      } else if (ourComponentsInverted && !theirComponentsInverted) {
+      } else if (ourCompsInverted && !otherCompsInverted) {
         return false;
-      } else if (!ourComponentsInverted && theirComponentsInverted) {
-        if (!ourComponents.isDisjoint(theirComponents)) {
+      } else if (!ourCompsInverted && otherCompsInverted) {
+        if (!ourComps.isDisjoint(otherComps)) {
           return false;
         }
-      } else if (!ourComponentsInverted && !theirComponentsInverted) {
-        if (!ourComponents.isSubset(theirComponents)) {
+      } else if (!ourCompsInverted && !otherCompsInverted) {
+        if (!ourComps.isSubset(otherComps)) {
           return false;
         }
       }
@@ -427,13 +402,10 @@ export class Access {
     }
 
     if (other.readsAllResources) {
-      return this.__resourceWrites.isSubset(other.__resourceWrites);
+      return this._resW.isSubset(other._resW);
     }
 
-    return (
-      this.__resourceReadAndWrites.isSubset(other.__resourceReadAndWrites) &&
-      this.__resourceWrites.isSubset(other.__resourceWrites)
-    );
+    return this._resRW.isSubset(other._resRW) && this._resW.isSubset(other._resW);
   }
 
   /**
@@ -448,9 +420,9 @@ export class Access {
    */
   clearWrites(): void {
     this.writesAllResources = false;
-    this.componentWritesInverted = false;
-    this.__componentWrites.clear();
-    this.__resourceWrites.clear();
+    this.compWInverted = false;
+    this._compW.clear();
+    this._resW.clear();
   }
 
   /**
@@ -459,60 +431,55 @@ export class Access {
   clear(): void {
     this.readsAllResources = false;
     this.writesAllResources = false;
-    this.componentReadAndWritesInverted = false;
-    this.componentWritesInverted = false;
-    this.__componentReadAndWrites.clear();
-    this.__componentWrites.clear();
-    this.__resourceReadAndWrites.clear();
-    this.__resourceWrites.clear();
-    this.__archetypal.clear();
+    this.compRWInverted = false;
+    this.compWInverted = false;
+    this._compRW.clear();
+    this._compW.clear();
+    this._resRW.clear();
+    this._resW.clear();
+    this._archetypal.clear();
   }
 
   /**
    * Adds all access from other.
    */
   extend(other: Access): void {
-    const componentReadAndWritesInverted =
-      this.componentReadAndWritesInverted || other.componentReadAndWritesInverted;
-    const componentWritesInverted = this.componentWritesInverted || other.componentWritesInverted;
+    const compRWInverted = this.compRWInverted || other.compRWInverted;
+    const compWInverted = this.compWInverted || other.compWInverted;
 
     // Handle component read and writes
-    if (this.componentReadAndWritesInverted && other.componentReadAndWritesInverted) {
-      this.__componentReadAndWrites.intersectWith(other.__componentReadAndWrites);
-    } else if (this.componentReadAndWritesInverted && !other.componentReadAndWritesInverted) {
-      this.__componentReadAndWrites.differenceWith(other.__componentReadAndWrites);
-    } else if (!this.componentReadAndWritesInverted && other.componentReadAndWritesInverted) {
-      this.__componentReadAndWrites.grow(
-        Math.max(this.__componentReadAndWrites.len(), other.__componentReadAndWrites.len()),
-      );
-      this.__componentReadAndWrites.toggleRange(0, this.__componentReadAndWrites.len());
-      this.__componentReadAndWrites.intersectWith(other.__componentReadAndWrites);
+    if (this.compRWInverted && other.compRWInverted) {
+      this._compRW.intersectWith(other._compRW);
+    } else if (this.compRWInverted && !other.compRWInverted) {
+      this._compRW.differenceWith(other._compRW);
+    } else if (!this.compRWInverted && other.compRWInverted) {
+      this._compRW.grow(Math.max(this._compRW.len(), other._compRW.len()));
+      this._compRW.toggleRange(0, this._compRW.len());
+      this._compRW.intersectWith(other._compRW);
     } else {
-      this.__componentReadAndWrites.unionWith(other.__componentReadAndWrites);
+      this._compRW.unionWith(other._compRW);
     }
 
     // Handle component writes
-    if (this.componentWritesInverted && other.componentWritesInverted) {
-      this.__componentWrites.intersectWith(other.__componentWrites);
-    } else if (this.componentWritesInverted && !other.componentWritesInverted) {
-      this.__componentWrites.differenceWith(other.__componentWrites);
-    } else if (!this.componentWritesInverted && other.componentWritesInverted) {
-      this.__componentWrites.grow(
-        Math.max(this.__componentWrites.len(), other.__componentWrites.len()),
-      );
-      this.__componentWrites.toggleRange(0, this.__componentWrites.len());
-      this.__componentWrites.intersectWith(other.__componentWrites);
+    if (this.compWInverted && other.compWInverted) {
+      this._compW.intersectWith(other._compW);
+    } else if (this.compWInverted && !other.compWInverted) {
+      this._compW.differenceWith(other._compW);
+    } else if (!this.compWInverted && other.compWInverted) {
+      this._compW.grow(Math.max(this._compW.len(), other._compW.len()));
+      this._compW.toggleRange(0, this._compW.len());
+      this._compW.intersectWith(other._compW);
     } else {
-      this.__componentWrites.unionWith(other.__componentWrites);
+      this._compW.unionWith(other._compW);
     }
 
     this.readsAllResources = this.readsAllResources || other.readsAllResources;
     this.writesAllResources = this.writesAllResources || other.writesAllResources;
-    this.componentReadAndWritesInverted = componentReadAndWritesInverted;
-    this.componentWritesInverted = componentWritesInverted;
-    this.__resourceReadAndWrites.unionWith(other.__resourceReadAndWrites);
-    this.__resourceWrites.unionWith(other.__resourceWrites);
-    this.__archetypal.unionWith(other.__archetypal);
+    this.compRWInverted = compRWInverted;
+    this.compWInverted = compWInverted;
+    this._resRW.unionWith(other._resRW);
+    this._resW.unionWith(other._resW);
+    this._archetypal.unionWith(other._archetypal);
   }
 
   getComponentConflicts(other: Access): AccessConflicts {
@@ -522,37 +489,32 @@ export class Access {
     // write and we read or write
     const cases = [
       {
-        lhsWrites: this.__componentWrites,
-        rhsReadsAndWrites: other.__componentReadAndWrites,
-        lhsWritesInverted: this.componentWritesInverted,
-        rhsReadsAndWritesInverted: other.componentReadAndWritesInverted,
+        lhsW: this._compW,
+        rhsRW: other._compRW,
+        lhsWInverted: this.compWInverted,
+        rhsRWInverted: other.compRWInverted,
       },
       {
-        lhsWrites: other.__componentWrites,
-        rhsReadsAndWrites: this.__componentReadAndWrites,
-        lhsWritesInverted: other.componentWritesInverted,
-        rhsReadsAndWritesInverted: this.componentReadAndWritesInverted,
+        lhsW: other._compW,
+        rhsRW: this._compRW,
+        lhsWInverted: other.compWInverted,
+        rhsRWInverted: this.compRWInverted,
       },
     ];
 
-    for (const {
-      lhsWrites,
-      rhsReadsAndWrites,
-      lhsWritesInverted,
-      rhsReadsAndWritesInverted,
-    } of cases) {
+    for (const { lhsW, rhsRW, lhsWInverted, rhsRWInverted } of cases) {
       // There's no way to do this without a temporary.
       // Neither CNF nor DNF allows us to avoid one.
       let tempConflicts: FixedBitSet;
 
-      if (lhsWritesInverted && rhsReadsAndWritesInverted) {
+      if (lhsWInverted && rhsRWInverted) {
         return AccessConflicts.All();
-      } else if (!lhsWritesInverted && rhsReadsAndWritesInverted) {
-        tempConflicts = lhsWrites.difference(rhsReadsAndWrites);
-      } else if (lhsWritesInverted && !rhsReadsAndWritesInverted) {
-        tempConflicts = rhsReadsAndWrites.difference(lhsWrites);
+      } else if (!lhsWInverted && rhsRWInverted) {
+        tempConflicts = lhsW.difference(rhsRW);
+      } else if (lhsWInverted && !rhsRWInverted) {
+        tempConflicts = rhsRW.difference(lhsW);
       } else {
-        tempConflicts = lhsWrites.intersection(rhsReadsAndWrites);
+        tempConflicts = lhsW.intersection(rhsRW);
       }
 
       conflicts.unionWith(tempConflicts);
@@ -573,7 +535,7 @@ export class Access {
     if (componentConflicts.isAll()) {
       return AccessConflicts.All();
     }
-    conflicts = componentConflicts.match({ Individual: (conflicts) => conflicts });
+    conflicts = componentConflicts.unwrap();
 
     // Check resource conflicts
     if (this.readsAllResources) {
@@ -581,7 +543,7 @@ export class Access {
         return AccessConflicts.All();
       }
       // Add all of other's resource writes to conflicts
-      conflicts.extend(other.__resourceWrites.ones());
+      conflicts.extend(other._resW.ones());
     }
 
     if (other.readsAllResources) {
@@ -589,21 +551,21 @@ export class Access {
         return AccessConflicts.All();
       }
       // Add all of our resource writes to conflicts
-      conflicts.extend(this.__resourceWrites.ones());
+      conflicts.extend(this._resW.ones());
     }
 
     if (this.writesAllResources) {
       // Add all of other's resource reads/writes to conflicts
-      conflicts.extend(other.__resourceReadAndWrites.ones());
+      conflicts.extend(other._resRW.ones());
     }
 
     if (other.writesAllResources) {
       // Add all of our resource reads/writes to conflicts
-      conflicts.extend(this.__resourceReadAndWrites.ones());
+      conflicts.extend(this._resRW.ones());
     }
 
-    conflicts.extend(this.__resourceWrites.intersection(other.__resourceReadAndWrites).ones());
-    conflicts.extend(this.__resourceReadAndWrites.intersection(other.__resourceWrites).ones());
+    conflicts.extend(this._resW.intersection(other._resRW).ones());
+    conflicts.extend(this._resRW.intersection(other._resW).ones());
 
     return AccessConflicts.Individual(conflicts);
   }
@@ -612,7 +574,7 @@ export class Access {
    * Returns an iterator over the indices of resources this has access to.
    */
   resourceReadAndWrites(): Iterable<number> {
-    return this.__resourceReadAndWrites.ones();
+    return this._resRW.ones();
   }
 
   /**
@@ -620,8 +582,8 @@ export class Access {
    */
   resourceReads(): Iterable<number> {
     const reads = new FixedBitSet();
-    reads.unionWith(this.__resourceReadAndWrites);
-    reads.differenceWith(this.__resourceWrites);
+    reads.unionWith(this._resRW);
+    reads.differenceWith(this._resW);
     return reads.ones();
   }
 
@@ -629,14 +591,14 @@ export class Access {
    * Returns an iterator over the indices of resources this has exclusive access to.
    */
   resourceWrites(): Iterable<number> {
-    return this.__resourceWrites.ones();
+    return this._resW.ones();
   }
 
   /**
    * Returns an iterator over the indices of archetypal components this has access to.
    */
   archetypal(): Iterable<number> {
-    return this.__archetypal.ones();
+    return this._archetypal.ones();
   }
 
   /**
@@ -647,7 +609,7 @@ export class Access {
    * Prefer managing your own lists of accessible components instead.
    */
   componentReadsAndWrites(): [Iterable<number>, boolean] {
-    return [this.__componentReadAndWrites.ones(), this.componentReadAndWritesInverted];
+    return [this._compRW.ones(), this.compRWInverted];
   }
 
   /**
@@ -655,36 +617,20 @@ export class Access {
    * along with a flag indicating whether the list consists of writable (false) or non-writable (true) components.
    */
   componentWrites(): [Iterable<number>, boolean] {
-    return [this.__componentWrites.ones(), this.componentWritesInverted];
+    return [this._compW.ones(), this.compWInverted];
   }
-}
-
-interface AccessConflictsMatch<U> {
-  All: () => U;
-  Individual: (conflicts: FixedBitSet) => U;
 }
 
 /**
  * Records how two accesses conflict with each other
  */
-export class AccessConflicts extends Enum {
+export class AccessConflicts extends Enum<typeof AccessConflicts> {
   @variant static All(): AccessConflicts {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   @variant static Individual(_conflicts: FixedBitSet): AccessConflicts {
-    throw NOT_IMPLEMENTED;
-  }
-
-  match<U>(patterns: Partial<AccessConflictsMatch<U>>): U {
-    return super.match(patterns, {
-      All: (): U => {
-        return undefined as any;
-      },
-      Individual: (_conflicts): U => {
-        return undefined as any;
-      },
-    });
+    throw new NotImplementedError();
   }
 
   isAll(): boolean {
@@ -697,17 +643,18 @@ export class AccessConflicts extends Enum {
 
   add(other: AccessConflicts): void {
     this.match({
-      All: () => {},
       Individual: (conflicts) => {
         other.match({
-          All: () => {
-            this.replace(AccessConflicts.All() as any);
-          },
           Individual: (otherConflicts) => {
             conflicts.extend(otherConflicts.ones());
           },
+          All: () => {
+            this.replace(AccessConflicts.All());
+          },
+          _: () => {},
         });
       },
+      _: () => {},
     });
   }
 
@@ -715,6 +662,7 @@ export class AccessConflicts extends Enum {
     return this.match({
       All: () => false,
       Individual: (conflicts) => conflicts.isEmpty(),
+      _: () => false,
     });
   }
 
@@ -729,6 +677,7 @@ export class AccessConflicts extends Enum {
           })
           .collect()
           .join(', '),
+      _: () => '',
     });
   }
 
@@ -910,8 +859,8 @@ export class FilteredAccess extends Access {
     // in this case we can short-circuit by performing an in-place union for each bitset.
     if (other.filterSets.len() === 1) {
       for (const filter of this.filterSets) {
-        filter.with.unionWith(other.filterSets[0].with);
-        filter.without.unionWith(other.filterSets[0].without);
+        filter.with.unionWith(other.filterSets.getUnchecked(0).with);
+        filter.without.unionWith(other.filterSets.getUnchecked(0).without);
       }
       return;
     }
@@ -968,12 +917,12 @@ export class FilteredAccessSet {
   /**
    * The combined access of all filters in this set.
    */
-  private __combinedAccess: Access = new Access();
+  private _combinedAccess: Access = new Access();
 
   /**
    * The set of access of each individual filter.
    */
-  private __filteredAccesses: Vec<FilteredAccess> = Vec.new();
+  private _filteredAccesses: Vec<FilteredAccess> = Vec.new();
 
   /**
    * Creates a new empty access set.
@@ -986,19 +935,19 @@ export class FilteredAccessSet {
    * Returns a reference to the unfiltered access of the entire set.
    */
   get combinedAccess(): Access {
-    return this.__combinedAccess;
+    return this._combinedAccess;
   }
 
   /**
    * Returns true if this and other can be active at the same time.
    */
   isCompatible(other: FilteredAccessSet): boolean {
-    if (this.__combinedAccess.isCompatible(other.__combinedAccess)) {
+    if (this._combinedAccess.isCompatible(other._combinedAccess)) {
       return true;
     }
 
-    for (const filtered of this.__filteredAccesses) {
-      for (const otherFiltered of other.__filteredAccesses) {
+    for (const filtered of this._filteredAccesses) {
+      for (const otherFiltered of other._filteredAccesses) {
         if (!filtered.isCompatible(otherFiltered)) {
           return false;
         }
@@ -1011,13 +960,13 @@ export class FilteredAccessSet {
    * Returns a vector of elements that this set and other cannot access at the same time.
    */
   getConflicts(other: FilteredAccessSet): AccessConflicts {
-    if (this.__combinedAccess.isCompatible(other.__combinedAccess)) {
+    if (this._combinedAccess.isCompatible(other._combinedAccess)) {
       return AccessConflicts.empty();
     }
 
     let conflicts = new FixedBitSet();
-    for (const filtered of this.__filteredAccesses) {
-      for (const otherFiltered of other.__filteredAccesses) {
+    for (const filtered of this._filteredAccesses) {
+      for (const otherFiltered of other._filteredAccesses) {
         if (!filtered.isCompatible(otherFiltered)) {
           return AccessConflicts.All();
         }
@@ -1030,12 +979,12 @@ export class FilteredAccessSet {
    * Returns a vector of elements that this set and the filtered access cannot access at the same time.
    */
   getConflictsSingle(filteredAccess: FilteredAccess): AccessConflicts {
-    if (this.__combinedAccess.isCompatible(filteredAccess)) {
+    if (this._combinedAccess.isCompatible(filteredAccess)) {
       return AccessConflicts.empty();
     }
 
     let conflicts = new FixedBitSet();
-    for (const filtered of this.__filteredAccesses) {
+    for (const filtered of this._filteredAccesses) {
       if (!filtered.isCompatible(filteredAccess)) {
         return AccessConflicts.All();
       }
@@ -1047,8 +996,8 @@ export class FilteredAccessSet {
    * Adds the filtered access to the set.
    */
   add(filteredAccess: FilteredAccess): void {
-    this.__combinedAccess.extend(filteredAccess);
-    this.__filteredAccesses.push(filteredAccess);
+    this._combinedAccess.extend(filteredAccess);
+    this._filteredAccesses.push(filteredAccess);
   }
 
   /**
@@ -1091,30 +1040,30 @@ export class FilteredAccessSet {
    * Adds all of the accesses from the passed set to this.
    */
   extend(filteredAccessSet: FilteredAccessSet): void {
-    this.__combinedAccess.extend(filteredAccessSet.__combinedAccess);
-    this.__filteredAccesses.extend(filteredAccessSet.__filteredAccesses);
+    this._combinedAccess.extend(filteredAccessSet._combinedAccess);
+    this._filteredAccesses.extend(filteredAccessSet._filteredAccesses);
   }
 
   /**
    * Marks the set as reading all possible indices.
    */
   readAll(): void {
-    this.__combinedAccess.readAll();
+    this._combinedAccess.readAll();
   }
 
   /**
    * Marks the set as writing all indices.
    */
   writeAll(): void {
-    this.__combinedAccess.writeAll();
+    this._combinedAccess.writeAll();
   }
 
   /**
    * Removes all accesses stored in this set.
    */
   clear(): void {
-    this.__combinedAccess.clear();
-    this.__filteredAccesses.clear();
+    this._combinedAccess.clear();
+    this._filteredAccesses.clear();
   }
 }
 

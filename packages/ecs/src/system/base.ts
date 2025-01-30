@@ -1,18 +1,17 @@
-import { logger, NOT_IMPLEMENTED } from '@sciurus/utils';
-import { Constructor, Result, trait, Type, Vec } from 'rustable';
+import { logger } from '@sciurus/utils';
+import { Constructor, NotImplementedError, Result, Trait, Type, Vec } from 'rustable';
 import { Tick } from '../change_detection/tick';
 import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
 import { World } from '../world';
 import { DeferredWorld } from '../world/deferred';
 
-@trait
-export class System<In = any, Out = any> {
+export class System<In = any, Out = any> extends Trait {
   INPUT: Constructor<In> = undefined!;
   OUTPUT: Constructor<Out> = undefined!;
 
   name(): string {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   type(): Constructor {
@@ -20,11 +19,11 @@ export class System<In = any, Out = any> {
   }
 
   componentAccess(): Access {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   archetypeComponentAccess(): Access {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   run(input: In, world: World): Out {
@@ -35,19 +34,19 @@ export class System<In = any, Out = any> {
   }
 
   runUnsafe(_input: In, _world: World): Out {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   applyDeferred(_world: World): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   queueDeferred(_world: DeferredWorld): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   validateParamUnsafe(_world: World): boolean {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   validateParam(world: World): boolean {
@@ -56,19 +55,19 @@ export class System<In = any, Out = any> {
   }
 
   initialize(_world: World): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   isExclusive(): boolean {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   hasDeferred(): boolean {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   updateArchetypeComponentAccess(_world: World): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   defaultSystemSets(): Vec<SystemSet> {
@@ -76,19 +75,18 @@ export class System<In = any, Out = any> {
   }
 
   checkChangeTick(_changeTick: Tick): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   getLastRun(): Tick {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 
   setLastRun(_lastRun: Tick): void {
-    throw NOT_IMPLEMENTED;
+    throw new NotImplementedError();
   }
 }
 
-@trait
 export class ReadonlySystem<In = any, Out = any> extends System<In, Out> {
   runReadonly(input: In, world: World): Out {
     this.updateArchetypeComponentAccess(world);
@@ -96,20 +94,19 @@ export class ReadonlySystem<In = any, Out = any> extends System<In, Out> {
   }
 }
 
-@trait
-export class RunSystemOnce {
+export class RunSystemOnce extends Trait {
   /**
    * Tries to run a system and apply its deferred parameters.
    */
-  runSystemOnce<T extends object, Out>(system: T): Result<Out, Error> {
+  runSystemOnce<T, Out>(system: T): Result<Out, Error> {
     return this.runSystemOnceWith(system, []);
   }
 
   /**
    * Tries to run a system with given input and apply deferred parameters.
    */
-  runSystemOnceWith<T extends object, In, Out>(_system: T, _input: In): Result<Out, Error> {
-    throw NOT_IMPLEMENTED;
+  runSystemOnceWith<T, In, Out>(_system: T, _input: In): Result<Out, Error> {
+    throw new NotImplementedError();
   }
 }
 

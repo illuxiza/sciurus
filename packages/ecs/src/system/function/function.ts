@@ -1,4 +1,4 @@
-import { Constructor, implTrait, None, Option, Some, Vec } from 'rustable';
+import { Constructor, None, Option, Some, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
 import { Access } from '../../query/access';
 import { IntoSystemSet, SystemSet, SystemTypeSet } from '../../schedule/set';
@@ -144,9 +144,9 @@ export class FunctionSystem {
   }
 }
 
-implTrait(FunctionSystem, System);
+System.implFor(FunctionSystem);
 
-implTrait(FunctionSystem, WithParamWarnPolicy, {
+WithParamWarnPolicy.implFor(FunctionSystem, {
   withParamWarnPolicy(warnPolicy: ParamWarnPolicy): FunctionSystem {
     this.meta.setParamWarnPolicy(warnPolicy);
     return this;
@@ -155,7 +155,7 @@ implTrait(FunctionSystem, WithParamWarnPolicy, {
 
 export interface FunctionSystem extends WithParamWarnPolicy {}
 
-implTrait(FunctionSystem, IntoSystemSet, {
+IntoSystemSet.implFor(FunctionSystem, {
   intoSystemSet(): SystemSet {
     return new SystemTypeSet(this.type());
   },

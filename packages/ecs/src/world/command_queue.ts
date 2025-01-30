@@ -1,4 +1,4 @@
-import { Default, derive, Err, implTrait, Option, Result, Some, trait, Vec } from 'rustable';
+import { Default, derive, Err, Option, Result, Some, Trait, Vec } from 'rustable';
 import { SystemBuffer } from '../system/buffer';
 import { SystemMeta } from '../system/types';
 import { World } from './base';
@@ -7,8 +7,7 @@ import { DeferredWorld } from './deferred';
 /**
  * Interface for commands that can be queued and executed later
  */
-@trait
-export class Command {
+export class Command extends Trait {
   apply(_world: World): void {
     throw new Error('Command.apply must be implemented');
   }
@@ -99,7 +98,7 @@ export class CommandQueue {
 
     try {
       while (localCursor < stop) {
-        const { meta, command } = this.__bytes[localCursor];
+        const { meta, command } = this.__bytes.getUnchecked(localCursor);
         localCursor++;
         try {
           meta.consumeCommandAndGetSize(command, world);
@@ -134,13 +133,13 @@ export class CommandQueue {
 
 export class FunctionCommand {
   constructor(public fn: (world: World) => void) {}
-
-  apply(world: World): void {
-    this.fn(world);
-  }
 }
 
-implTrait(FunctionCommand, Command);
+Command.implFor(FunctionCommand, {
+  apply(world: World): void {
+    this.fn(world);
+  },
+});
 
 export interface FunctionCommand extends Command {}
 
@@ -154,7 +153,7 @@ function drop<T extends object>(t: T): void {
   }
 }
 
-implTrait(CommandQueue, SystemBuffer, {
+SystemBuffer.implFor(CommandQueue, {
   applyBuffer(_systemMeta: SystemMeta, world: World): void {
     this.apply(world);
   },

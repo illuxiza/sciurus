@@ -59,18 +59,7 @@ export class Archetypes {
   }
 
   empty(): Archetype {
-    return this.__archetypes[EMPTY_VALUE];
-  }
-
-  emptyMut(): Ptr<Archetype> {
-    return Ptr({
-      get: () => {
-        return this.__archetypes[EMPTY_VALUE];
-      },
-      set: (archetype) => {
-        return this.__archetypes.set(EMPTY_VALUE, archetype);
-      },
-    });
+    return this.__archetypes.getUnchecked(EMPTY_VALUE);
   }
 
   newArchetypeComponentId() {
@@ -84,7 +73,7 @@ export class Archetypes {
   }
 
   getUnchecked(id: ArchetypeId): Archetype {
-    return this.__archetypes[id];
+    return this.__archetypes.getUnchecked(id);
   }
 
   get2(a: ArchetypeId, b: ArchetypeId): [Ptr<Archetype>, Ptr<Archetype>] {
@@ -155,7 +144,7 @@ export class Archetypes {
     const archetypes = this.__byComponent.get(componentId);
     if (archetypes.isSome()) {
       for (const [archetypeId] of archetypes.unwrap()) {
-        this.__archetypes[archetypeId].flags.set(flags, set);
+        this.__archetypes.getUnchecked(archetypeId).flags.set(flags, set);
       }
     }
   }

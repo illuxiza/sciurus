@@ -92,7 +92,7 @@ describe('app tests', () => {
     }).toThrow();
   });
 
-  @derive([ScheduleLabel])
+  @derive([Default, ScheduleLabel])
   class EnterMainMenu {}
 
   const bar = system([Commands], (commands: Commands) => {
@@ -105,9 +105,9 @@ describe('app tests', () => {
 
   test('add_systems_should_create_schedule_if_it_does_not_exist', () => {
     const app = App.new();
-    app.addSystems(new EnterMainMenu(), [foo, bar]);
+    app.addSystems(EnterMainMenu, [foo, bar]);
 
-    app.world().runSchedule(new EnterMainMenu());
+    app.world().runSchedule(EnterMainMenu);
     expect(app.world().entities.len()).toBe(2);
   });
 
@@ -185,10 +185,10 @@ describe('app tests', () => {
       expect(despawnCount).toBe(2);
     });
 
-    app.addSystems(new Update(), despawnOneFoo);
+    app.addSystems(Update, despawnOneFoo);
     app.update(); // Frame 0
     app.update(); // Frame 1
-    app.addSystems(new Update(), checkDespawns.after(despawnOneFoo));
+    app.addSystems(Update, checkDespawns.after(despawnOneFoo));
     app.update(); // Should see despawns from frames 1 & 2, but not frame 0
   });
 
@@ -205,7 +205,7 @@ describe('app tests', () => {
       foo.value++;
     });
 
-    app.addSystems(new Update(), incrementFoo);
+    app.addSystems(Update, incrementFoo);
 
     const subApp = SubApp.new();
     subApp.setExtract((mainWorld: World, _subWorld: World) => {
@@ -223,7 +223,7 @@ describe('app tests', () => {
       exits.send(AppExit.Error(73));
     });
 
-    const exit = App.new().addSystems(new Update(), raiseExits).run();
+    const exit = App.new().addSystems(Update, raiseExits).run();
 
     expect(exit).toEqual(AppExit.Error(4));
   });
@@ -248,7 +248,7 @@ describe('app tests', () => {
     });
 
     // Should not panic due to missing resource
-    App.new().setRunner(myRunner).addSystems(new PreUpdate(), mySystem).run();
+    App.new().setRunner(myRunner).addSystems(PreUpdate, mySystem).run();
   });
 
   test('initializing_resources_from_world', () => {

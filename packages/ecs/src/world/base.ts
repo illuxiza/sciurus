@@ -49,10 +49,8 @@ import { Schedule, Schedules } from '../schedule/base';
 import { ComponentSparseSet, Table } from '../storage';
 import { ResourceData } from '../storage/resource/data';
 import { Storages } from '../storage/storages';
-import { IntoSystem, SystemParam } from '../system';
-import { RunSystemOnce, System } from '../system/base';
+import { IntoObserverSystem, IntoSystem, RunSystemOnce, System, SystemParam } from '../system';
 import { Commands } from '../system/commands';
-import { IntoObserverSystem } from '../system/observer';
 import { IntoSystemParam } from '../system/param/base';
 import { ExclusiveSystemParam } from '../system/param/exclusive';
 import {

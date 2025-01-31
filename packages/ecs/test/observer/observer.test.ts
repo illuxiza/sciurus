@@ -7,7 +7,7 @@ import { Event } from '../../src/event';
 import { Observer, ObserverState } from '../../src/observer/runner';
 import { ObserverDescriptor, Trigger } from '../../src/observer/types';
 import { StorageType } from '../../src/storage';
-import { observer } from '../../src/system';
+import { observer } from '../../src/observer';
 import { Commands } from '../../src/system/commands/base';
 import { Query } from '../../src/system/param/query';
 import { Traversal } from '../../src/traversal';

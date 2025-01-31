@@ -32,18 +32,14 @@ import { IntoSystemSet, ScheduleLabel, SystemSet } from './set';
 import { ScheduleBuildError, ScheduleBuildSettings } from './types';
 
 @derive([Default, ScheduleLabel])
-export class DefaultSchedule {
-  static new() {
-    return new DefaultSchedule();
-  }
-}
+export class DefaultSchedule {}
 
 export class Schedule {
   label: ScheduleLabel;
   graph = new ScheduleGraph();
   executable = new SystemSchedule();
   executor: SystemExecutor = new SingleThreadedExecutor();
-  executorInitialized = false;
+  executorInited = false;
 
   constructor(label: any = DefaultSchedule) {
     this.label = ScheduleLabel.label(label);
@@ -58,19 +54,19 @@ export class Schedule {
     const aSet = IntoSystemSet.wrap(a).intoSystemSet();
     const bSet = IntoSystemSet.wrap(b).intoSystemSet();
 
-    const aId = this.graph.__systemSetIds
+    const aId = this.graph.sysSetIds
       .get(aSet)
       .expect(
         `Could not mark system as ambiguous, '${aSet}' was not found in the schedule. Did you try to call 'ambiguousWith' before adding the system to the world?`,
       );
 
-    const bId = this.graph.__systemSetIds
+    const bId = this.graph.sysSetIds
       .get(bSet)
       .expect(
         `Could not mark system as ambiguous, '${bSet}' was not found in the schedule. Did you try to call 'ambiguousWith' before adding the system to the world?`,
       );
 
-    this.graph.__ambiguousWith.addEdge(aId, bId);
+    this.graph.ambiguousWith.addEdge(aId, bId);
 
     return this;
   }
@@ -81,12 +77,12 @@ export class Schedule {
   }
 
   setBuildSettings(settings: ScheduleBuildSettings): this {
-    this.graph.__settings = settings;
+    this.graph.settings = settings;
     return this;
   }
 
   getBuildSettings(): ScheduleBuildSettings {
-    return this.graph.__settings;
+    return this.graph.settings;
   }
 
   getExecutorKind(): ExecutorKind {
@@ -96,7 +92,7 @@ export class Schedule {
   setExecutorKind(executor: ExecutorKind): this {
     if (executor !== this.executor.kind()) {
       this.executor = makeExecutor(executor);
-      this.executorInitialized = false;
+      this.executorInited = false;
     }
     return this;
   }
@@ -133,12 +129,12 @@ export class Schedule {
       if (result.isErr()) {
         return result;
       }
-      this.graph.__changed = false;
-      this.executorInitialized = false;
+      this.graph.changed = false;
+      this.executorInited = false;
     }
-    if (!this.executorInitialized) {
+    if (!this.executorInited) {
       this.executor.init(this.executable);
-      this.executorInitialized = true;
+      this.executorInited = true;
     }
     return Ok(undefined);
   }
@@ -168,7 +164,7 @@ export class Schedule {
   }
 
   systems(): Result<RustIter<[NodeId, ScheduleSystem]>, Error> {
-    if (!this.executorInitialized) {
+    if (!this.executorInited) {
       return Err(new Error('executable schedule has not been built'));
     }
     const iter = this.executable.systemIds
@@ -179,8 +175,8 @@ export class Schedule {
   }
 
   systemsLen(): number {
-    if (!this.executorInitialized) {
-      return this.graph.__systems.len();
+    if (!this.executorInited) {
+      return this.graph.syss.len();
     } else {
       return this.executable.systems.len();
     }

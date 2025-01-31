@@ -1,9 +1,8 @@
 import { logger } from '@sciurus/utils';
 import { Constructor, Default, derive, Location, None, Option, Some } from 'rustable';
-import { InsertMode } from '../../bundle/types';
+import { InsertMode } from '../../bundle';
 import { Resource } from '../../component';
-import { Entity } from '../../entity/base';
-import { Entities } from '../../entity/collection';
+import { Entities, Entity } from '../../entity';
 import { Events } from '../../event';
 import { Observer } from '../../observer/runner';
 import { World } from '../../world/base';

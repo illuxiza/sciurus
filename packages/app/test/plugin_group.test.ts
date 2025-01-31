@@ -62,7 +62,7 @@ describe('PluginGroup', () => {
       .add(new PluginB())
       .add(new PluginC());
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginB), typeId(PluginC)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginB), typeId(PluginC)]);
   });
 
   test('add before', () => {
@@ -71,7 +71,7 @@ describe('PluginGroup', () => {
       .add(new PluginB())
       .addBefore(PluginB, new PluginC());
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
   });
 
   test('try add before', () => {
@@ -81,7 +81,7 @@ describe('PluginGroup', () => {
     expect(result.isOk()).toBe(true);
     group = result.unwrap();
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginC), typeId(PluginA)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginC), typeId(PluginA)]);
 
     expect(group.tryAddBefore(PluginA, new PluginC()).isErr()).toBe(true);
   });
@@ -100,7 +100,7 @@ describe('PluginGroup', () => {
       .add(new PluginB())
       .addAfter(PluginA, new PluginC());
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
   });
 
   test('try add after', () => {
@@ -110,7 +110,7 @@ describe('PluginGroup', () => {
     expect(result.isOk()).toBe(true);
     group = result.unwrap();
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
 
     expect(group.tryAddAfter(PluginA, new PluginC()).isErr()).toBe(true);
   });
@@ -133,7 +133,7 @@ describe('PluginGroup', () => {
     group = group.add(new PluginWithData(0xa0));
 
     expect(getPlugin<PluginWithData>(group, id).value).toBe(0xa0);
-    expect(group['order'].asSlice()).toEqual([
+    expect(group.order.asSlice()).toEqual([
       typeId(PluginA),
       typeId(PluginC),
       typeId(PluginWithData),
@@ -144,7 +144,7 @@ describe('PluginGroup', () => {
     group = beforeResult.unwrap();
 
     expect(getPlugin<PluginWithData>(group, id).value).toBe(0x01);
-    expect(group['order'].asSlice()).toEqual([
+    expect(group.order.asSlice()).toEqual([
       typeId(PluginWithData),
       typeId(PluginA),
       typeId(PluginC),
@@ -155,7 +155,7 @@ describe('PluginGroup', () => {
     group = afterResult.unwrap();
 
     expect(getPlugin<PluginWithData>(group, id).value).toBe(0xdeadbeef);
-    expect(group['order'].asSlice()).toEqual([
+    expect(group.order.asSlice()).toEqual([
       typeId(PluginA),
       typeId(PluginWithData),
       typeId(PluginC),
@@ -169,7 +169,7 @@ describe('PluginGroup', () => {
       .add(new PluginC())
       .add(new PluginB());
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
   });
 
   test('readd before', () => {
@@ -179,7 +179,7 @@ describe('PluginGroup', () => {
       .add(new PluginC())
       .addBefore(PluginB, new PluginC());
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
   });
 
   test('readd after', () => {
@@ -189,7 +189,7 @@ describe('PluginGroup', () => {
       .add(new PluginC())
       .addAfter(PluginA, new PluginC());
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginC), typeId(PluginB)]);
   });
 
   test('add basic subgroup', () => {
@@ -197,7 +197,7 @@ describe('PluginGroup', () => {
 
     const groupB = PluginGroupBuilder.start(NoopPluginGroup).addGroup(groupA).add(new PluginC());
 
-    expect(groupB['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginB), typeId(PluginC)]);
+    expect(groupB.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginB), typeId(PluginC)]);
   });
 
   test('add conflicting subgroup', () => {
@@ -207,6 +207,6 @@ describe('PluginGroup', () => {
 
     const group = PluginGroupBuilder.start(NoopPluginGroup).addGroup(groupA).addGroup(groupB);
 
-    expect(group['order'].asSlice()).toEqual([typeId(PluginA), typeId(PluginB), typeId(PluginC)]);
+    expect(group.order.asSlice()).toEqual([typeId(PluginA), typeId(PluginB), typeId(PluginC)]);
   });
 });

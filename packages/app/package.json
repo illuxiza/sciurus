@@ -1,7 +1,7 @@
 {
   "name": "@sciurus/app",
   "description": "Provides core App functionality for Sciurus Engine",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/illuxiza/sciurus#readme",
   "license": "MIT",
   "main": "lib/index.js",

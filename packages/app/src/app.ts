@@ -40,18 +40,18 @@ type ExtractFn = (world: World, appWorld: World) => void;
 
 export class SubApp {
   /** The data of this application */
-  public world: World;
+  world: World;
   /** List of plugins that have been added */
-  private _plugReg = Vec.new<Plugin>();
+  plugReg = Vec.new<Plugin>();
   /** The names of plugins that have been added to this app */
-  private __pluginNames = new HashSet<string>();
+  plugNames = new HashSet<string>();
   /** Panics if an update is attempted while plugins are building */
-  private _plugBuildDep: number = 0;
-  private __pluginsState: PluginsState = PluginsState.Adding;
+  plugBuildDep: number = 0;
+  plugsState: PluginsState = PluginsState.Adding;
   /** The schedule that will be run by update */
-  public updateSchedule: Option<ScheduleLabel> = None;
+  updateSchedule: Option<ScheduleLabel> = None;
   /** Function for copying data between worlds */
-  private __extract: Option<ExtractFn> = None;
+  private ext: Option<ExtractFn> = None;
 
   constructor() {
     this.world = new World();
@@ -74,7 +74,7 @@ export class SubApp {
 
   /** Runs the default schedule */
   runDefaultSchedule(): void {
-    if (this.isBuildingPlugins()) {
+    if (this.plugBuildDep > 0) {
       throw new Error('SubApp::update() was called while a plugin was building.');
     }
 
@@ -91,21 +91,21 @@ export class SubApp {
 
   /** Extracts data from world into the app's world using the registered extract method */
   extract(world: World): void {
-    if (this.__extract.isSome()) {
-      this.__extract.unwrap()(world, this.world);
+    if (this.ext.isSome()) {
+      this.ext.unwrap()(world, this.world);
     }
   }
 
   /** Sets the method that will be called by extract */
   setExtract(extract: ExtractFn): this {
-    this.__extract = Some(extract);
+    this.ext = Some(extract);
     return this;
   }
 
   /** Take the function that will be called by extract out of the app */
   takeExtract(): Option<ExtractFn> {
-    const extract = this.__extract;
-    this.__extract = None;
+    const extract = this.ext;
+    this.ext = None;
     return extract;
   }
 
@@ -214,29 +214,24 @@ export class SubApp {
 
   /** Check if a plugin is added */
   isPluginAdded<T extends object>(pluginType: Constructor<T>): boolean {
-    return this.__pluginNames.contains(pluginType.name);
+    return this.plugNames.contains(pluginType.name);
   }
 
   /** Get added plugins of a specific type */
   getAddedPlugins<T extends object>(pluginType: Constructor<T>): T[] {
-    return this._plugReg
+    return this.plugReg
       .iter()
       .filter((p) => p instanceof pluginType)
       .map((p) => p as T)
       .collect();
   }
 
-  /** Check if plugins are being built */
-  private isBuildingPlugins(): boolean {
-    return this._plugBuildDep > 0;
-  }
-
   /** Get the state of plugins */
   pluginsState(): PluginsState {
-    if (this.__pluginsState === PluginsState.Adding) {
+    if (this.plugsState === PluginsState.Adding) {
       let state = PluginsState.Ready;
-      const plugins = Vec.from([...this._plugReg]);
-      this._plugReg = Vec.new();
+      const plugins = Vec.from([...this.plugReg]);
+      this.plugReg = Vec.new();
 
       this.runAsApp((app) => {
         for (const plugin of plugins) {
@@ -247,36 +242,36 @@ export class SubApp {
         }
       });
 
-      this._plugReg = plugins;
+      this.plugReg = plugins;
       return state;
     }
-    return this.__pluginsState;
+    return this.plugsState;
   }
 
   /** Finish plugin setup */
   finish(): void {
-    const plugins = Vec.from([...this._plugReg]);
-    this._plugReg = Vec.new();
+    const plugins = Vec.from([...this.plugReg]);
+    this.plugReg = Vec.new();
     this.runAsApp((app) => {
       for (const p of plugins) {
         p.finish(app);
       }
     });
-    this._plugReg = plugins;
-    this.__pluginsState = PluginsState.Finished;
+    this.plugReg = plugins;
+    this.plugsState = PluginsState.Finished;
   }
 
   /** Clean up plugins */
   cleanup(): void {
-    const plugins = Vec.from([...this._plugReg]);
-    this._plugReg = Vec.new();
+    const plugins = Vec.from([...this.plugReg]);
+    this.plugReg = Vec.new();
     this.runAsApp((app) => {
       for (const p of plugins) {
         p.cleanup(app);
       }
     });
-    this._plugReg = plugins;
-    this.__pluginsState = PluginsState.Cleaned;
+    this.plugReg = plugins;
+    this.plugsState = PluginsState.Cleaned;
   }
 }
 
@@ -286,7 +281,7 @@ export class SubApps {
   /** The primary sub-app that contains the "main" world */
   main: SubApp;
   /** Other, labeled sub-apps */
-  private __subApps = new HashMap<AppLabel, SubApp>();
+  apps = new HashMap<AppLabel, SubApp>();
 
   constructor(main: SubApp = new SubApp()) {
     this.main = main;
@@ -301,7 +296,7 @@ export class SubApps {
     this.main.runDefaultSchedule();
 
     // Update sub apps
-    for (const [_label, subApp] of this.__subApps) {
+    for (const [_label, subApp] of this.apps) {
       subApp.extract(this.main.world);
       subApp.update();
     }
@@ -310,12 +305,12 @@ export class SubApps {
   }
 
   collect() {
-    return [this.main, ...this.__subApps.values()];
+    return [this.main, ...this.apps.values()];
   }
 
   /** Extract data from the main world into the SubApp with the given label and perform an update if it exists */
   updateSubappByLabel(label: AppLabel): void {
-    const subApp = this.__subApps.get(label);
+    const subApp = this.apps.get(label);
     if (subApp.isSome()) {
       subApp.unwrap().extract(this.main.world);
       subApp.unwrap().update();
@@ -441,7 +436,7 @@ export class App {
 
   /** Gets a sub-app by label */
   getSubApp(label: string): Option<SubApp> {
-    return this.subApps['__subApps'].get(label);
+    return this.subApps.apps.get(label);
   }
 
   /** Returns a reference to the SubApp with the given label */
@@ -453,12 +448,12 @@ export class App {
 
   /** Inserts a sub-app with the given label */
   insertSubApp(label: string, subApp: SubApp): void {
-    this.subApps['__subApps'].insert(label, subApp);
+    this.subApps.apps.insert(label, subApp);
   }
 
   /** Removes a sub-app with the given label */
   removeSubApp(label: string): Option<SubApp> {
-    return this.subApps['__subApps'].remove(label);
+    return this.subApps.apps.remove(label);
   }
 
   /** Updates a sub-app by label */
@@ -471,7 +466,7 @@ export class App {
     let overallState = this.main().pluginsState();
     if (overallState === PluginsState.Adding) {
       overallState = PluginsState.Ready;
-      let plugins = this.main()['_plugReg'];
+      let plugins = this.main().plugReg;
       for (let plugin of plugins) {
         // plugins installed to main need to see all sub-apps
         if (!plugin.ready(this)) {
@@ -492,12 +487,12 @@ export class App {
   /** Finishes plugin setup */
   finish(): void {
     // Finish plugins in main app
-    const plugins = this.main()['_plugReg'];
+    const plugins = this.main().plugReg;
     for (const plugin of plugins) {
       plugin.finish(this);
     }
 
-    this.main()['__pluginsState'] = PluginsState.Finished;
+    this.main().plugsState = PluginsState.Finished;
 
     // Finish plugins in sub-apps
     for (const subApp of this.subApps.collect().iter().skip(1)) {
@@ -508,12 +503,12 @@ export class App {
   /** Cleans up plugins */
   cleanup(): void {
     // Cleanup plugins in main app
-    const plugins = this.main()['_plugReg'];
+    const plugins = this.main().plugReg;
     for (const plugin of plugins) {
       plugin.cleanup(this);
     }
 
-    this.main()['__pluginsState'] = PluginsState.Cleaned;
+    this.main().plugsState = PluginsState.Cleaned;
 
     // Cleanup plugins in sub-apps
     for (const subApp of this.subApps.collect().iter().skip(1)) {
@@ -522,11 +517,11 @@ export class App {
   }
 
   /** Returns true if any sub-apps are building plugins */
-  protected isBuildingPlugins(): boolean {
+  private isBuildingPlugins(): boolean {
     return this.subApps
       .collect()
       .iter()
-      .any((app) => app['isBuildingPlugins']());
+      .any((app) => app.plugBuildDep > 0);
   }
 
   /** Adds systems to a schedule */
@@ -567,23 +562,23 @@ export class App {
   /** Adds a boxed plugin to the app */
   addBoxedPlugin(plugin: Plugin): Result<void, AppError> {
     logger.debug(`added plugin: ${plugin.name()}`);
-    if (plugin.isUnique() && this.main()['__pluginNames'].contains(plugin.name())) {
+    if (plugin.isUnique() && this.main().plugNames.contains(plugin.name())) {
       return Err(AppError.duplicatePlugin(plugin.name()));
     }
 
-    const index = this.main()['_plugReg'].len();
-    this.main()['_plugReg'].push(new PlaceholderPlugin());
+    const index = this.main().plugReg.len();
+    this.main().plugReg.push(new PlaceholderPlugin());
 
-    this.main()['_plugBuildDep']++;
+    this.main().plugBuildDep++;
 
     try {
       plugin.build(this);
     } finally {
-      this.main()['__pluginNames'].insert(plugin.name());
-      this.main()['_plugBuildDep']--;
+      this.main().plugNames.insert(plugin.name());
+      this.main().plugBuildDep--;
     }
 
-    this.main()['_plugReg'].set(index, plugin);
+    this.main().plugReg.set(index, plugin);
     return Ok(undefined);
   }
 

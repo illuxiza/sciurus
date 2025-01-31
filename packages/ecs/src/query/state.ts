@@ -33,13 +33,13 @@ export class StorageId {
  */
 export class QueryState<D extends QueryData = any, F extends QueryFilter = any> {
   constructor(
-    public queryData: D,
-    public queryFilter: F,
-    private __worldId: number,
-    private __archetypeGeneration: ArchetypeGeneration,
-    private __matchedTables: FixedBitSet,
-    private __matchedArchetypes: FixedBitSet,
-    private __componentAccess: FilteredAccess,
+    public data: D,
+    public filter: F,
+    public wId: number,
+    public _archetypeGeneration: ArchetypeGeneration,
+    public _matchedTables: FixedBitSet,
+    public _matchedArchetypes: FixedBitSet,
+    public _compAccess: FilteredAccess,
     public matchedStorageIds: Vec<StorageId>,
     public isDense: boolean,
     public fetchState: D['STATE'],
@@ -47,13 +47,13 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   ) {}
 
   static new(data: QueryData, filter: QueryFilter, world: World): QueryState {
-    const state = QueryState.newUninitialized(data, filter, world);
+    const state = newUninitialized(data, filter, world);
     state.updateArchetypes(world);
     return state;
   }
 
   static tryNew(data: QueryData, filter: QueryFilter, world: World): Option<QueryState> {
-    const state = QueryState.tryNewUninitialized(data, filter, world);
+    const state = tryNewUninitialized(data, filter, world);
     if (state.isSome()) {
       state.unwrap().updateArchetypes(world);
       return state;
@@ -67,107 +67,31 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     world: World,
     access: Ptr<Access>,
   ): QueryState {
-    const state = QueryState.newUninitialized(data, filter, world);
+    const state = newUninitialized(data, filter, world);
     for (const archetype of world.archetypes.iter()) {
-      if (state.newArchetypeInternal(archetype)) {
+      if (newArchetypeInternal(state, archetype)) {
         state.updateArchetypeComponentAccess(archetype, access);
       }
     }
-    state.__archetypeGeneration = world.archetypes.generation();
+    state._archetypeGeneration = world.archetypes.generation();
 
-    if (state.__componentAccess.access().hasReadAllResources()) {
+    if (state._compAccess.access().hasReadAllResources()) {
       access.readAllResources();
     } else {
-      for (const componentId of state.__componentAccess.access().resourceReads()) {
+      for (const componentId of state._compAccess.access().resourceReads()) {
         access.addResourceRead(world.initializeResourceInternal(componentId).id);
       }
     }
 
-    if (state.__componentAccess.access().hasWriteAllResources()) {
+    if (state._compAccess.access().hasWriteAllResources()) {
       access.writeAllResources();
     } else {
-      for (const componentId of state.__componentAccess.access().resourceWrites()) {
+      for (const componentId of state._compAccess.access().resourceWrites()) {
         access.addResourceWrite(world.initializeResourceInternal(componentId).id);
       }
     }
 
     return state;
-  }
-
-  private static newUninitialized(data: QueryData, filter: QueryFilter, world: World): QueryState {
-    const fetchState = data.initState(world);
-    const filterState = filter.initState(world);
-    return QueryState.fromStatesUninitialized(data, filter, world.id, fetchState, filterState);
-  }
-
-  private static tryNewUninitialized(
-    data: QueryData,
-    filter: QueryFilter,
-    world: World,
-  ): Option<QueryState> {
-    const fetchState = data.getState(world.components);
-    if (fetchState.isNone()) {
-      return None;
-    }
-
-    const filterState = filter.getState(world.components);
-    if (filterState.isNone()) {
-      return None;
-    }
-
-    return Some(
-      QueryState.fromStatesUninitialized(
-        data,
-        filter,
-        world.id,
-        fetchState.unwrap(),
-        filterState.unwrap(),
-      ),
-    );
-  }
-
-  private static fromStatesUninitialized(
-    data: QueryData,
-    filter: QueryFilter,
-    worldId: number,
-    fetchState: any,
-    filterState: any,
-  ): QueryState {
-    let componentAccess = new FilteredAccess();
-    data.updateComponentAccess(
-      fetchState,
-      Ptr({
-        get: () => componentAccess,
-        set: (a) => (componentAccess = a),
-      }),
-    );
-
-    let filterComponentAccess = new FilteredAccess();
-    filter.updateComponentAccess(
-      filterState,
-      Ptr({
-        get: () => filterComponentAccess,
-        set: (a) => (filterComponentAccess = a),
-      }),
-    );
-
-    componentAccess.extend(filterComponentAccess);
-
-    const isDense = data.isDense() && filter.isDense();
-
-    return new QueryState(
-      data,
-      filter,
-      worldId,
-      ArchetypeGeneration.initial(),
-      new FixedBitSet(),
-      new FixedBitSet(),
-      componentAccess,
-      Vec.new(),
-      isDense,
-      fetchState,
-      filterState,
-    );
   }
 
   static fromBuilder(builder: QueryBuilder): QueryState {
@@ -227,21 +151,21 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    * Returns the components accessed by this query.
    */
   get componentAccess(): FilteredAccess {
-    return this.__componentAccess;
+    return this._compAccess;
   }
 
   /**
    * Returns the tables matched by this query.
    */
   get matchedTables(): RustIter<TableId> {
-    return iter(this.__matchedTables.ones());
+    return iter(this._matchedTables.ones());
   }
 
   /**
    * Returns the archetypes matched by this query.
    */
   get matchedArchetypes(): RustIter<ArchetypeId> {
-    return iter(this.__matchedArchetypes.ones());
+    return iter(this._matchedArchetypes.ones());
   }
 
   /**
@@ -249,20 +173,20 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    */
   updateArchetypesUnsafeWorldCell(world: World) {
     this.validateWorld(world.id);
-    if (this.__componentAccess.required.isEmpty()) {
+    if (this._compAccess.required.isEmpty()) {
       const archetypes = world.archetypes;
-      const oldGeneration = this.__archetypeGeneration;
-      this.__archetypeGeneration = archetypes.generation();
+      const oldGeneration = this._archetypeGeneration;
+      this._archetypeGeneration = archetypes.generation();
 
       for (let i = oldGeneration.id; i < archetypes.len(); i++) {
-        this.newArchetypeInternal(archetypes.getUnchecked(i));
+        newArchetypeInternal(this, archetypes.getUnchecked(i));
       }
     } else {
-      if (this.__archetypeGeneration.id === world.archetypes.generation().id) {
+      if (this._archetypeGeneration.id === world.archetypes.generation().id) {
         return;
       }
 
-      const potentialArchetypes = iter(this.__componentAccess.required.ones())
+      const potentialArchetypes = iter(this._compAccess.required.ones())
         .filterMap((componentId) =>
           world.archetypes
             .componentIndex()
@@ -273,14 +197,14 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
 
       if (potentialArchetypes.isSome()) {
         for (const archetypeId of potentialArchetypes.unwrap()) {
-          if (archetypeId < this.__archetypeGeneration.id) {
+          if (archetypeId < this._archetypeGeneration.id) {
             continue;
           }
           const archetype = world.archetypes.getUnchecked(archetypeId);
-          this.newArchetypeInternal(archetype);
+          newArchetypeInternal(this, archetype);
         }
       }
-      this.__archetypeGeneration = world.archetypes.generation();
+      this._archetypeGeneration = world.archetypes.generation();
     }
   }
 
@@ -288,9 +212,9 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    * Validates that the given WorldId matches the World used to create this QueryState.
    */
   validateWorld(worldId: number) {
-    if (this.__worldId !== worldId) {
+    if (this.wId !== worldId) {
       throw new Error(
-        `Encountered a mismatched World. This QueryState was created from ${this.__worldId}, but a method was called using ${worldId}.`,
+        `Encountered a mismatched World. This QueryState was created from ${this.wId}, but a method was called using ${worldId}.`,
       );
     }
   }
@@ -303,7 +227,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
    */
   newArchetype(archetype: Archetype, access: Ptr<Access>): void {
     // SAFETY: The caller ensures that `archetype` is from the World the state was initialized from.
-    const matches = this.newArchetypeInternal(archetype);
+    const matches = newArchetypeInternal(this, archetype);
     if (matches) {
       // SAFETY: The caller ensures that `archetype` is from the World the state was initialized from.
       this.updateArchetypeComponentAccess(archetype, access);
@@ -311,39 +235,10 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
   }
 
   /**
-   * Process the given Archetype to update internal metadata about the Tables and Archetypes that are matched by this query.
-   */
-  private newArchetypeInternal(archetype: Archetype): boolean {
-    if (
-      this.queryData.matchesComponentSet(this.fetchState, (id) => archetype.contains(id)) &&
-      this.queryFilter.matchesComponentSet(this.filterState, (id) => archetype.contains(id)) &&
-      this.matchesComponentSet((id) => archetype.contains(id))
-    ) {
-      const archetypeIndex = archetype.id;
-      if (!this.__matchedArchetypes.contains(archetypeIndex)) {
-        this.__matchedArchetypes.growAndInsert(archetypeIndex);
-        if (!this.isDense) {
-          this.matchedStorageIds.push(new StorageId(0, archetype.id));
-        }
-      }
-
-      const tableIndex = archetype.tableId;
-      if (!this.__matchedTables.contains(tableIndex)) {
-        this.__matchedTables.growAndInsert(tableIndex);
-        if (this.isDense) {
-          this.matchedStorageIds.push(new StorageId(archetype.tableId, 0));
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Returns true if this query matches a set of components.
    */
   matchesComponentSet(setContainsId: (componentId: ComponentId) => boolean): boolean {
-    return this.__componentAccess.filterSets
+    return this._compAccess.filterSets
       .iter()
       .any(
         (set) =>
@@ -404,7 +299,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     const fetchState = newD.getState(world.components);
     const filterState = newF.getState(world.components);
 
-    newD.setAccess(fetchState, this.__componentAccess);
+    newD.setAccess(fetchState, this._compAccess);
     newD.updateComponentAccess(
       fetchState,
       Ptr({
@@ -424,20 +319,20 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
 
     componentAccess.extend(filterComponentAccess);
 
-    if (!componentAccess.isSubset(this.__componentAccess)) {
+    if (!componentAccess.isSubset(this._compAccess)) {
       throw new Error(
-        `Transmuted state for ${newD.constructor.name}, ${newF.constructor.name} attempts to access terms that are not allowed by original state ${this.queryData.constructor.name}, ${this.queryFilter.constructor.name}.`,
+        `Transmuted state for ${newD.constructor.name}, ${newF.constructor.name} attempts to access terms that are not allowed by original state ${this.data.constructor.name}, ${this.filter.constructor.name}.`,
       );
     }
 
     return new QueryState(
       newD,
       newF,
-      this.__worldId,
-      this.__archetypeGeneration,
-      this.__matchedTables.clone(),
-      this.__matchedArchetypes.clone(),
-      this.__componentAccess.clone(),
+      this.wId,
+      this._archetypeGeneration,
+      this._matchedTables.clone(),
+      this._matchedArchetypes.clone(),
+      this._compAccess.clone(),
       this.matchedStorageIds.clone(),
       this.isDense,
       fetchState,
@@ -462,7 +357,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     world: World,
     other: QueryState,
   ): QueryState {
-    if (this.__worldId !== other.__worldId) {
+    if (this.wId !== other.wId) {
       throw new Error('Joining queries initialized on different worlds is not allowed.');
     }
     this.validateWorld(world.id);
@@ -471,7 +366,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     const newFetchState = newD.getState(world.components);
     const newFilterState = newF.getState(world.components);
 
-    newD.setAccess(newFetchState, this.__componentAccess);
+    newD.setAccess(newFetchState, this._compAccess);
     newD.updateComponentAccess(
       newFetchState,
       Ptr({
@@ -491,16 +386,16 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
 
     componentAccess.extend(newFilterComponentAccess);
 
-    let joinedComponentAccess = this.__componentAccess.clone();
-    joinedComponentAccess.extend(other.__componentAccess);
+    let joinedComponentAccess = this._compAccess.clone();
+    joinedComponentAccess.extend(other._compAccess);
 
     if (!componentAccess.isSubset(joinedComponentAccess)) {
       throw new Error(
-        `Joined state for ${newD.constructor.name}, ${newF.constructor.name} attempts to access terms that are not allowed by state ${this.queryData.constructor.name}, ${this.queryFilter.constructor.name} joined with ${orderD.constructor.name}, ${orderF.constructor.name}.`,
+        `Joined state for ${newD.constructor.name}, ${newF.constructor.name} attempts to access terms that are not allowed by state ${this.data.constructor.name}, ${this.filter.constructor.name} joined with ${orderD.constructor.name}, ${orderF.constructor.name}.`,
       );
     }
 
-    if (this.__archetypeGeneration !== other.__archetypeGeneration) {
+    if (this._archetypeGeneration !== other._archetypeGeneration) {
       logger.warn(
         'You have tried to join queries with different archetype_generations. This could lead to unpredictable results.',
       );
@@ -508,10 +403,10 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
 
     const isDense = this.isDense && other.isDense;
 
-    let matchedTables = this.__matchedTables.clone();
-    let matchedArchetypes = this.__matchedArchetypes.clone();
-    matchedTables.intersectWith(other.__matchedTables);
-    matchedArchetypes.intersectWith(other.__matchedArchetypes);
+    let matchedTables = this._matchedTables.clone();
+    let matchedArchetypes = this._matchedArchetypes.clone();
+    matchedTables.intersectWith(other._matchedTables);
+    matchedArchetypes.intersectWith(other._matchedArchetypes);
 
     const matchedStorageIds = isDense
       ? iter(matchedTables.ones())
@@ -524,8 +419,8 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     return new QueryState(
       newD,
       newF,
-      this.__worldId,
-      this.__archetypeGeneration,
+      this.wId,
+      this._archetypeGeneration,
       matchedTables,
       matchedArchetypes,
       joinedComponentAccess,
@@ -580,20 +475,20 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     }
 
     const location = locationOp.unwrap();
-    if (!this.__matchedArchetypes.contains(location.archetypeId)) {
+    if (!this._matchedArchetypes.contains(location.archetypeId)) {
       return Err(QueryEntityError.QueryDoesNotMatch(entity, world));
     }
 
     const archetype = world.archetypes.getUnchecked(location.archetypeId);
-    let fetch = this.queryData.initFetch(world, this.fetchState, lastRun, thisRun);
-    let filter = this.queryFilter.initFetch(world, this.filterState, lastRun, thisRun);
+    let fetch = this.data.initFetch(world, this.fetchState, lastRun, thisRun);
+    let filter = this.filter.initFetch(world, this.filterState, lastRun, thisRun);
     const table = world.storages.tables.getUnchecked(location.tableId);
 
-    this.queryData.setArchetype(fetch, this.fetchState, archetype, table);
-    this.queryFilter.setArchetype(filter, this.filterState, archetype, table);
+    this.data.setArchetype(fetch, this.fetchState, archetype, table);
+    this.filter.setArchetype(filter, this.filterState, archetype, table);
 
-    if (this.queryFilter.filterFetch(filter, entity, location.tableRow)) {
-      return Ok(this.queryData.fetch(fetch, entity, location.tableRow));
+    if (this.filter.filterFetch(filter, entity, location.tableRow)) {
+      return Ok(this.data.fetch(fetch, entity, location.tableRow));
     } else {
       return Err(QueryEntityError.QueryDoesNotMatch(entity, world));
     }
@@ -718,4 +613,106 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
       return Err(QuerySingleError.MultipleEntities(this.constructor.name));
     }
   }
+}
+
+function newUninitialized(data: QueryData, filter: QueryFilter, world: World): QueryState {
+  const fetchState = data.initState(world);
+  const filterState = filter.initState(world);
+  return fromStatesUninitialized(data, filter, world.id, fetchState, filterState);
+}
+
+function tryNewUninitialized(
+  data: QueryData,
+  filter: QueryFilter,
+  world: World,
+): Option<QueryState> {
+  const fetchState = data.getState(world.components);
+  if (fetchState.isNone()) {
+    return None;
+  }
+
+  const filterState = filter.getState(world.components);
+  if (filterState.isNone()) {
+    return None;
+  }
+
+  return Some(
+    fromStatesUninitialized(data, filter, world.id, fetchState.unwrap(), filterState.unwrap()),
+  );
+}
+
+function fromStatesUninitialized(
+  data: QueryData,
+  filter: QueryFilter,
+  worldId: number,
+  fetchState: any,
+  filterState: any,
+): QueryState {
+  let componentAccess = new FilteredAccess();
+  data.updateComponentAccess(
+    fetchState,
+    Ptr({
+      get: () => componentAccess,
+      set: (a) => (componentAccess = a),
+    }),
+  );
+
+  let filterComponentAccess = new FilteredAccess();
+  filter.updateComponentAccess(
+    filterState,
+    Ptr({
+      get: () => filterComponentAccess,
+      set: (a) => (filterComponentAccess = a),
+    }),
+  );
+
+  componentAccess.extend(filterComponentAccess);
+
+  const isDense = data.isDense() && filter.isDense();
+
+  return new QueryState(
+    data,
+    filter,
+    worldId,
+    ArchetypeGeneration.initial(),
+    new FixedBitSet(),
+    new FixedBitSet(),
+    componentAccess,
+    Vec.new(),
+    isDense,
+    fetchState,
+    filterState,
+  );
+}
+
+/**
+ * Process the given Archetype to update internal metadata about the Tables and Archetypes that are matched by this query.
+ */
+function newArchetypeInternal<D extends QueryData = any, F extends QueryFilter = any>(
+  self: QueryState<D, F>,
+  archetype: Archetype,
+): boolean {
+  if (
+    self.data.matchesComponentSet(self.fetchState, (id) => archetype.contains(id)) &&
+    self.filter.matchesComponentSet(self.filterState, (id) => archetype.contains(id)) &&
+    self.matchesComponentSet((id) => archetype.contains(id))
+  ) {
+    const archetypeIndex = archetype.id;
+    if (!self._matchedArchetypes.contains(archetypeIndex)) {
+      self._matchedArchetypes.growAndInsert(archetypeIndex);
+      if (!self.isDense) {
+        self.matchedStorageIds.push(new StorageId(0, archetype.id));
+      }
+    }
+
+    const tableIndex = archetype.tableId;
+    if (!self._matchedTables.contains(tableIndex)) {
+      self._matchedTables.growAndInsert(tableIndex);
+      if (self.isDense) {
+        self.matchedStorageIds.push(new StorageId(archetype.tableId, 0));
+      }
+    }
+    return true;
+  }
+  return false;
 }

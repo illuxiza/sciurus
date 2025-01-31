@@ -59,7 +59,7 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
 
   sizeHint(): [number, number?] {
     const maxSize = this.cursor.maxRemaining(this.tables, this.archetypes);
-    const archetypeQuery = this.queryState.queryFilter.isArchetypal();
+    const archetypeQuery = this.queryState.filter.isArchetypal();
     const minSize = archetypeQuery ? maxSize : 0;
     return [minSize, maxSize];
   }
@@ -133,17 +133,17 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
     }
 
     const [start, end] = range;
-    this.queryState.queryData.setTable(this.cursor.fetch, this.queryState.fetchState, table);
-    this.queryState.queryFilter.setTable(this.cursor.filter, this.queryState.filterState, table);
+    this.queryState.data.setTable(this.cursor.fetch, this.queryState.fetchState, table);
+    this.queryState.filter.setTable(this.cursor.filter, this.queryState.filterState, table);
 
     const entities = table.entities;
     for (let row = start; row < end; row++) {
       const entity = entities.get(row).unwrap();
       const tableRow = row;
-      if (!this.queryState.queryFilter.filterFetch(this.cursor.filter, entity, tableRow)) {
+      if (!this.queryState.filter.filterFetch(this.cursor.filter, entity, tableRow)) {
         continue;
       }
-      const item = this.queryState.queryData.fetch(this.cursor.fetch, entity, tableRow);
+      const item = this.queryState.data.fetch(this.cursor.fetch, entity, tableRow);
       accum = func(accum, item);
     }
 
@@ -162,13 +162,13 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
 
     const [start, end] = range;
     const table = this.tables.get(archetype.tableId).unwrap();
-    this.queryState.queryData.setArchetype(
+    this.queryState.data.setArchetype(
       this.cursor.fetch,
       this.queryState.fetchState,
       archetype,
       table,
     );
-    this.queryState.queryFilter.setArchetype(
+    this.queryState.filter.setArchetype(
       this.cursor.filter,
       this.queryState.filterState,
       archetype,
@@ -179,7 +179,7 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
     for (let index = start; index < end; index++) {
       const archetypeEntity = entities.get(index).unwrap();
       if (
-        !this.queryState.queryFilter.filterFetch(
+        !this.queryState.filter.filterFetch(
           this.cursor.filter,
           archetypeEntity.id,
           archetypeEntity.tableRow,
@@ -187,7 +187,7 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
       ) {
         continue;
       }
-      const item = this.queryState.queryData.fetch(
+      const item = this.queryState.data.fetch(
         this.cursor.fetch,
         archetypeEntity.id,
         archetypeEntity.tableRow,
@@ -210,13 +210,13 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
 
     const [start, end] = range;
     const table = this.tables.get(archetype.tableId).unwrap();
-    this.queryState.queryData.setArchetype(
+    this.queryState.data.setArchetype(
       this.cursor.fetch,
       this.queryState.fetchState,
       archetype,
       table,
     );
-    this.queryState.queryFilter.setArchetype(
+    this.queryState.filter.setArchetype(
       this.cursor.filter,
       this.queryState.filterState,
       archetype,
@@ -226,10 +226,10 @@ export class QueryIter<D extends QueryData, F extends QueryFilter> {
     const entities = table.entities;
     for (let row = start; row < end; row++) {
       const entity = entities.get(row).unwrap();
-      if (!this.queryState.queryFilter.filterFetch(this.cursor.filter, entity, row)) {
+      if (!this.queryState.filter.filterFetch(this.cursor.filter, entity, row)) {
         continue;
       }
-      const item = this.queryState.queryData.fetch(this.cursor.fetch, entity, row);
+      const item = this.queryState.data.fetch(this.cursor.fetch, entity, row);
       accum = func(accum, item);
     }
 
@@ -285,16 +285,16 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
     lastRun: Tick,
     thisRun: Tick,
   ): QueryIterationCursor {
-    const fetch = queryState.queryData.initFetch(world, queryState.fetchState, lastRun, thisRun);
-    const filter = queryState.queryFilter.initFetch(
+    const fetch = queryState.data.initFetch(world, queryState.fetchState, lastRun, thisRun);
+    const filter = queryState.filter.initFetch(
       world,
       queryState.filterState,
       lastRun,
       thisRun,
     );
     return new QueryIterationCursor(
-      queryState.queryData,
-      queryState.queryFilter,
+      queryState.data,
+      queryState.filter,
       queryState.isDense,
       iter([]),
       Vec.new(),
@@ -312,8 +312,8 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
     lastRun: Tick,
     thisRun: Tick,
   ): QueryIterationCursor<D, F> {
-    const fetch = queryState.queryData.initFetch(world, queryState.fetchState, lastRun, thisRun);
-    const filter = queryState.queryFilter.initFetch(
+    const fetch = queryState.data.initFetch(world, queryState.fetchState, lastRun, thisRun);
+    const filter = queryState.filter.initFetch(
       world,
       queryState.filterState,
       lastRun,
@@ -321,8 +321,8 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
     );
 
     return new QueryIterationCursor(
-      queryState.queryData,
-      queryState.queryFilter,
+      queryState.data,
+      queryState.filter,
       queryState.isDense,
       queryState.matchedStorageIds.iter(),
       Vec.new(),

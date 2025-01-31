@@ -1,7 +1,7 @@
 {
   "name": "@sciurus/utils",
   "description": "A Collection of Utilities for the Sciurus.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/illuxiza/sciurus#readme",
   "license": "MIT",
   "main": "lib/index.js",

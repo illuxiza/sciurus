@@ -20,10 +20,10 @@ export {
   Tick,
 } from './change_detection';
 export {
-  ComponentId,
   Component,
   ComponentDescriptor,
   ComponentHooks,
+  ComponentId,
   ComponentInfo,
   Components,
   RequireFunc,
@@ -65,6 +65,7 @@ export {
   OptionRes,
   Query,
   Res,
+  RunSystemOnce,
   System,
   SystemId,
   SystemParam,

@@ -1,7 +1,7 @@
 {
   "name": "@sciurus/app",
   "description": "Provides core App functionality for Sciurus Engine",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://github.com/illuxiza/sciurus#readme",
   "license": "MIT",
   "main": "lib/index.js",
@@ -28,8 +28,8 @@
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
   "dependencies": {
-    "@sciurus/ecs": "0.0.4",
-    "@sciurus/utils": "0.0.4"
+    "@sciurus/ecs": "0.0.5",
+    "@sciurus/utils": "0.0.5"
   },
   "peerDependencies": {
     "rustable": "^0.4.0"

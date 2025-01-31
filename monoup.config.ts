@@ -6,13 +6,13 @@ export default defineConfig({
 
   build: {
     main: true,
-    
+
     typescript: {
       enabled: true,
       declaration: true,
       removeComments: false,
     },
 
-    baseExternals: ['path', 'fs', 'tslib'],
+    baseExternals: ['tslib', '@rustable/iter/advanced'],
   },
 });

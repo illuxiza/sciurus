@@ -36,7 +36,7 @@
     "@typescript-eslint/parser": "^8.22.0",
     "eslint": "^9.19.0",
     "minigame-api-typings": "^3.8.7",
-    "monoup": "^0.2.2",
+    "monoup": "^0.3.0",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "rustable": "^0.4.2",
@@ -53,9 +53,9 @@
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
   "dependencies": {
-    "@sciurus/app": "workspace:*",
-    "@sciurus/ecs": "workspace:*",
-    "@sciurus/utils": "workspace:*"
+    "@sciurus/app": "0.0.4",
+    "@sciurus/ecs": "0.0.4",
+    "@sciurus/utils": "0.0.4"
   },
   "peerDependencies": {
     "rustable": "^0.4.0"

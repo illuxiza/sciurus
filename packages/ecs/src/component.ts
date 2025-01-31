@@ -156,19 +156,19 @@ export class ComponentInfo {
    * Update the given flags to include any ComponentHook registered to self
    */
   updateArchetypeFlags(flags: ArchetypeFlags): void {
-    if (this.hooks.onAddHook.isSome()) {
+    if (this.hooks.addHook.isSome()) {
       flags.insert(ArchetypeFlags.ON_ADD_HOOK);
     }
-    if (this.hooks.onInsertHook.isSome()) {
+    if (this.hooks.insertHook.isSome()) {
       flags.insert(ArchetypeFlags.ON_INSERT_HOOK);
     }
-    if (this.hooks.onReplaceHook.isSome()) {
+    if (this.hooks.replaceHook.isSome()) {
       flags.insert(ArchetypeFlags.ON_REPLACE_HOOK);
     }
-    if (this.hooks.onRemoveHook.isSome()) {
+    if (this.hooks.removeHook.isSome()) {
       flags.insert(ArchetypeFlags.ON_REMOVE_HOOK);
     }
-    if (this.hooks.onDespawnHook.isSome()) {
+    if (this.hooks.despawnHook.isSome()) {
       flags.insert(ArchetypeFlags.ON_DESPAWN_HOOK);
     }
   }
@@ -191,18 +191,18 @@ export type ComponentHook = (
  * and are not intended for general-purpose logic.
  */
 export class ComponentHooks {
-  private _onAdd: Option<ComponentHook>;
-  private _onInsert: Option<ComponentHook>;
-  private _onReplace: Option<ComponentHook>;
-  private _onRemove: Option<ComponentHook>;
-  private _onDespawn: Option<ComponentHook>;
+  addHook: Option<ComponentHook>;
+  insertHook: Option<ComponentHook>;
+  replaceHook: Option<ComponentHook>;
+  removeHook: Option<ComponentHook>;
+  despawnHook: Option<ComponentHook>;
 
   constructor() {
-    this._onAdd = None;
-    this._onInsert = None;
-    this._onReplace = None;
-    this._onRemove = None;
-    this._onDespawn = None;
+    this.addHook = None;
+    this.insertHook = None;
+    this.replaceHook = None;
+    this.removeHook = None;
+    this.despawnHook = None;
   }
 
   /**
@@ -210,10 +210,10 @@ export class ComponentHooks {
    * Returns None if the component already has an onAdd hook.
    */
   tryOnAdd(hook: ComponentHook): Option<this> {
-    if (this._onAdd.isSome()) {
+    if (this.addHook.isSome()) {
       return None;
     }
-    this._onAdd = Some(hook);
+    this.addHook = Some(hook);
     return Some(this);
   }
 
@@ -222,10 +222,10 @@ export class ComponentHooks {
    * Returns None if the component already has an onInsert hook.
    */
   tryOnInsert(hook: ComponentHook): Option<this> {
-    if (this._onInsert.isSome()) {
+    if (this.insertHook.isSome()) {
       return None;
     }
-    this._onInsert = Some(hook);
+    this.insertHook = Some(hook);
     return Some(this);
   }
 
@@ -234,10 +234,10 @@ export class ComponentHooks {
    * Returns None if the component already has an onReplace hook.
    */
   tryOnReplace(hook: ComponentHook): Option<this> {
-    if (this._onReplace.isSome()) {
+    if (this.replaceHook.isSome()) {
       return None;
     }
-    this._onReplace = Some(hook);
+    this.replaceHook = Some(hook);
     return Some(this);
   }
 
@@ -246,18 +246,18 @@ export class ComponentHooks {
    * Returns None if the component already has an onRemove hook.
    */
   tryOnRemove(hook: ComponentHook): Option<this> {
-    if (this._onRemove.isSome()) {
+    if (this.removeHook.isSome()) {
       return None;
     }
-    this._onRemove = Some(hook);
+    this.removeHook = Some(hook);
     return Some(this);
   }
 
   tryOnDespawn(hook: ComponentHook): Option<this> {
-    if (this._onDespawn.isSome()) {
+    if (this.despawnHook.isSome()) {
       return None;
     }
-    this._onDespawn = Some(hook);
+    this.despawnHook = Some(hook);
     return Some(this);
   }
 
@@ -321,32 +321,12 @@ export class ComponentHooks {
    */
   hasHooks(): boolean {
     return (
-      this._onAdd.isSome() ||
-      this._onInsert.isSome() ||
-      this._onReplace.isSome() ||
-      this._onRemove.isSome() ||
-      this._onDespawn.isSome()
+      this.addHook.isSome() ||
+      this.insertHook.isSome() ||
+      this.replaceHook.isSome() ||
+      this.removeHook.isSome() ||
+      this.despawnHook.isSome()
     );
-  }
-
-  get onAddHook(): Option<ComponentHook> {
-    return this._onAdd;
-  }
-
-  get onInsertHook(): Option<ComponentHook> {
-    return this._onInsert;
-  }
-
-  get onReplaceHook(): Option<ComponentHook> {
-    return this._onReplace;
-  }
-
-  get onRemoveHook(): Option<ComponentHook> {
-    return this._onRemove;
-  }
-
-  get onDespawnHook(): Option<ComponentHook> {
-    return this._onDespawn;
   }
 }
 
@@ -677,8 +657,8 @@ export const ComponentCloneHandler = Enums.create(
 export type ComponentCloneHandler = EnumInstance<typeof componentCloneHandlerParams>;
 
 export class ComponentCloneHandlers {
-  private handlers: Vec<Option<ComponentCloneFn>> = Vec.new();
-  private defaultHandler: ComponentCloneFn;
+  handlers: Vec<Option<ComponentCloneFn>> = Vec.new();
+  defaultHandler: ComponentCloneFn;
 
   constructor(defaultHandler: ComponentCloneFn) {
     this.defaultHandler = defaultHandler;
@@ -728,56 +708,14 @@ export class Components {
   componentCloneHandlers: ComponentCloneHandlers = new ComponentCloneHandlers(componentCloneIgnore);
 
   registerComponent<T extends Constructor>(component: T, storages: Storages): ComponentId {
-    return this.registerComponentInternal(component, storages, Vec.new());
-  }
-
-  private registerComponentInternal<T extends Constructor>(
-    component: T,
-    storages: Storages,
-    recursionCheckStack: Vec<ComponentId>,
-  ): ComponentId {
-    let isNewRegistration = false;
-    const tid = typeId(component);
-    let id = this.indices.get(tid).unwrapOrElse(() => {
-      const id = this.registerComponentInner(storages, ComponentDescriptor.new(component));
-      isNewRegistration = true;
-      this.indices.insert(tid, id);
-      return id;
-    });
-    if (isNewRegistration) {
-      const requiredComponents = new RequiredComponents();
-      Component.wrap(component).registerRequiredComponents(
-        id,
-        this,
-        storages,
-        requiredComponents,
-        0,
-        recursionCheckStack,
-      );
-      const info = this.components.getUnchecked(id);
-      Component.wrap(component).registerComponentHooks(info.hooks);
-      info.requiredComponents = requiredComponents;
-      const cloneHandler = Component.wrap(component).getComponentCloneHandler();
-      this.componentCloneHandlers.setComponentHandler(id, cloneHandler);
-    }
-    return id;
+    return registerComponent(this, component, storages, Vec.new());
   }
 
   registerComponentWithDescriptor(
     storages: Storages,
     descriptor: ComponentDescriptor,
   ): ComponentId {
-    return this.registerComponentInner(storages, descriptor);
-  }
-
-  private registerComponentInner(storages: Storages, descriptor: ComponentDescriptor): ComponentId {
-    const componentId = this.components.len();
-    const info = new ComponentInfo(componentId, descriptor);
-    if (info.descriptor.storageType === StorageType.SparseSet) {
-      storages.sparseSets.getOrInsert(info);
-    }
-    this.components.push(info);
-    return componentId;
+    return registerComponentInner(this, storages, descriptor);
   }
 
   len() {
@@ -901,12 +839,8 @@ export class Components {
     inheritanceDepth: number,
     recursionCheckStack: Vec<ComponentId>,
   ): void {
-    const requiree = this.registerComponentInternal(component, storages, recursionCheckStack);
-    const required = this.registerComponentInternal(
-      requiredComponent,
-      storages,
-      recursionCheckStack,
-    );
+    const requiree = registerComponent(this, component, storages, recursionCheckStack);
+    const required = registerComponent(this, requiredComponent, storages, recursionCheckStack);
 
     // SAFETY: We just created the components.
     this.registerRequiredComponentsManualUnchecked(
@@ -997,4 +931,51 @@ export class Components {
   iter() {
     return this.components;
   }
+}
+
+function registerComponent<T extends Constructor>(
+  self: Components,
+  component: T,
+  storages: Storages,
+  recursionCheckStack: Vec<ComponentId>,
+): ComponentId {
+  let isNewRegistration = false;
+  const tid = typeId(component);
+  let id = self.indices.get(tid).unwrapOrElse(() => {
+    const id = registerComponentInner(self, storages, ComponentDescriptor.new(component));
+    isNewRegistration = true;
+    self.indices.insert(tid, id);
+    return id;
+  });
+  if (isNewRegistration) {
+    const requiredComponents = new RequiredComponents();
+    Component.wrap(component).registerRequiredComponents(
+      id,
+      self,
+      storages,
+      requiredComponents,
+      0,
+      recursionCheckStack,
+    );
+    const info = self.components.getUnchecked(id);
+    Component.wrap(component).registerComponentHooks(info.hooks);
+    info.requiredComponents = requiredComponents;
+    const cloneHandler = Component.wrap(component).getComponentCloneHandler();
+    self.componentCloneHandlers.setComponentHandler(id, cloneHandler);
+  }
+  return id;
+}
+
+function registerComponentInner(
+  self: Components,
+  storages: Storages,
+  descriptor: ComponentDescriptor,
+): ComponentId {
+  const componentId = self.components.len();
+  const info = new ComponentInfo(componentId, descriptor);
+  if (info.descriptor.storageType === StorageType.SparseSet) {
+    storages.sparseSets.getOrInsert(info);
+  }
+  self.components.push(info);
+  return componentId;
 }

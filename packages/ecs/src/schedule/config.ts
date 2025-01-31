@@ -49,7 +49,7 @@ export class NodeConfigs<T> extends Enum {
   }
   @variant
   static NodeConfig<T>(_config: NodeConfig<T>): NodeConfigs<T> {
-    throw new NotImplementedError();
+    return null!;
   }
 
   @variant
@@ -58,15 +58,11 @@ export class NodeConfigs<T> extends Enum {
     _collectiveConditions: Vec<Condition>,
     _chained: Chain,
   ): NodeConfigs<T> {
-    throw new NotImplementedError();
+    return null!;
   }
 
-  match<U>(patterns: Partial<NodeConfigsMatch<T, U>>): U {
-    return super.match({ ...patterns, _: undefined! });
-  }
-
-  intoConfigs(): NodeConfigs<T> {
-    return this;
+  match<U>(patterns: NodeConfigsMatch<T, U>): U {
+    return super.match(patterns);
   }
 
   inSet<S extends object>(set: S) {
@@ -243,7 +239,7 @@ export namespace SystemSetConfigs {
   }
 }
 
-export class IntoConfigs<T = any> extends Trait {
+export class IntoConfigs<T> extends Trait {
   intoConfigs(): NodeConfigs<T> {
     throw new NotImplementedError();
   }
@@ -293,7 +289,11 @@ export class IntoConfigs<T = any> extends Trait {
   }
 }
 
-IntoConfigs.implFor(NodeConfigs);
+IntoConfigs.implFor(NodeConfigs, {
+  intoConfigs(): NodeConfigs<any> {
+    return this;
+  },
+});
 
 IntoConfigs.implFor(IntoSystem, {
   intoConfigs(): SystemConfigs {
@@ -316,6 +316,8 @@ IntoConfigs.implFor(Array, {
     );
   },
 });
+
+export interface NodeConfigs<T> extends IntoConfigs<T> {}
 
 declare module '../system/into' {
   interface IntoSystem extends IntoConfigs<System> {}

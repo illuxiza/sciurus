@@ -28,7 +28,7 @@
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
   "dependencies": {
-    "@sciurus/utils": "workspace:*"
+    "@sciurus/utils": "0.0.4"
   },
   "peerDependencies": {
     "rustable": "^0.4.0"

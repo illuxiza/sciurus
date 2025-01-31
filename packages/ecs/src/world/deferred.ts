@@ -71,7 +71,7 @@ export class DeferredWorld {
       entity,
       targets,
       (arch) => arch.hasAddHook(),
-      (hooks) => hooks.onAddHook,
+      (hooks) => hooks.addHook,
     );
   }
 
@@ -81,7 +81,7 @@ export class DeferredWorld {
       entity,
       targets,
       (arch) => arch.hasInsertHook(),
-      (hooks) => hooks.onInsertHook,
+      (hooks) => hooks.insertHook,
     );
   }
 
@@ -91,7 +91,7 @@ export class DeferredWorld {
       entity,
       targets,
       (arch) => arch.hasReplaceHook(),
-      (hooks) => hooks.onReplaceHook,
+      (hooks) => hooks.replaceHook,
     );
   }
 
@@ -101,7 +101,7 @@ export class DeferredWorld {
       entity,
       targets,
       (arch) => arch.hasRemoveHook(),
-      (hooks) => hooks.onRemoveHook,
+      (hooks) => hooks.removeHook,
     );
   }
 
@@ -111,7 +111,7 @@ export class DeferredWorld {
       entity,
       targets,
       (arch) => arch.hasDespawnHook(),
-      (hooks) => hooks.onDespawnHook,
+      (hooks) => hooks.despawnHook,
     );
   }
 

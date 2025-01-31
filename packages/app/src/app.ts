@@ -525,7 +525,7 @@ export class App {
   }
 
   /** Adds systems to a schedule */
-  addSystems(scheduleLabel: any, systems: IntoConfigs): this {
+  addSystems<M>(scheduleLabel: any, systems: IntoConfigs<M>): this {
     this.main().addSystems(scheduleLabel, systems);
     return this;
   }
@@ -536,7 +536,7 @@ export class App {
   }
 
   /** Configures system sets */
-  configureSets(schedule: ScheduleLabel, sets: IntoConfigs): this {
+  configureSets<M>(schedule: ScheduleLabel, sets: IntoConfigs<M>): this {
     this.main().configureSets(schedule, sets);
     return this;
   }

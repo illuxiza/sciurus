@@ -1,13 +1,13 @@
 import { EntityCell } from 'packages/ecs/src/world/entity_ref/cell';
 import { Default, derive, Option, Some, Vec } from 'rustable';
 import { Component, ComponentId, Res, Resource, World } from '../../src';
+import { observer } from '../../src/';
 import { component } from '../../src/component';
 import { Entity } from '../../src/entity/base';
 import { Event } from '../../src/event';
 import { Observer, ObserverState } from '../../src/observer/runner';
 import { ObserverDescriptor, Trigger } from '../../src/observer/types';
 import { StorageType } from '../../src/storage';
-import { observer } from '../../src/observer';
 import { Commands } from '../../src/system/commands/base';
 import { Query } from '../../src/system/param/query';
 import { Traversal } from '../../src/traversal';

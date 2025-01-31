@@ -45,7 +45,7 @@ export class Schedule {
     this.label = ScheduleLabel.label(label);
   }
 
-  addSystems(systems: IntoConfigs): Schedule {
+  addSystems<M>(systems: IntoConfigs<M>): Schedule {
     this.graph.processConfigs(ScheduleSystem, IntoConfigs.wrap(systems).intoConfigs(), false);
     return this;
   }

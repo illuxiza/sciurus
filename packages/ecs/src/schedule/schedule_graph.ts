@@ -112,7 +112,7 @@ export class ScheduleGraph {
     });
   }
 
-  processConfigs<T extends object>(
+  processConfigs<T>(
     type: Constructor<T>,
     nodeConfigs: NodeConfigs<T>,
     collectNodes: boolean,
@@ -167,7 +167,7 @@ export class ScheduleGraph {
     });
   }
 
-  configureSets(sets: IntoConfigs) {
+  configureSets<M>(sets: IntoConfigs<M>) {
     this.processConfigs(SystemSet, IntoConfigs.wrap(sets).intoConfigs(), false);
   }
 
@@ -336,7 +336,7 @@ export class ScheduleGraph {
   }
 }
 
-function processConfig<T extends object>(
+function processConfig<T>(
   self: ScheduleGraph,
   type: Constructor<T>,
   config: NodeConfig<T>,
@@ -378,7 +378,7 @@ function configureSet(self: ScheduleGraph, config: SystemSetConfig): NodeId {
   return id;
 }
 
-function applyCollectiveConditions<T extends object>(
+function applyCollectiveConditions<T>(
   self: ScheduleGraph,
   configs: Vec<NodeConfigs<T>>,
   collectiveConditions: Vec<Condition>,

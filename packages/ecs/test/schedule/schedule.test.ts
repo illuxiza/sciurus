@@ -1,12 +1,11 @@
-import { Schedule, Schedules } from '../../../ecs/src/schedule/base';
+import { derive, Eq } from 'rustable';
+import { condition, OptionRes, Res, system } from '../../src';
+import { Schedule, Schedules } from '../../src/schedule/base';
+import { ScheduleLabel, SystemSet } from '../../src/schedule/set';
+import { LogLevel, ScheduleBuildSettings } from '../../src/schedule/types';
+import { Commands } from '../../src/system/commands';
 import { Resource } from '../../src/component';
 import { World } from '../../src/world/base';
-
-import { derive, Eq } from 'rustable';
-import { condition, OptionRes, Res, system } from '../../../ecs/src';
-import { ScheduleLabel, SystemSet } from '../../../ecs/src/schedule/set';
-import { LogLevel, ScheduleBuildSettings } from '../../../ecs/src/schedule/types';
-import { Commands } from '../../../ecs/src/system/commands';
 
 @derive(Resource)
 class Resource1 {}

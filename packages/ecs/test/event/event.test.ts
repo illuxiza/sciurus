@@ -1,7 +1,7 @@
-import { Schedule } from '../../../ecs/src/schedule/base';
-import { system } from '../../../ecs/src/system';
 import { deepClone, derive, None, Option, Some } from 'rustable';
 import { Event, EventCursor, EventReader, EventRegistry, Events } from '../../src/event';
+import { Schedule } from '../../src/schedule/base';
+import { system } from '../../src/system';
 import { World } from '../../src/world';
 
 @derive([Event])

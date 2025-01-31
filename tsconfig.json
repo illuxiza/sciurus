@@ -20,9 +20,9 @@
     "useDefineForClassFields": false,
     "types": ["vitest", "vitest/globals"],
     "paths": {
-      "@sciurus/app": ["packages/app"],
-      "@sciurus/ecs": ["packages/ecs"],
-      "@sciurus/utils": ["packages/utils"]
+      "@sciurus/app": ["packages/app/src"],
+      "@sciurus/ecs": ["packages/ecs/src"],
+      "@sciurus/utils": ["packages/utils/src"]
     }
   }
 }

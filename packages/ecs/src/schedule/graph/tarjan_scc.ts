@@ -138,7 +138,9 @@ class TarjanScc {
       this.nodes.getUnchecked(this.graph.toIndex(w)).rootIndex.unwrap() <
       this.nodes.getUnchecked(this.graph.toIndex(v)).rootIndex.unwrap()
     ) {
-      this.nodes.getUnchecked(this.graph.toIndex(v)).rootIndex = this.nodes.getUnchecked(this.graph.toIndex(w)).rootIndex;
+      this.nodes.getUnchecked(this.graph.toIndex(v)).rootIndex = this.nodes.getUnchecked(
+        this.graph.toIndex(w),
+      ).rootIndex;
       vIsLocalRoot = false;
     }
 

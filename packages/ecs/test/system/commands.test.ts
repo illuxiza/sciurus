@@ -1,4 +1,4 @@
-import { Default, derive,  Type, typeId } from 'rustable';
+import { Default, derive, Type, typeId } from 'rustable';
 import { Component, component, Resource } from '../../src/component';
 import { QueryData } from '../../src/query/fetch';
 import { Commands } from '../../src/system/commands';

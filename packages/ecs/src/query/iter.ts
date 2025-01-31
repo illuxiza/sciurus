@@ -286,12 +286,7 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
     thisRun: Tick,
   ): QueryIterationCursor {
     const fetch = queryState.data.initFetch(world, queryState.fetchState, lastRun, thisRun);
-    const filter = queryState.filter.initFetch(
-      world,
-      queryState.filterState,
-      lastRun,
-      thisRun,
-    );
+    const filter = queryState.filter.initFetch(world, queryState.filterState, lastRun, thisRun);
     return new QueryIterationCursor(
       queryState.data,
       queryState.filter,
@@ -313,12 +308,7 @@ class QueryIterationCursor<D extends QueryData = any, F extends QueryFilter = an
     thisRun: Tick,
   ): QueryIterationCursor<D, F> {
     const fetch = queryState.data.initFetch(world, queryState.fetchState, lastRun, thisRun);
-    const filter = queryState.filter.initFetch(
-      world,
-      queryState.filterState,
-      lastRun,
-      thisRun,
-    );
+    const filter = queryState.filter.initFetch(world, queryState.filterState, lastRun, thisRun);
 
     return new QueryIterationCursor(
       queryState.data,

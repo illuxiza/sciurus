@@ -7,7 +7,7 @@ import { IntoSystem } from './into';
  * Implemented for Systems that have a Trigger as the first argument.
  */
 export class ObserverSystem<
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   E extends object = any,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   B extends object = any,
@@ -40,7 +40,7 @@ export class IntoObserverSystem<
 }
 
 // Implementation for any System that has Trigger as input
-ObserverSystem.implFor(Type(System, [Trigger]))
+ObserverSystem.implFor(Type(System, [Trigger]));
 
 // Implementation for any IntoSystem that can convert to an ObserverSystem
 IntoObserverSystem.implFor(Type(IntoSystem, [Trigger]), {

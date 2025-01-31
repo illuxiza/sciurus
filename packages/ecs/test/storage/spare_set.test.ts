@@ -2,7 +2,7 @@ import { derive, iter, None, Some } from 'rustable';
 import { Component, ComponentDescriptor, ComponentInfo } from '../../src/component';
 import { Entity, EntityIndex } from '../../src/entity';
 import { SparseSet, SparseSets } from '../../src/storage';
-import '@rustable/iter/advanced'
+import '@rustable/iter/advanced';
 
 class Foo {
   constructor(public value: number) {}

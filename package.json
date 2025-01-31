@@ -27,8 +27,8 @@
     "clean": "monoup clean",
     "lint": "eslint packages/*/src/**/*.ts packages/*/test/**/*.ts src/**/*.ts",
     "format": "prettier --write packages/*/src/**/*.ts packages/*/test/**/*.ts src/**/*.ts",
-    "prepub": "yarn format && yarn lint && yarn clean && yarn build && yarn test run",
-    "publish": "yarn workspaces foreach -R npm publish",
+    "prepub": "yarn lint && yarn clean && yarn build && yarn test run",
+    "publish": "monoup publish",
     "ver": "monoup version"
   },
   "devDependencies": {
@@ -36,7 +36,7 @@
     "@typescript-eslint/parser": "^8.22.0",
     "eslint": "^9.19.0",
     "minigame-api-typings": "^3.8.7",
-    "monoup": "^0.3.0",
+    "monoup": "^0.3.2",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "rustable": "^0.4.2",

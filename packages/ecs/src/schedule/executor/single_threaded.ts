@@ -40,10 +40,15 @@ export class SingleThreadedExecutor implements SystemExecutor {
           continue;
         }
 
-        const setConditionsMet = evaluateAndFoldConditions(schedule.setConditions.getUnchecked(setIdx), world);
+        const setConditionsMet = evaluateAndFoldConditions(
+          schedule.setConditions.getUnchecked(setIdx),
+          world,
+        );
 
         if (!setConditionsMet) {
-          this.completedSystems.unionWith(schedule.systemsInSetsWithConditions.getUnchecked(setIdx));
+          this.completedSystems.unionWith(
+            schedule.systemsInSetsWithConditions.getUnchecked(setIdx),
+          );
         }
 
         shouldRun = shouldRun && setConditionsMet;

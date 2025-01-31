@@ -71,7 +71,9 @@ describe('Access', () => {
     expect(cloned.hasComponentWrite(1)).toBe(original.hasComponentWrite(1));
     expect(cloned.hasComponentRead(2)).toBe(original.hasComponentRead(2));
     expect(cloned.required.contains(3)).toBe(original.required.contains(3));
-    expect(cloned.filterSets.getUnchecked(0).with.contains(4)).toBe(original.filterSets.getUnchecked(0).with.contains(4));
+    expect(cloned.filterSets.getUnchecked(0).with.contains(4)).toBe(
+      original.filterSets.getUnchecked(0).with.contains(4),
+    );
   });
 
   test('access_filters_clone', () => {
@@ -92,7 +94,9 @@ describe('Access', () => {
     expect(cloned.hasComponentWrite(1)).toBe(original.hasComponentWrite(1));
     expect(cloned.hasComponentRead(2)).toBe(original.hasComponentRead(2));
     expect(cloned.required.contains(3)).toBe(original.required.contains(3));
-    expect(cloned.filterSets.getUnchecked(0).with.contains(4)).toBe(original.filterSets.getUnchecked(0).with.contains(4));
+    expect(cloned.filterSets.getUnchecked(0).with.contains(4)).toBe(
+      original.filterSets.getUnchecked(0).with.contains(4),
+    );
   });
 
   test('read_all_access_conflicts', () => {

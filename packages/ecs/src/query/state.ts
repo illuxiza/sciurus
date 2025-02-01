@@ -36,7 +36,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     public data: D,
     public filter: F,
     public wId: number,
-    public _archetypeGeneration: ArchetypeGeneration,
+    public archetypeGen: ArchetypeGeneration,
     public _matchedTables: FixedBitSet,
     public _matchedArchetypes: FixedBitSet,
     public _compAccess: FilteredAccess,
@@ -73,7 +73,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
         state.updateArchetypeComponentAccess(archetype, access);
       }
     }
-    state._archetypeGeneration = world.archetypes.generation();
+    state.archetypeGen = world.archetypes.gen();
 
     if (state._compAccess.access().hasReadAllResources()) {
       access.readAllResources();
@@ -175,14 +175,14 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
     this.validateWorld(world.id);
     if (this._compAccess.required.isEmpty()) {
       const archetypes = world.archetypes;
-      const oldGeneration = this._archetypeGeneration;
-      this._archetypeGeneration = archetypes.generation();
+      const oldGeneration = this.archetypeGen;
+      this.archetypeGen = archetypes.gen();
 
       for (let i = oldGeneration.id; i < archetypes.len(); i++) {
         newArchetypeInternal(this, archetypes.getUnchecked(i));
       }
     } else {
-      if (this._archetypeGeneration.id === world.archetypes.generation().id) {
+      if (this.archetypeGen.id === world.archetypes.gen().id) {
         return;
       }
 
@@ -197,14 +197,14 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
 
       if (potentialArchetypes.isSome()) {
         for (const archetypeId of potentialArchetypes.unwrap()) {
-          if (archetypeId < this._archetypeGeneration.id) {
+          if (archetypeId < this.archetypeGen.id) {
             continue;
           }
           const archetype = world.archetypes.getUnchecked(archetypeId);
           newArchetypeInternal(this, archetype);
         }
       }
-      this._archetypeGeneration = world.archetypes.generation();
+      this.archetypeGen = world.archetypes.gen();
     }
   }
 
@@ -329,7 +329,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
       newD,
       newF,
       this.wId,
-      this._archetypeGeneration,
+      this.archetypeGen,
       this._matchedTables.clone(),
       this._matchedArchetypes.clone(),
       this._compAccess.clone(),
@@ -395,7 +395,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
       );
     }
 
-    if (this._archetypeGeneration !== other._archetypeGeneration) {
+    if (this.archetypeGen !== other.archetypeGen) {
       logger.warn(
         'You have tried to join queries with different archetype_generations. This could lead to unpredictable results.',
       );
@@ -420,7 +420,7 @@ export class QueryState<D extends QueryData = any, F extends QueryFilter = any> 
       newD,
       newF,
       this.wId,
-      this._archetypeGeneration,
+      this.archetypeGen,
       matchedTables,
       matchedArchetypes,
       joinedComponentAccess,

@@ -144,19 +144,19 @@ export class ComponentSparseSet {
   }
 
   insert(entity: Entity, value: any, changeTick: Tick, caller?: string) {
-    const denseIndex = this.__sparse.get(entity.index);
+    const denseIndex = this.__sparse.get(entity.idx);
     if (denseIndex.isSome()) {
       this.__dense.replace(denseIndex.unwrap(), value, changeTick, caller);
       return;
     }
     const denseLength = this.__dense.len();
     this.__dense.push(value, ComponentTicks.new(changeTick), caller);
-    this.__sparse.insert(entity.index, denseLength);
+    this.__sparse.insert(entity.idx, denseLength);
     this.__entities.push(entity);
   }
 
   contains(entity: Entity) {
-    const denseIndex = this.__sparse.get(entity.index);
+    const denseIndex = this.__sparse.get(entity.idx);
     if (denseIndex.isNone()) {
       return false;
     }
@@ -165,13 +165,13 @@ export class ComponentSparseSet {
 
   get(entity: Entity): Option<any> {
     return this.__sparse
-      .get(entity.index)
+      .get(entity.idx)
       .map((denseIndex) => this.__dense.getDataUnchecked(denseIndex));
   }
 
   getWithTicks(entity: Entity): Option<[Ptr<any>, ComponentTicks, Ptr<string>]> {
     return this.__sparse
-      .get(entity.index)
+      .get(entity.idx)
       .map((denseIndex) => [
         this.__dense.getDataMut(denseIndex).unwrap(),
         this.__dense.getTicksUnchecked(denseIndex),
@@ -181,43 +181,43 @@ export class ComponentSparseSet {
 
   getAddedTick(entity: Entity): Option<Tick> {
     return this.__sparse
-      .get(entity.index)
+      .get(entity.idx)
       .map((denseIndex) => this.__dense.getAddedTickUnchecked(denseIndex));
   }
 
   getChangedTick(entity: Entity): Option<Tick> {
     return this.__sparse
-      .get(entity.index)
+      .get(entity.idx)
       .map((denseIndex) => this.__dense.getChangedTickUnchecked(denseIndex));
   }
 
   getTicks(entity: Entity): Option<ComponentTicks> {
     return this.__sparse
-      .get(entity.index)
+      .get(entity.idx)
       .map((denseIndex) => this.__dense.getTicksUnchecked(denseIndex));
   }
 
   removeAndForget(entity: Entity): Option<any> {
-    return this.__sparse.remove(entity.index).map((denseIndex) => {
+    return this.__sparse.remove(entity.idx).map((denseIndex) => {
       this.__entities.swapRemove(denseIndex);
       const isLast = denseIndex === this.__dense.len() - 1;
       const [value] = this.__dense.swapRemoveAndForget(denseIndex);
       if (!isLast) {
         const swappedEntity = this.__entities.get(denseIndex).unwrap();
-        this.__sparse.getMut(swappedEntity.index).unwrap()[Ptr.ptr] = denseIndex;
+        this.__sparse.getMut(swappedEntity.idx).unwrap()[Ptr.ptr] = denseIndex;
       }
       return value;
     });
   }
 
   remove(entity: Entity) {
-    return this.__sparse.remove(entity.index).map((denseIndex) => {
+    return this.__sparse.remove(entity.idx).map((denseIndex) => {
       this.__entities.swapRemove(denseIndex);
       const isLast = denseIndex === this.__dense.len() - 1;
       this.__dense.swapRemove(denseIndex);
       if (!isLast) {
         const last = this.__entities.get(denseIndex).unwrap();
-        this.__sparse.getMut(last.index).unwrap()[Ptr.ptr] = denseIndex;
+        this.__sparse.getMut(last.idx).unwrap()[Ptr.ptr] = denseIndex;
       }
     });
   }

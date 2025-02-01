@@ -1,3 +1,9 @@
+function validIndex(index: number, length: number, op: string) {
+  if (index >= length) {
+    throw new Error(`${op} at index ${index} exceeds fixedbitset size ${length}`);
+  }
+}
+
 /**
  * A fixed-size bit set.
  */
@@ -24,9 +30,7 @@ export class FixedBitSet {
    * @throws Error if index exceeds the bit set size
    */
   put(index: number): boolean {
-    if (index >= this.numBits) {
-      throw new Error(`put at index ${index} exceeds fixedbitset size ${this.numBits}`);
-    }
+    validIndex(index, this.numBits, 'put');
     // The above check ensures that the block is inside the array's allocation.
     const wordIndex = Math.floor(index / 32);
     const bitIndex = index % 32;
@@ -42,9 +46,7 @@ export class FixedBitSet {
    * @throws Error if index exceeds the bit set size
    */
   toggle(index: number): void {
-    if (index >= this.numBits) {
-      throw new Error(`toggle at index ${index} exceeds fixedbitset size ${this.numBits}`);
-    }
+    validIndex(index, this.numBits, 'toggle');
     // The above check ensures that the block is inside the array's allocation.
     const wordIndex = Math.floor(index / 32);
     const bitIndex = index % 32;
@@ -59,9 +61,7 @@ export class FixedBitSet {
    * @throws Error if index exceeds the bit set size
    */
   set(index: number, enabled: boolean = true): void {
-    if (index >= this.numBits) {
-      throw new Error(`set at index ${index} exceeds fixedbitset size ${this.numBits}`);
-    }
+    validIndex(index, this.numBits, 'set');
     // The above check ensures that the block is inside the array's allocation.
     const wordIndex = Math.floor(index / 32);
     const bitIndex = index % 32;
@@ -77,9 +77,7 @@ export class FixedBitSet {
    * @throws Error if index exceeds the bit set size
    */
   insert(index: number): void {
-    if (index >= this.numBits) {
-      throw new Error(`insert at index ${index} exceeds fixedbitset size ${this.numBits}`);
-    }
+    validIndex(index, this.numBits, 'insert');
     const wordIndex = Math.floor(index / 32);
     const bitIndex = index % 32;
     this.bits[wordIndex] |= 1 << bitIndex;

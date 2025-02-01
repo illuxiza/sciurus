@@ -162,7 +162,7 @@ export class BundleInserter {
         if (result.swappedEntity.isSome()) {
           const swappedLocation = entities.get(result.swappedEntity.unwrap()).unwrap();
           entities.set(
-            result.swappedEntity.unwrap().index,
+            result.swappedEntity.unwrap().idx,
             new EntityLocation(
               swappedLocation.archetypeId,
               location.archetypeRow,
@@ -173,7 +173,7 @@ export class BundleInserter {
         }
 
         const newLocation = newArchetypeMut.allocate(entity, result.tableRow);
-        entities.set(entity.index, newLocation);
+        entities.set(entity.idx, newLocation);
 
         bundleInfo.writeComponents(
           table,
@@ -201,7 +201,7 @@ export class BundleInserter {
         if (result.swappedEntity.isSome()) {
           const swappedLocation = entities.get(result.swappedEntity.unwrap()).unwrap();
           entities.set(
-            result.swappedEntity.unwrap().index,
+            result.swappedEntity.unwrap().idx,
             new EntityLocation(
               swappedLocation.archetypeId,
               location.archetypeRow,
@@ -213,7 +213,7 @@ export class BundleInserter {
 
         const moveResult = table.moveToSuperset(result.tableRow, newTableMut);
         const newLocation = newArchetypeMut.allocate(entity, moveResult.newRow);
-        entities.set(entity.index, newLocation);
+        entities.set(entity.idx, newLocation);
 
         // If an entity was moved into this entity's table spot, update its table row
         if (moveResult.swappedEntity.isSome()) {
@@ -221,7 +221,7 @@ export class BundleInserter {
           const swappedLocation = entities.get(swappedEntity).unwrap();
 
           entities.set(
-            swappedEntity.index,
+            swappedEntity.idx,
             new EntityLocation(
               swappedLocation.archetypeId,
               swappedLocation.archetypeRow,

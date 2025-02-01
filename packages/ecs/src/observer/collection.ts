@@ -87,7 +87,7 @@ export class Observers {
     observers.map.iter().forEach(triggerObserver);
 
     // Trigger entity observers listening for this kind of trigger
-    if (target !== Entity.PLACEHOLDER) {
+    if (target !== Entity.PH) {
       const map = observers.entityObservers.get(target);
       if (map.isSome()) {
         map.unwrap().iter().forEach(triggerObserver);
@@ -99,7 +99,7 @@ export class Observers {
       const componentObservers = observers.componentObservers.get(id);
       if (componentObservers.isSome()) {
         componentObservers.unwrap().map.iter().forEach(triggerObserver);
-        if (target !== Entity.PLACEHOLDER) {
+        if (target !== Entity.PH) {
           const map = componentObservers.unwrap().entityMap.get(target);
           if (map.isSome()) {
             map.unwrap().iter().forEach(triggerObserver);

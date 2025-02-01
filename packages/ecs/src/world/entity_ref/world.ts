@@ -279,7 +279,7 @@ export class EntityWorld {
       Some: (swappedEntity) => {
         const swappedLocation = entities.get(swappedEntity).unwrap();
         entities.set(
-          swappedEntity.index,
+          swappedEntity.idx,
           new EntityLocation(
             swappedLocation.archetypeId,
             oldLocation.archetypeRow,
@@ -309,7 +309,7 @@ export class EntityWorld {
         Some: (swappedEntity) => {
           const swappedLocation = entities.get(swappedEntity).unwrap();
           entities.set(
-            swappedEntity.index,
+            swappedEntity.idx,
             new EntityLocation(
               swappedLocation.archetypeId,
               swappedLocation.archetypeRow,
@@ -326,7 +326,7 @@ export class EntityWorld {
     }
 
     selfLocation = newLocation;
-    entities.set(entity.index, newLocation);
+    entities.set(entity.idx, newLocation);
   }
 
   private removeBundle(bundle: BundleId): EntityLocation {
@@ -495,7 +495,7 @@ export class EntityWorld {
       Some: (swappedEntity) => {
         const swappedLocation = world.entities.get(swappedEntity).unwrap();
         world.entities.set(
-          swappedEntity.index,
+          swappedEntity.idx,
           new EntityLocation(
             swappedLocation.archetypeId,
             location.archetypeRow,
@@ -520,7 +520,7 @@ export class EntityWorld {
       Some: (movedEntity) => {
         const movedLocation = world.entities.get(movedEntity).unwrap();
         world.entities.set(
-          movedEntity.index,
+          movedEntity.idx,
           new EntityLocation(
             movedLocation.archetypeId,
             movedLocation.archetypeRow,
@@ -538,7 +538,7 @@ export class EntityWorld {
     world.flush();
 
     if (caller) {
-      world.entities.setSpawnedOrDespawnedBy(this.__entity.index, caller);
+      world.entities.setSpawnedOrDespawnedBy(this.__entity.idx, caller);
     }
   }
 

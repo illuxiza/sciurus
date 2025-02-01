@@ -27,9 +27,10 @@ import { SparseSets, Storages, StorageType, TableRow } from './storage';
 import { Table } from './storage/table/base';
 import { type DeferredWorld } from './world/deferred';
 
-const storageSymbol = Symbol('COMPONENT_STORAGE');
-const dropSymbol = Symbol('COMPONENT_DROP');
-const mutSymbol = Symbol('COMPONENT_MUT');
+const storageSymbol = Symbol('CS');
+const dropSymbol = Symbol('CD');
+const mutSymbol = Symbol('CM');
+const HOOK_CONFLICT_MESSAGE = 'Component already has an ';
 
 export class ComponentDescriptor<T = any> {
   name: string;
@@ -40,7 +41,7 @@ export class ComponentDescriptor<T = any> {
 
   constructor(component: Constructor<T>) {
     this.name = component.name;
-    this.storageType = Component.staticWrap(component).storageType();
+    this.storageType = Component.wrap(component).storageType();
     this.typeId = Some(typeId(component));
     this.mutable = (component as any)[mutSymbol] ?? true;
     this.drop = (component as any)[dropSymbol] ? Some((component as any)[dropSymbol]) : None;
@@ -268,7 +269,7 @@ export class ComponentHooks {
    * @throws Error if the component already has an onAdd hook
    */
   onAdd(hook: ComponentHook): this {
-    return this.tryOnAdd(hook).expect('Component already has an onAdd hook');
+    return this.tryOnAdd(hook).expect(`${HOOK_CONFLICT_MESSAGE}onAdd hook`);
   }
 
   /**
@@ -282,7 +283,7 @@ export class ComponentHooks {
    * @throws Error if the component already has an onInsert hook
    */
   onInsert(hook: ComponentHook): this {
-    return this.tryOnInsert(hook).expect('Component already has an onInsert hook');
+    return this.tryOnInsert(hook).expect(`${HOOK_CONFLICT_MESSAGE}onInsert hook`);
   }
 
   /**
@@ -300,7 +301,7 @@ export class ComponentHooks {
    * @throws Error if the component already has an onReplace hook
    */
   onReplace(hook: ComponentHook): this {
-    return this.tryOnReplace(hook).expect('Component already has an onReplace hook');
+    return this.tryOnReplace(hook).expect(`${HOOK_CONFLICT_MESSAGE}onReplace hook`);
   }
 
   /**
@@ -309,11 +310,11 @@ export class ComponentHooks {
    * @throws Error if the component already has an onRemove hook
    */
   onRemove(hook: ComponentHook): this {
-    return this.tryOnRemove(hook).expect('Component already has an onRemove hook');
+    return this.tryOnRemove(hook).expect(`${HOOK_CONFLICT_MESSAGE}onRemove hook`);
   }
 
   onDespawn(hook: ComponentHook): this {
-    return this.tryOnDespawn(hook).expect('Component already has an onDespawn hook');
+    return this.tryOnDespawn(hook).expect(`${HOOK_CONFLICT_MESSAGE}onDespawn hook`);
   }
 
   /**
@@ -842,42 +843,14 @@ export class Components {
     const requiree = registerComponent(this, component, storages, recursionCheckStack);
     const required = registerComponent(this, requiredComponent, storages, recursionCheckStack);
 
-    // SAFETY: We just created the components.
-    this.registerRequiredComponentsManualUnchecked(
+    registerRequiredComponentsManualUnchecked(
+      this,
       requiree,
       required,
       requiredComponents,
       customCreator,
       inheritanceDepth,
     );
-  }
-
-  registerRequiredComponentsManualUnchecked<R>(
-    requiree: ComponentId,
-    required: ComponentId,
-    requiredComponents: RequiredComponents,
-    customCreator: () => R,
-    inheritanceDepth: number,
-  ): void {
-    if (required === requiree) {
-      return;
-    }
-    requiredComponents.registerById(required, customCreator, inheritanceDepth);
-    const requiredBy = this.getInfoUnchecked(required).requiredBy;
-    requiredBy.insert(requiree);
-    const inherited = this.getInfoUnchecked(required)
-      .requiredComponents.components.iter()
-      .map(([id, component]) => {
-        return [id, component.clone()] as [ComponentId, RequiredComponent];
-      });
-    for (const [id, component] of inherited) {
-      requiredComponents.registerDynamic(
-        id,
-        component.__constructor,
-        component.inheritanceDepth + 1,
-      );
-      this.getInfoUnchecked(id).requiredBy.insert(requiree);
-    }
   }
 
   getRequiredBy(id: ComponentId): Option<HashSet<ComponentId>> {
@@ -930,6 +903,32 @@ export class Components {
 
   iter() {
     return this.components;
+  }
+}
+
+function registerRequiredComponentsManualUnchecked<R>(
+  self: Components,
+  requiree: ComponentId,
+  required: ComponentId,
+  requiredComponents: RequiredComponents,
+  customCreator: () => R,
+  inheritanceDepth: number,
+): void {
+  if (required === requiree) {
+    return;
+  }
+  requiredComponents.registerById(required, customCreator, inheritanceDepth);
+  const requiredBy = self.getInfoUnchecked(required).requiredBy;
+  requiredBy.insert(requiree);
+  const inherited = self
+    .getInfoUnchecked(required)
+    .requiredComponents.components.iter()
+    .map(([id, component]) => {
+      return [id, component.clone()] as [ComponentId, RequiredComponent];
+    });
+  for (const [id, component] of inherited) {
+    requiredComponents.registerDynamic(id, component.__constructor, component.inheritanceDepth + 1);
+    self.getInfoUnchecked(id).requiredBy.insert(requiree);
   }
 }
 

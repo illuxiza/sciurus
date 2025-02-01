@@ -399,7 +399,7 @@ describe('Observer Tests', () => {
       EventA,
       [],
       observer([Res(Order)], (obs: Trigger<EventA>, order: Res<Order>) => {
-        expect(obs.target).toEqual(Entity.PLACEHOLDER);
+        expect(obs.target).toEqual(Entity.PH);
         order.observed('event_a');
       }),
     );

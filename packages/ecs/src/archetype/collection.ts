@@ -49,7 +49,7 @@ export class Archetypes {
     return this.__byComponent;
   }
 
-  generation(): ArchetypeGeneration {
+  gen(): ArchetypeGeneration {
     const id = this.__archetypes.len();
     return new ArchetypeGeneration(id);
   }

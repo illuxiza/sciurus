@@ -7,34 +7,24 @@ export type EntityIndex = number;
 
 export class EntityLocation {
   static INVALID = new EntityLocation(INVALID_VALUE, INVALID_VALUE, INVALID_VALUE, INVALID_VALUE);
-  archetypeId: ArchetypeId;
-  archetypeRow: ArchetypeRow;
-  tableId: TableId;
-  tableRow: TableRow;
-
   constructor(
-    archetypeId: ArchetypeId,
-    archetypeRow: ArchetypeRow,
-    tableId: TableId,
-    tableRow: TableRow,
-  ) {
-    this.archetypeId = archetypeId;
-    this.archetypeRow = archetypeRow;
-    this.tableId = tableId;
-    this.tableRow = tableRow;
-  }
+    public archetypeId: ArchetypeId,
+    public archetypeRow: ArchetypeRow,
+    public tableId: TableId,
+    public tableRow: TableRow,
+  ) {}
 }
 
 @derive([Clone])
 export class EntityMeta {
   static EMPTY = new EntityMeta(EntityLocation.INVALID, 1);
-  location: EntityLocation;
-  generation: number;
-  spawnedOrDespawnedBy?: string;
+  loc: EntityLocation;
+  gen: number;
+  changedBy?: string;
 
-  constructor(location: EntityLocation, generation: number) {
-    this.location = location;
-    this.generation = generation;
+  constructor(loc: EntityLocation, gen: number) {
+    this.loc = loc;
+    this.gen = gen;
   }
 }
 
@@ -43,7 +33,7 @@ export interface EntityMeta extends Clone {}
 const params = {
   Exists: (_location: EntityLocation) => {},
   DidNotExist: () => {},
-  ExistsWithWrongGeneration: () => {},
+  ExistsWithWrongGen: () => {},
 };
 export const AllocAtWithoutReplacement = Enums.create('AllocAtWithoutReplacement', params);
 

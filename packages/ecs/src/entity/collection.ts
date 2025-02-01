@@ -27,7 +27,7 @@ export class Entities {
     const n = this.freeCursor--;
     if (n > 0) {
       const index = this.pending.getUnchecked(n - 1);
-      return Entity.fromRawAndGeneration(index, this.meta.getUnchecked(index).generation);
+      return Entity.fromRawAndGen(index, this.meta.getUnchecked(index).gen);
     } else {
       return Entity.fromRaw(this.meta.len() - n);
     }
@@ -45,9 +45,9 @@ export class Entities {
     const index = this.pending.pop();
     if (index.isSome()) {
       this.freeCursor = this.pending.len();
-      return Entity.fromRawAndGeneration(
+      return Entity.fromRawAndGen(
         index.unwrap(),
-        this.meta.getUnchecked(index.unwrap()).generation,
+        this.meta.getUnchecked(index.unwrap()).gen,
       );
     } else {
       const index = this.meta.len();
@@ -59,84 +59,84 @@ export class Entities {
   allocAt(entity: Entity): Option<EntityLocation> {
     this.verifyFlushed();
     const locFn = () => {
-      if (entity.index > this.meta.len()) {
-        this.pending.extend(range(this.meta.len(), entity.index));
+      if (entity.idx > this.meta.len()) {
+        this.pending.extend(range(this.meta.len(), entity.idx));
         this.freeCursor = this.pending.len();
-        this.meta.resize(entity.index + 1, EntityMeta.EMPTY.clone());
+        this.meta.resize(entity.idx + 1, EntityMeta.EMPTY.clone());
         this.length += 1;
         return None;
       }
-      const index = this.pending.iter().position((i) => i === entity.index);
+      const index = this.pending.iter().position((i) => i === entity.idx);
       if (index.isSome()) {
         this.pending.swapRemove(index.unwrap());
         this.freeCursor = this.pending.len();
         this.length += 1;
         return None;
       } else {
-        const value = this.meta.getUnchecked(entity.index).location;
-        this.meta.getUnchecked(entity.index).generation = EntityMeta.EMPTY.generation;
+        const value = this.meta.getUnchecked(entity.idx).loc;
+        this.meta.getUnchecked(entity.idx).gen = EntityMeta.EMPTY.gen;
         return Some(value);
       }
     };
     const loc = locFn();
-    this.meta.getUnchecked(entity.index).generation = entity.generation;
+    this.meta.getUnchecked(entity.idx).gen = entity.gen;
     return loc;
   }
 
   allocAtWithoutReplacement(entity: Entity): AllocAtWithoutReplacement {
     this.verifyFlushed();
     const resultFn = () => {
-      if (entity.index > this.meta.len()) {
-        this.pending.extend(range(this.meta.len(), entity.index));
+      if (entity.idx > this.meta.len()) {
+        this.pending.extend(range(this.meta.len(), entity.idx));
         this.freeCursor = this.pending.len();
-        this.meta.resize(entity.index + 1, EntityMeta.EMPTY.clone());
+        this.meta.resize(entity.idx + 1, EntityMeta.EMPTY.clone());
         this.length += 1;
         return AllocAtWithoutReplacement.DidNotExist();
       }
-      const index = this.pending.iter().position((i) => i === entity.index);
+      const index = this.pending.iter().position((i) => i === entity.idx);
       if (index.isSome()) {
         this.pending.swapRemove(index.unwrap());
         this.freeCursor = this.pending.len();
         this.length += 1;
         return AllocAtWithoutReplacement.DidNotExist();
       } else {
-        const currentMeta = this.meta.getUnchecked(entity.index);
-        if (currentMeta.location.archetypeId === INVALID_VALUE) {
+        const currentMeta = this.meta.getUnchecked(entity.idx);
+        if (currentMeta.loc.archetypeId === INVALID_VALUE) {
           return AllocAtWithoutReplacement.DidNotExist();
-        } else if (currentMeta.generation === entity.generation) {
-          return AllocAtWithoutReplacement.Exists(currentMeta.location);
+        } else if (currentMeta.gen === entity.gen) {
+          return AllocAtWithoutReplacement.Exists(currentMeta.loc);
         } else {
-          return AllocAtWithoutReplacement.ExistsWithWrongGeneration();
+          return AllocAtWithoutReplacement.ExistsWithWrongGen();
         }
       }
     };
     const result = resultFn();
-    this.meta.getUnchecked(entity.index).generation = entity.generation;
+    this.meta.getUnchecked(entity.idx).gen = entity.gen;
     return result;
   }
 
   free(entity: Entity) {
     this.verifyFlushed();
-    const meta = this.meta.getUnchecked(entity.index);
-    if (meta.generation !== entity.generation) {
+    const meta = this.meta.getUnchecked(entity.idx);
+    if (meta.gen !== entity.gen) {
       return None;
     }
-    meta.generation += 1;
-    if (meta.generation === 1) {
+    meta.gen += 1;
+    if (meta.gen === 1) {
       logger.warn(
-        'Entity(' + entity.index + ') generation wrapped on Entities::free, aliasing may occur',
+        'Entity(' + entity.idx + ') generation wrapped on Entities::free, aliasing may occur',
       );
     }
-    const loc = meta.location;
-    meta.location = EntityMeta.EMPTY.clone().location;
-    this.pending.push(entity.index);
+    const loc = meta.loc;
+    meta.loc = EntityMeta.EMPTY.clone().loc;
+    this.pending.push(entity.idx);
     this.freeCursor = this.pending.len();
     this.length -= 1;
     return Some(loc);
   }
 
   contains(entity: Entity) {
-    return this.resolveFromId(entity.index).mapOr(false, (v) => v.generation === entity.generation);
+    return this.resolveFromId(entity.idx).mapOr(false, (v) => v.gen === entity.gen);
   }
 
   clear() {
@@ -147,13 +147,13 @@ export class Entities {
   }
 
   get(entity: Entity): Option<EntityLocation> {
-    return this.meta.get(entity.index).match({
+    return this.meta.get(entity.idx).match({
       None: () => None,
       Some: (meta) => {
-        if (meta.generation !== entity.generation || meta.location.archetypeId === INVALID_VALUE) {
+        if (meta.gen !== entity.gen || meta.loc.archetypeId === INVALID_VALUE) {
           return None;
         } else {
-          return Some(meta.location);
+          return Some(meta.loc);
         }
       },
     });
@@ -164,7 +164,7 @@ export class Entities {
   }
 
   set(index: EntityIndex, entityLocation: EntityLocation) {
-    this.meta.getUnchecked(index).location = entityLocation;
+    this.meta.getUnchecked(index).loc = entityLocation;
   }
 
   reserveGenerations(index: number, generations: number) {
@@ -172,8 +172,8 @@ export class Entities {
       return false;
     }
     const meta = this.meta.getUnchecked(index);
-    if (meta.location.archetypeId === INVALID_VALUE) {
-      meta.generation = meta.generation + generations;
+    if (meta.loc.archetypeId === INVALID_VALUE) {
+      meta.gen = meta.gen + generations;
       return true;
     } else {
       return false;
@@ -183,7 +183,7 @@ export class Entities {
   resolveFromId(index: number): Option<Entity> {
     return this.meta.get(index).match({
       Some: (meta) => {
-        return Some(Entity.fromRawAndGeneration(index, meta.generation));
+        return Some(Entity.fromRawAndGen(index, meta.gen));
       },
       None: () => {
         const freeCursor = this.freeCursor;
@@ -218,11 +218,11 @@ export class Entities {
             for (let i = oldMetaLen; i < newMetaLen; i++) {
               const meta = this.meta.getUnchecked(i);
               init(
-                Entity.fromRawAndGeneration(i, meta.generation),
+                Entity.fromRawAndGen(i, meta.gen),
                 Ptr({
-                  get: () => meta.location,
+                  get: () => meta.loc,
                   set: (location) => {
-                    meta.location = location;
+                    meta.loc = location;
                   },
                 }),
               );
@@ -234,11 +234,11 @@ export class Entities {
     for (const index of this.pending.iter().skip(newFreeCursor)) {
       const meta = this.meta.getUnchecked(index);
       init(
-        Entity.fromRawAndGeneration(index, meta.generation),
+        Entity.fromRawAndGen(index, meta.gen),
         Ptr({
-          get: () => meta.location,
+          get: () => meta.loc,
           set: (location) => {
-            meta.location = location;
+            meta.loc = location;
           },
         }),
       );
@@ -264,13 +264,13 @@ export class Entities {
     if (!meta) {
       throw new Error('Entity index invalid');
     }
-    meta.spawnedOrDespawnedBy = caller;
+    meta.changedBy = caller;
   }
 
   entityGetSpawnedOrDespawnedBy(entity: Entity): Option<string> {
-    return this.meta.get(entity.index).andThen((meta) => {
-      if (!meta.spawnedOrDespawnedBy) return None;
-      return Some(meta.spawnedOrDespawnedBy);
+    return this.meta.get(entity.idx).andThen((meta) => {
+      if (!meta.changedBy) return None;
+      return Some(meta.changedBy);
     });
   }
 }

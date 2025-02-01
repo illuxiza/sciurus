@@ -15,10 +15,6 @@ export class Cell<T> {
     this.inner = value;
   }
 
-  toInner(): T {
-    return this.inner;
-  }
-
   toPtr(): Ptr<T> {
     return Ptr({
       get: () => this.get(),

@@ -88,7 +88,7 @@ export class BundleSpawner {
         InsertMode.Replace,
         caller,
       );
-      entities.set(entity.index, location);
+      entities.set(entity.idx, location);
       return location;
     })();
 

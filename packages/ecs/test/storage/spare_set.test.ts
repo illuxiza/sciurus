@@ -17,47 +17,47 @@ describe('SparseSet', () => {
     const e3 = Entity.fromRaw(3);
     const e4 = Entity.fromRaw(4);
 
-    set.insert(e1.index, new Foo(1));
-    set.insert(e2.index, new Foo(2));
-    set.insert(e3.index, new Foo(3));
+    set.insert(e1.idx, new Foo(1));
+    set.insert(e2.idx, new Foo(2));
+    set.insert(e3.idx, new Foo(3));
 
-    expect(set.get(e0.index)).toBe(None);
-    expect(set.get(e1.index)).toEqual(Some(new Foo(1)));
-    expect(set.get(e2.index)).toEqual(Some(new Foo(2)));
-    expect(set.get(e3.index)).toEqual(Some(new Foo(3)));
-    expect(set.get(e4.index)).toBe(None);
+    expect(set.get(e0.idx)).toBe(None);
+    expect(set.get(e1.idx)).toEqual(Some(new Foo(1)));
+    expect(set.get(e2.idx)).toEqual(Some(new Foo(2)));
+    expect(set.get(e3.idx)).toEqual(Some(new Foo(3)));
+    expect(set.get(e4.idx)).toBe(None);
 
     const iterResults = Array.from(set.values());
     expect(iterResults).toEqual([new Foo(1), new Foo(2), new Foo(3)]);
 
-    expect(set.remove(e2.index)).toEqual(Some(new Foo(2)));
-    expect(set.remove(e2.index)).toBe(None);
+    expect(set.remove(e2.idx)).toEqual(Some(new Foo(2)));
+    expect(set.remove(e2.idx)).toBe(None);
 
-    expect(set.get(e0.index)).toBe(None);
-    expect(set.get(e1.index)).toEqual(Some(new Foo(1)));
+    expect(set.get(e0.idx)).toBe(None);
+    expect(set.get(e1.idx)).toEqual(Some(new Foo(1)));
 
-    expect(set.get(e2.index)).toBe(None);
+    expect(set.get(e2.idx)).toBe(None);
 
-    expect(set.get(e3.index)).toEqual(Some(new Foo(3)));
+    expect(set.get(e3.idx)).toEqual(Some(new Foo(3)));
 
-    expect(set.get(e4.index)).toBe(None);
+    expect(set.get(e4.idx)).toBe(None);
 
-    expect(set.remove(e1.index)).toEqual(Some(new Foo(1)));
+    expect(set.remove(e1.idx)).toEqual(Some(new Foo(1)));
 
-    expect(set.get(e0.index)).toBe(None);
-    expect(set.get(e1.index)).toBe(None);
-    expect(set.get(e2.index)).toBe(None);
-    expect(set.get(e3.index)).toEqual(Some(new Foo(3)));
-    expect(set.get(e4.index)).toBe(None);
+    expect(set.get(e0.idx)).toBe(None);
+    expect(set.get(e1.idx)).toBe(None);
+    expect(set.get(e2.idx)).toBe(None);
+    expect(set.get(e3.idx)).toEqual(Some(new Foo(3)));
+    expect(set.get(e4.idx)).toBe(None);
 
-    set.insert(e1.index, new Foo(10));
-    expect(set.get(e1.index)).toEqual(Some(new Foo(10)));
+    set.insert(e1.idx, new Foo(10));
+    expect(set.get(e1.idx)).toEqual(Some(new Foo(10)));
 
-    const mutValue = set.get(e1.index);
+    const mutValue = set.get(e1.idx);
     mutValue.map((foo) => {
       foo.value = 11;
     });
-    expect(set.get(e1.index)).toEqual(Some(new Foo(11)));
+    expect(set.get(e1.idx)).toEqual(Some(new Foo(11)));
   });
 });
 

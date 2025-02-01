@@ -269,7 +269,7 @@ export class World {
     return result.match({
       Exists: (location) => Some(new EntityWorld(this, entity, location)),
       DidNotExist: () => Some(this.spawnAtEmptyInternal(entity, caller)),
-      ExistsWithWrongGeneration: () => None,
+      ExistsWithWrongGen: () => None,
     });
   }
 
@@ -340,7 +340,7 @@ export class World {
       this.flushCommands();
       entityLocation = this.entities.get(entity).unwrapOr(EntityLocation.INVALID);
     }
-    this.entities.setSpawnedOrDespawnedBy(entity.index, new Location().caller()!.name);
+    this.entities.setSpawnedOrDespawnedBy(entity.idx, new Location().caller()!.name);
     return new EntityWorld(this, entity, entityLocation);
   }
 
@@ -348,8 +348,8 @@ export class World {
     const archetype = this.archetypes.empty();
     const tableRow = this.storages.tables.getUnchecked(archetype.tableId).allocate(entity);
     const location = archetype.allocate(entity, tableRow);
-    this.entities.set(entity.index, location);
-    this.entities.setSpawnedOrDespawnedBy(entity.index, caller || new Location().caller(1)!.name);
+    this.entities.set(entity.idx, location);
+    this.entities.setSpawnedOrDespawnedBy(entity.idx, caller || new Location().caller(1)!.name);
     return new EntityWorld(this, entity, location);
   }
 
@@ -844,7 +844,7 @@ export class World {
             },
           });
         },
-        ExistsWithWrongGeneration: () => {
+        ExistsWithWrongGen: () => {
           invalidEntities.push(entity);
         },
       });
@@ -1145,7 +1145,7 @@ export class World {
       world.triggerObserversWithData(
         Event.staticWrap(eventData).traversal(),
         eventId,
-        Entity.PLACEHOLDER,
+        Entity.PH,
         t.components(),
         eventData,
         false,

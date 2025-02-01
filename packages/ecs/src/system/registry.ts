@@ -42,7 +42,7 @@ export class SystemId<I = any, O = any> {
   }
 
   toString(): string {
-    return `SystemId:${this.entity.index}`;
+    return `SystemId:${this.entity.idx}`;
   }
 }
 

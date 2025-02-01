@@ -14,7 +14,7 @@ export interface FunctionReadonlySystem extends ReadonlySystem {}
 export class FunctionReadonlySystem {
   state: Option<FunctionSystemState<any>>;
   meta: SystemMeta;
-  archetypeGeneration: number;
+  archetypeGen: number;
 
   constructor(
     public func: (...args: any[]) => any,
@@ -23,7 +23,7 @@ export class FunctionReadonlySystem {
   ) {
     this.state = None;
     this.meta = SystemMeta.new(func.name || 'anonymous_system');
-    this.archetypeGeneration = 0;
+    this.archetypeGen = 0;
   }
 
   name(): string {
@@ -113,8 +113,8 @@ export class FunctionReadonlySystem {
     }
 
     const archetypes = world.archetypes;
-    const oldGeneration = this.archetypeGeneration;
-    this.archetypeGeneration = archetypes.len();
+    const oldGeneration = this.archetypeGen;
+    this.archetypeGen = archetypes.len();
 
     for (let i = oldGeneration; i < archetypes.len(); i++) {
       const archetype = archetypes.get(i);

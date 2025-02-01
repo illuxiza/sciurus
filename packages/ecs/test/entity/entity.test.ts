@@ -4,7 +4,7 @@ import { Entities } from '../../src/entity/collection';
 
 describe('Entity', () => {
   test('entity bits roundtrip', () => {
-    const e = Entity.fromRawAndGeneration(0xdeadbeef, 0x5aadf00d);
+    const e = Entity.fromRawAndGen(0xdeadbeef, 0x5aadf00d);
     expect(Entity.fromBits(e.toBits())).toEqual(e);
   });
 
@@ -34,7 +34,7 @@ describe('Entity', () => {
     test('reserve generations', () => {
       const entity = entities.alloc();
       entities.free(entity);
-      expect(entities.reserveGenerations(entity.index, 1)).toBe(true);
+      expect(entities.reserveGenerations(entity.idx, 1)).toBe(true);
     });
 
     test('reserve generations and alloc', () => {
@@ -42,20 +42,20 @@ describe('Entity', () => {
       const entity = entities.alloc();
       entities.free(entity);
 
-      expect(entities.reserveGenerations(entity.index, GENERATIONS)).toBe(true);
+      expect(entities.reserveGenerations(entity.idx, GENERATIONS)).toBe(true);
 
       const nextEntity = entities.alloc();
-      expect(nextEntity.index).toBe(entity.index);
-      expect(nextEntity.generation).toBeGreaterThan(entity.generation + GENERATIONS);
+      expect(nextEntity.idx).toBe(entity.idx);
+      expect(nextEntity.gen).toBeGreaterThan(entity.gen + GENERATIONS);
     });
   });
 
   describe('Entity Comparison', () => {
     test('entity comparison', () => {
-      const e1 = Entity.fromRawAndGeneration(123, 456);
-      const e2 = Entity.fromRawAndGeneration(123, 456);
-      const e3 = Entity.fromRawAndGeneration(123, 789);
-      const e4 = Entity.fromRawAndGeneration(456, 123);
+      const e1 = Entity.fromRawAndGen(123, 456);
+      const e2 = Entity.fromRawAndGen(123, 456);
+      const e3 = Entity.fromRawAndGen(123, 789);
+      const e4 = Entity.fromRawAndGen(456, 123);
 
       expect(e1).toEqual(e2);
       expect(e1).not.toEqual(e3);
@@ -68,22 +68,22 @@ describe('Entity', () => {
       expect(e1.toBits() > e2.toBits()).toBe(false);
 
       expect(
-        Entity.fromRawAndGeneration(9, 1).toBits() < Entity.fromRawAndGeneration(1, 9).toBits(),
+        Entity.fromRawAndGen(9, 1).toBits() < Entity.fromRawAndGen(1, 9).toBits(),
       ).toBe(true);
       expect(
-        Entity.fromRawAndGeneration(1, 9).toBits() > Entity.fromRawAndGeneration(9, 1).toBits(),
+        Entity.fromRawAndGen(1, 9).toBits() > Entity.fromRawAndGen(9, 1).toBits(),
       ).toBe(true);
       expect(
-        Entity.fromRawAndGeneration(1, 1).toBits() < Entity.fromRawAndGeneration(2, 1).toBits(),
+        Entity.fromRawAndGen(1, 1).toBits() < Entity.fromRawAndGen(2, 1).toBits(),
       ).toBe(true);
       expect(
-        Entity.fromRawAndGeneration(1, 1).toBits() <= Entity.fromRawAndGeneration(2, 1).toBits(),
+        Entity.fromRawAndGen(1, 1).toBits() <= Entity.fromRawAndGen(2, 1).toBits(),
       ).toBe(true);
       expect(
-        Entity.fromRawAndGeneration(2, 2).toBits() > Entity.fromRawAndGeneration(1, 2).toBits(),
+        Entity.fromRawAndGen(2, 2).toBits() > Entity.fromRawAndGen(1, 2).toBits(),
       ).toBe(true);
       expect(
-        Entity.fromRawAndGeneration(2, 2).toBits() >= Entity.fromRawAndGeneration(1, 2).toBits(),
+        Entity.fromRawAndGen(2, 2).toBits() >= Entity.fromRawAndGen(1, 2).toBits(),
       ).toBe(true);
     });
   });

@@ -1,7 +1,7 @@
 {
   "name": "@sciurus/ecs",
   "description": "Sciurus Engine's entity component system",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "homepage": "https://github.com/illuxiza/sciurus#readme",
   "license": "MIT",
   "main": "lib/index.js",
@@ -28,7 +28,7 @@
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
   "dependencies": {
-    "@sciurus/utils": "0.0.5"
+    "@sciurus/utils": "0.0.6"
   },
   "peerDependencies": {
     "rustable": "^0.4.0"

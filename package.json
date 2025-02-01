@@ -1,7 +1,7 @@
 {
   "name": "sciurus",
   "description": "A lightweight, TypeScript-based implementation of Bevy.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "workspaces": [
     "packages/*",
     "examples/*"
@@ -36,10 +36,10 @@
     "@typescript-eslint/parser": "^8.22.0",
     "eslint": "^9.19.0",
     "minigame-api-typings": "^3.8.7",
-    "monoup": "^0.3.6",
+    "monoup": "^0.3.7",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
-    "rustable": "^0.4.3",
+    "rustable": "^0.4.4",
     "tslib": "^2.8.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.4"
@@ -53,9 +53,9 @@
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
   "dependencies": {
-    "@sciurus/app": "0.0.5",
-    "@sciurus/ecs": "0.0.5",
-    "@sciurus/utils": "0.0.5"
+    "@sciurus/app": "0.0.6",
+    "@sciurus/ecs": "0.0.6",
+    "@sciurus/utils": "0.0.6"
   },
   "peerDependencies": {
     "rustable": "^0.4.0"

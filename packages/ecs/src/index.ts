@@ -58,6 +58,7 @@ export {
   EntityCommand,
   EntityCommands,
   EntityEntryCommands,
+  In,
   IntoObserverSystem,
   IntoSystem,
   Local,
@@ -73,4 +74,4 @@ export {
   observer,
   system,
 } from './system';
-export { World } from './world';
+export { FromWorld, World } from './world';

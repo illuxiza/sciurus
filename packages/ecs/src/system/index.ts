@@ -3,6 +3,6 @@ export { Commands, EntityCommand, EntityCommands, EntityEntryCommands } from './
 export { condition, observer, system } from './function/fn';
 export { IntoSystem } from './into';
 export { IntoObserverSystem, ObserverSystem } from './observer';
-export { Local, OptionRes, Query, Res, SystemParam } from './param';
+export { In, Local, OptionRes, Query, Res, SystemParam } from './param';
 export { SystemId } from './registry';
 export { ScheduleSystem } from './schedule';

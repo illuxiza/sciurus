@@ -1,16 +1,5 @@
 import { FromWorld, OptionRes, Resource, World } from '@sciurus/ecs';
-import {
-  Default,
-  derive,
-  Enum,
-  EnumMatchPattern,
-  getGenerics,
-  None,
-  Option,
-  Ptr,
-  Some,
-  variant,
-} from 'rustable';
+import { Default, derive, Enum, getGenerics, None, Option, Ptr, Some, variant } from 'rustable';
 import { FreelyMutableState } from './freely_mutable_state';
 import { States } from './states';
 
@@ -35,6 +24,11 @@ FromWorld.implFor(State, {
   },
 });
 
+interface NextStateMatch<S extends FreelyMutableState, U> {
+  Pending: (state: S) => U;
+  Unchanged: (() => U) | U;
+}
+
 @derive([Resource])
 export class NextState<S extends FreelyMutableState = any> extends Enum {
   @variant
@@ -45,7 +39,7 @@ export class NextState<S extends FreelyMutableState = any> extends Enum {
   static Pending<S extends FreelyMutableState>(_state: S): NextState<S> {
     return null!;
   }
-  match<U>(patterns: EnumMatchPattern<U, typeof NextState<S>>): U {
+  match<U>(patterns: NextStateMatch<S, U>): U {
     return super.match(patterns);
   }
   set(state: S): void {

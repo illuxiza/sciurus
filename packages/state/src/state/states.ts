@@ -1,10 +1,10 @@
 import { Trait } from 'rustable';
 
 export class States extends Trait {
-  dependDepth(): number {
+  static dependDepth(): number {
     return 1;
   }
-  scopedEntitiesEnabled(): boolean {
+  static scopedEntitiesEnabled(): boolean {
     return false;
   }
 }

@@ -7,6 +7,7 @@ A lightweight, TypeScript-based implementation of [Bevy](https://bevyengine.org/
 ### @sciurus/app
 
 Core application framework providing:
+
 - Application lifecycle management
 - Plugin system for extensible functionality
 - Schedule system with fixed timestep support
@@ -16,6 +17,7 @@ Core application framework providing:
 ### @sciurus/ecs
 
 High-performance Entity Component System (ECS) inspired by Bevy ECS:
+
 - Archetype-based storage for efficient component access
 - Change detection system
 - Event system with type-safe dispatch
@@ -25,6 +27,7 @@ High-performance Entity Component System (ECS) inspired by Bevy ECS:
 ### @sciurus/utils
 
 Collection of utilities supporting the engine:
+
 - BitSet: Fixed-size bit operations
 - Logger: Configurable logging system
 - Cell: Generic value containers

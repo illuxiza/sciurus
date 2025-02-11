@@ -1,0 +1,36 @@
+{
+  "name": "@sciurus/state",
+  "description": "",
+  "version": "0.0.6",
+  "homepage": "https://github.com/illuxiza/sciurus#readme",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "lib/index.mjs",
+  "types": "lib/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "require": "./lib/index.js",
+      "import": "./lib/index.mjs"
+    }
+  },
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/illuxiza/sciurus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/illuxiza/sciurus/issues"
+  },
+  "peerDependencies": {
+    "rustable": "^0.4.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

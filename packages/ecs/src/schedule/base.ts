@@ -28,7 +28,7 @@ import {
 import { SingleThreadedExecutor } from './executor/single_threaded';
 import { NodeId } from './graph';
 import { ScheduleGraph } from './schedule_graph';
-import { IntoSystemSet, ScheduleLabel, SystemSet } from './set';
+import { IntoSystemSet, ScheduleLabel } from './set';
 import { ScheduleBuildError, ScheduleBuildSettings } from './types';
 
 @derive([Default, ScheduleLabel])
@@ -71,7 +71,7 @@ export class Schedule {
     return this;
   }
 
-  configureSets(sets: IntoConfigs<SystemSet>): this {
+  configureSets(sets: IntoConfigs<any>): this {
     this.graph.configureSets(sets);
     return this;
   }

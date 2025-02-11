@@ -3,10 +3,12 @@ import {
   Event,
   EventReader,
   EventWriter,
+  In,
   OptionRes,
   Schedule,
   ScheduleLabel,
   Schedules,
+  system,
   SystemSet,
   World,
 } from '@sciurus/ecs';
@@ -36,7 +38,7 @@ export class OnTransition<S> {
 export class StateTransition {}
 
 @derive([Event])
-export class StateTransitionEvent<S> {
+export class StateTransitionEvent<S = any> {
   constructor(
     public enter: Option<S>,
     public exit: Option<S>,
@@ -161,60 +163,64 @@ export function setupStateTransitionsInWorld(world: World) {
   schedules.insert(schedule);
 }
 
-export function lastTransition<S extends States>(reader: EventReader<StateTransitionEvent<S>>) {
-  return reader.read().iter().last();
-}
+export const lastTransition = <S extends States>(type: Constructor<S>) =>
+  system(
+    [EventReader(Type(StateTransitionEvent<S>, [type]))],
+    (reader: EventReader<StateTransitionEvent<S>>) => {
+      return reader.read().iter().last();
+    },
+  );
 
-export function runEnter<S extends States>(
-  transition: Option<StateTransitionEvent<S>>,
-  world: World,
-) {
-  if (transition.isNone()) {
-    return;
-  }
-  const t = transition.unwrap();
-  const { enter, exit } = t;
-  if (enter.eq(exit)) {
-    return;
-  }
-  if (enter.isNone()) {
-    return;
-  }
-  world.tryRunSchedule(new OnEnter(enter.unwrap()));
-}
+export const runEnter = system(
+  [In(Option<StateTransitionEvent>), World],
+  (transition: Option<StateTransitionEvent>, world: World) => {
+    if (transition.isNone()) {
+      return;
+    }
+    const t = transition.unwrap();
+    const { enter, exit } = t;
+    if (enter.eq(exit)) {
+      return;
+    }
+    if (enter.isNone()) {
+      return;
+    }
+    world.tryRunSchedule(new OnEnter(enter.unwrap()));
+  },
+);
 
-export function runExit<S extends States>(
-  transition: Option<StateTransitionEvent<S>>,
-  world: World,
-) {
-  if (transition.isNone()) {
-    return;
-  }
-  const t = transition.unwrap();
-  const { enter, exit } = t;
-  if (enter.eq(exit)) {
-    return;
-  }
-  if (exit.isNone()) {
-    return;
-  }
-  world.tryRunSchedule(new OnExit(exit.unwrap()));
-}
+export const runExit = system(
+  [In(Option<StateTransitionEvent>), World],
+  (transition: Option<StateTransitionEvent>, world: World) => {
+    if (transition.isNone()) {
+      return;
+    }
+    const t = transition.unwrap();
+    const { enter, exit } = t;
+    if (enter.eq(exit)) {
+      return;
+    }
+    if (exit.isNone()) {
+      return;
+    }
+    world.tryRunSchedule(new OnExit(exit.unwrap()));
+  },
+);
 
-export function runTransition<S extends States>(
-  transition: Option<StateTransitionEvent<S>>,
-  world: World,
-) {
-  if (transition.isNone()) {
-    return;
-  }
-  const t = transition.unwrap();
-  const { enter, exit } = t;
-  if (enter.isNone()) {
-    return;
-  }
-  if (exit.isNone()) {
-    return;
-  }
-  world.tryRunSchedule(new OnTransition(enter.unwrap(), exit.unwrap()));
-}
+export const runTransition = system(
+  [In(Option<StateTransitionEvent>), World],
+  (transition: Option<StateTransitionEvent>, world: World) => {
+    if (transition.isNone()) {
+      return;
+    }
+    const t = transition.unwrap();
+    const { enter, exit } = t;
+    if (enter.isNone()) {
+      return;
+    }
+    if (exit.isNone()) {
+      return;
+    }
+    world.tryRunSchedule(new OnTransition(enter.unwrap(), exit.unwrap()));
+  },
+);

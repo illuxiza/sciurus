@@ -12,7 +12,7 @@ import {
   SystemSet,
   World,
 } from '@sciurus/ecs';
-import { Constructor, derive, Enum, None, Option, Some, Type, variant } from 'rustable';
+import { Constructor, Default, derive, Enum, None, Option, Some, Type, variant } from 'rustable';
 import { State } from './resources';
 import { States } from './states';
 
@@ -34,7 +34,7 @@ export class OnTransition<S> {
   ) {}
 }
 
-@derive([ScheduleLabel])
+@derive([ScheduleLabel, Default])
 export class StateTransition {}
 
 @derive([Event])

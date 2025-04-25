@@ -11,7 +11,7 @@ export class ComputedStates extends Trait {
     throw new NotImplementedError();
   }
   static registerSystems(this: typeof ComputedStates, schedule: Schedule): void {
-    StateSet.wrap(this.sourceStates()).registerComputedSystemsInSchedule(this, schedule);
+    StateSet.wrap(this.sourceStates()).regComputedSystemsInSchedule(this, schedule);
   }
 }
 

@@ -23,14 +23,14 @@ export class StateSet extends Trait {
     throw new NotImplementedError();
   }
 
-  static registerComputedSystemsInSchedule(
+  static regComputedSystemsInSchedule(
     _type: Constructor<ComputedStates>,
     _schedule: Schedule,
   ): void {
     throw new NotImplementedError();
   }
 
-  static registerSubSystemsInSchedule(_type: Constructor<SubStates>, _schedule: Schedule) {
+  static regSubSystemsInSchedule(_type: Constructor<SubStates>, _schedule: Schedule) {
     throw new NotImplementedError();
   }
 }
@@ -52,7 +52,7 @@ InnerStateSet.implFor(States, {
     rawStateType(this: typeof States) {
       return this;
     },
-    iDependDepth() {
+    iDependDepth(this: typeof States) {
       return this.dependDepth();
     },
     convertToUsableState(wrapped: Option<State>) {
@@ -63,10 +63,10 @@ InnerStateSet.implFor(States, {
 
 StateSet.implFor(InnerStateSet, {
   static: {
-    setDependencyDepth() {
+    setDependencyDepth(this: typeof InnerStateSet) {
       return this.iDependDepth();
     },
-    registerComputedSystemsInSchedule(
+    regComputedSystemsInSchedule(
       this: typeof InnerStateSet,
       type: Constructor<ComputedStates>,
       schedule: Schedule,
@@ -118,7 +118,7 @@ StateSet.implFor(InnerStateSet, {
         .addSystems(lastTransition(type).pipe(runTransition).inSet(new TransitionSchedules(type)))
         .addSystems(lastTransition(type).pipe(runEnter).inSet(new EnterSchedules(type)));
     },
-    registerSubSystemsInSchedule(
+    regSubSystemsInSchedule(
       this: typeof InnerStateSet,
       type: Constructor<SubStates>,
       schedule: Schedule,

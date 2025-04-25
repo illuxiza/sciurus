@@ -621,7 +621,7 @@ export class App {
   /** Gets a schedule by label */
   getSchedule(label: ScheduleLabel): Option<Schedule> {
     const schedule = this.main().getSchedule(label);
-    return schedule ? Some(schedule) : None;
+    return schedule;
   }
 
   /** Edits a schedule */

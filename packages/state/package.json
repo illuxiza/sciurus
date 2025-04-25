@@ -27,6 +27,10 @@
   "bugs": {
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
+  "dependencies": {
+    "@sciurus/ecs": "0.0.6",
+    "@sciurus/utils": "0.0.6"
+  },
   "peerDependencies": {
     "rustable": "^0.4.0"
   },

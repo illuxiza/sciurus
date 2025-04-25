@@ -1,6 +1,7 @@
 import { NotImplementedError } from 'rustable';
 import { FreelyMutableState } from './state/freely_mutable_state';
 import { States } from './state/states';
+import { ComputedStates, SubStates } from './state';
 
 export class AppExtStates {
   initState<S extends FreelyMutableState>(): this {

@@ -22,6 +22,7 @@
     "paths": {
       "@sciurus/app": ["packages/app/src"],
       "@sciurus/ecs": ["packages/ecs/src"],
+      "@sciurus/state": ["packages/state/src"],
       "@sciurus/utils": ["packages/utils/src"]
     }
   }

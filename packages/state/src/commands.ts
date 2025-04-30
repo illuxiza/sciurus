@@ -11,7 +11,7 @@ export class CommandsStatesExt extends Trait {
 CommandsStatesExt.implFor(Commands, {
   setState<S extends FreelyMutableState>(this: Commands, state: S): void {
     this.queue((world: World) => {
-      const next = world.resourceMut(Type(NextState<S>, [type(state)]));
+      const next = world.resourceMut(NextState(type(state))<S>);
       next.match({
         Pending: (x: S) => {
           logger.debug(`overwriting next state ${x} with ${state}`);

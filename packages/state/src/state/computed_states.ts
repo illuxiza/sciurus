@@ -7,7 +7,7 @@ export class ComputedStates extends Trait {
   static sourceStates(): Constructor<StateSet> {
     throw new NotImplementedError();
   }
-  static compute(_sources: StateSet): Option<ComputedStates> {
+  static compute(_sources: any): Option<ComputedStates> {
     throw new NotImplementedError();
   }
   static registerSystems(this: typeof ComputedStates, schedule: Schedule): void {

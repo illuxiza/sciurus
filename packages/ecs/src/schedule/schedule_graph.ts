@@ -697,7 +697,7 @@ function mapSetsToSystems(
 ): [HashMap<NodeId, Vec<NodeId>>, HashMap<NodeId, FixedBitSet>] {
   let setSystems = new HashMap<NodeId, Vec<NodeId>>();
   let setSystemBitsets = new HashMap<NodeId, FixedBitSet>();
-  for (let id of topsort) {
+  for (let id of topsort.iter().rev()) {
     if (id.isSystem()) {
       continue;
     }

@@ -50,7 +50,7 @@ export interface StatesOptions {
  * @param options Options for the sub-states implementation
  * @returns A decorator function
  */
-export function states(options: StatesOptions) {
+export function states(options: StatesOptions = {}) {
   const isSub = options.source !== undefined;
   return function <T extends Constructor<any>>(target: T): T {
     // Implement the SubStates trait

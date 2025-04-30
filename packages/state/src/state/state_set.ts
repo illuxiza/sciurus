@@ -1,5 +1,5 @@
 import { Commands, EventReader, EventWriter, OptionRes, Schedule, system } from '@sciurus/ecs';
-import { Constructor, None, NotImplementedError, Option, Trait, Type } from 'rustable';
+import { Constructor, deepClone, getGenerics, None, NotImplementedError, Option, Some, Trait, Type } from 'rustable';
 import { ComputedStates } from './computed_states';
 import { NextState, State, takeNextState } from './resources';
 import { States } from './states';
@@ -56,7 +56,21 @@ InnerStateSet.implFor(States, {
       return this.dependDepth();
     },
     convertToUsableState(wrapped: Option<State>) {
-      return wrapped.map((v) => v.get());
+      return wrapped.map((v) => v.val);
+    },
+  },
+});
+
+InnerStateSet.implFor(Option, {
+  static: {
+    rawStateType(this: typeof Option) {
+      return getGenerics(this)[0];
+    },
+    iDependDepth(this: typeof Option) {
+      return States.wrap(getGenerics(this)[0]).dependDepth();
+    },
+    convertToUsableState(wrapped: Option<State>) {
+      return Some(deepClone(wrapped.map((v) => v.val)));
     },
   },
 });
@@ -75,9 +89,9 @@ StateSet.implFor(InnerStateSet, {
       const applyStateTransition = system(
         [
           EventReader(Type(StateTransitionEvent, [rawStateType])),
-          EventWriter(Type(StateTransitionEvent, [rawStateType])),
+          EventWriter(Type(StateTransitionEvent, [type])),
           Commands,
-          OptionRes(Type(State, [rawStateType])),
+          OptionRes(Type(State, [type])),
           OptionRes(Type(State, [rawStateType])),
         ],
         (
@@ -114,9 +128,9 @@ StateSet.implFor(InnerStateSet, {
 
       schedule
         .addSystems(applyStateTransition.inSet(new ApplyStateTransition(type)))
-        .addSystems(lastTransition(type).pipe(runExit).inSet(new ExitSchedules(type)))
-        .addSystems(lastTransition(type).pipe(runTransition).inSet(new TransitionSchedules(type)))
-        .addSystems(lastTransition(type).pipe(runEnter).inSet(new EnterSchedules(type)));
+        .addSystems(lastTransition(type).pipe(runExit(type)).inSet(new ExitSchedules(type)))
+        .addSystems(lastTransition(type).pipe(runTransition(type)).inSet(new TransitionSchedules(type)))
+        .addSystems(lastTransition(type).pipe(runEnter(type)).inSet(new EnterSchedules(type)));
     },
     regSubSystemsInSchedule(
       this: typeof InnerStateSet,
@@ -173,9 +187,19 @@ StateSet.implFor(InnerStateSet, {
 
       schedule
         .addSystems(applyStateTransition.inSet(new ApplyStateTransition(type)))
-        .addSystems(lastTransition(type).pipe(runExit).inSet(new ExitSchedules(type)))
-        .addSystems(lastTransition(type).pipe(runTransition).inSet(new TransitionSchedules(type)))
-        .addSystems(lastTransition(type).pipe(runEnter).inSet(new EnterSchedules(type)));
+        .addSystems(lastTransition(type).pipe(runExit(type)).inSet(new ExitSchedules(type)))
+        .addSystems(lastTransition(type).pipe(runTransition(type)).inSet(new TransitionSchedules(type)))
+        .addSystems(lastTransition(type).pipe(runEnter(type)).inSet(new EnterSchedules(type)));
     },
   },
 });
+
+interface InnerStateSet extends StateSet {}
+
+declare module './states' {
+  export interface States extends InnerStateSet {}
+}
+
+declare module 'rustable' {
+  export interface Option<T> extends InnerStateSet {}
+}

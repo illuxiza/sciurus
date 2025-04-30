@@ -12,7 +12,7 @@ import {
   SystemSet,
   World,
 } from '@sciurus/ecs';
-import { Constructor, Default, derive, Enum, None, Option, Some, Type, variant } from 'rustable';
+import { Constructor, Default, derive, Enum, Eq, HashMap, None, Option, Some, Type, variant } from 'rustable';
 import { State } from './resources';
 import { States } from './states';
 
@@ -72,7 +72,7 @@ export class StateTransitionSteps extends Enum<typeof StateTransition> {
 
 export interface StateTransitionSteps extends SystemSet {}
 
-@derive([SystemSet])
+@derive([SystemSet, Eq])
 export class ExitSchedules<S> {
   constructor(public s: Constructor<S>) {}
 }
@@ -80,7 +80,7 @@ export class ExitSchedules<S> {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface ExitSchedules<S> extends SystemSet {}
 
-@derive([SystemSet])
+@derive([SystemSet, Eq])
 export class TransitionSchedules<S> {
   constructor(public s: Constructor<S>) {}
 }
@@ -88,7 +88,7 @@ export class TransitionSchedules<S> {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface TransitionSchedules<S> extends SystemSet {}
 
-@derive([SystemSet])
+@derive([SystemSet, Eq])
 export class EnterSchedules<S> {
   constructor(public s: Constructor<S>) {}
 }
@@ -96,7 +96,7 @@ export class EnterSchedules<S> {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface EnterSchedules<S> extends SystemSet {}
 
-@derive([SystemSet])
+@derive([SystemSet, Eq])
 export class ApplyStateTransition<S> {
   constructor(public s: Constructor<S>) {}
 }
@@ -163,64 +163,127 @@ export function setupStateTransitionsInWorld(world: World) {
   schedules.insert(schedule);
 }
 
-export const lastTransition = <S extends States>(type: Constructor<S>) =>
-  system(
+// Cache to store the system functions for each type
+const lastTransitionCache = new HashMap<Constructor<any>, any>();
+
+export const lastTransition = <S extends States>(type: Constructor<S>) => {
+  // Check if we already have a cached system for this type
+  if (lastTransitionCache.containsKey(type)) {
+    return lastTransitionCache.get(type).unwrap();
+  }
+  
+  // Create a new system and cache it
+  const newSystem = system(
     [EventReader(Type(StateTransitionEvent<S>, [type]))],
     (reader: EventReader<StateTransitionEvent<S>>) => {
       return reader.read().iter().last();
     },
-  );
+  ).intoSystem();
+  
+  // Store in cache
+  lastTransitionCache.insert(type, newSystem);
+  
+  return newSystem;
+};
 
-export const runEnter = system(
-  [In(Option<StateTransitionEvent>), World],
-  (transition: Option<StateTransitionEvent>, world: World) => {
-    if (transition.isNone()) {
-      return;
-    }
-    const t = transition.unwrap();
-    const { enter, exit } = t;
-    if (enter.eq(exit)) {
-      return;
-    }
-    if (enter.isNone()) {
-      return;
-    }
-    world.tryRunSchedule(new OnEnter(enter.unwrap()));
-  },
-);
+// Cache to store the runEnter system functions for each type
+const runEnterCache = new HashMap<Constructor<any>, any>();
 
-export const runExit = system(
-  [In(Option<StateTransitionEvent>), World],
-  (transition: Option<StateTransitionEvent>, world: World) => {
-    if (transition.isNone()) {
-      return;
-    }
-    const t = transition.unwrap();
-    const { enter, exit } = t;
-    if (enter.eq(exit)) {
-      return;
-    }
-    if (exit.isNone()) {
-      return;
-    }
-    world.tryRunSchedule(new OnExit(exit.unwrap()));
-  },
-);
+export const runEnter = <S extends States>(type: Constructor<S>) => {
+  // Check if we already have a cached system for this type
+  if (runEnterCache.containsKey(type)) {
+    return runEnterCache.get(type).unwrap();
+  }
+  
+  // Create a new system and cache it
+  const newSystem = system(
+    [In(Option<StateTransitionEvent<S>>), World],
+    (transition: Option<StateTransitionEvent<S>>, world: World) => {
+      if (transition.isNone()) {
+        return;
+      }
+      const t = transition.unwrap();
+      const { enter, exit } = t;
+      if (enter.eq(exit)) {
+        return;
+      }
+      if (enter.isNone()) {
+        return;
+      }
+      world.tryRunSchedule(new OnEnter(enter.unwrap()));
+    },
+  ).intoSystem();
+  
+  // Store in cache
+  runEnterCache.insert(type, newSystem);
+  
+  return newSystem;
+};
 
-export const runTransition = system(
-  [In(Option<StateTransitionEvent>), World],
-  (transition: Option<StateTransitionEvent>, world: World) => {
-    if (transition.isNone()) {
-      return;
-    }
-    const t = transition.unwrap();
-    const { enter, exit } = t;
-    if (enter.isNone()) {
-      return;
-    }
-    if (exit.isNone()) {
-      return;
-    }
-    world.tryRunSchedule(new OnTransition(enter.unwrap(), exit.unwrap()));
-  },
-);
+// Cache to store the runExit system functions for each type
+const runExitCache = new HashMap<Constructor<any>, any>();
+
+export const runExit = <S extends States>(type: Constructor<S>) => {
+  // Check if we already have a cached system for this type
+  if (runExitCache.containsKey(type)) {
+    return runExitCache.get(type).unwrap();
+  }
+  
+  // Create a new system and cache it
+  const newSystem = system(
+    [In(Option<StateTransitionEvent<S>>), World],
+    (transition: Option<StateTransitionEvent<S>>, world: World) => {
+      if (transition.isNone()) {
+        return;
+      }
+      const t = transition.unwrap();
+      const { enter, exit } = t;
+      if (enter.eq(exit)) {
+        return;
+      }
+      if (exit.isNone()) {
+        return;
+      }
+      world.tryRunSchedule(new OnExit(exit.unwrap()));
+    },
+  ).intoSystem();
+  
+  // Store in cache
+  runExitCache.insert(type, newSystem);
+  
+  return newSystem;
+};
+
+// Cache to store the runTransition system functions for each type
+const runTransitionCache = new HashMap<Constructor<any>, any>();
+
+export const runTransition = <S extends States>(type: Constructor<S>) => {
+  // Check if we already have a cached system for this type
+  if (runTransitionCache.containsKey(type)) {
+    return runTransitionCache.get(type).unwrap();
+  }
+  
+  // Create a new system and cache it
+  const newSystem = system(
+    [In(Option<StateTransitionEvent<S>>), World],
+    (transition: Option<StateTransitionEvent<S>>, world: World) => {
+      if (transition.isNone()) {
+        return;
+      }
+      const t = transition.unwrap();
+      const { enter, exit } = t;
+      if (enter.isNone()) {
+        return;
+      }
+      if (exit.isNone()) {
+        return;
+      }
+      world.tryRunSchedule(new OnTransition(enter.unwrap(), exit.unwrap()));
+    },
+  ).intoSystem();
+  
+  // Store in cache
+  runTransitionCache.insert(type, newSystem);
+  
+  return newSystem;
+};

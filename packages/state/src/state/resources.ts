@@ -1,14 +1,27 @@
 import { FromWorld, OptionRes, Resource, World } from '@sciurus/ecs';
-import { Default, derive, Enum, getGenerics, None, Option, Ptr, Some, variant } from 'rustable';
+import {
+  Constructor,
+  createFactory,
+  Default,
+  derive,
+  Enum,
+  getGenerics,
+  None,
+  Option,
+  Ptr,
+  Some,
+  Type,
+  variant,
+} from 'rustable';
 import { FreelyMutableState } from './freely_mutable_state';
 import { States } from './states';
 
 @derive([Resource])
 export class State<S extends States = any> {
-  constructor(public s: S) {}
+  constructor(public val: S) {}
 
   get(): S {
-    return this.s;
+    return this.val;
   }
 }
 
@@ -30,7 +43,7 @@ interface NextStateMatch<S extends FreelyMutableState, U> {
 }
 
 @derive([Resource])
-export class NextState<S extends FreelyMutableState = any> extends Enum {
+class NextStateEnum<S extends FreelyMutableState = any> extends Enum {
   @variant
   static Unchanged<S extends FreelyMutableState>(): NextState<S> {
     return null!;
@@ -50,13 +63,28 @@ export class NextState<S extends FreelyMutableState = any> extends Enum {
   }
 }
 
-Default.implFor(NextState, {
+Default.implFor(NextStateEnum, {
   static: {
-    default(this: typeof NextState): NextState {
+    default(this: typeof NextStateEnum): NextState {
       return NextState.Unchanged();
     },
   },
 });
+
+export const NextState = createFactory(NextStateEnum, (stateType: Constructor) => {
+  const type = Type(NextStateEnum, [stateType]);
+  type.Pending = (state) => new type('Pending', state);
+  type.Unchanged = () => new type('Unchanged');
+  type.prototype.set = function (state) {
+    this.replace(type.Pending(state));
+  };
+  type.prototype.reset = function () {
+    this.replace(type.Unchanged());
+  };
+  return type;
+});
+
+export interface NextState<S extends FreelyMutableState = any> extends NextStateEnum<S> {}
 
 export function takeNextState<S extends FreelyMutableState>(
   op: OptionRes<NextState<S>>,

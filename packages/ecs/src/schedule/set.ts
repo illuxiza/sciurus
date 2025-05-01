@@ -1,6 +1,7 @@
 import {
   Constructor,
   defaultVal,
+  derive,
   Eq,
   macroTrait,
   named,
@@ -16,6 +17,7 @@ import {
 } from 'rustable';
 
 @named('ScheduleLabel')
+@derive([Eq])
 class ScheduleLabelImpl extends Trait {
   toString() {
     return typeName(this);
@@ -30,12 +32,6 @@ class ScheduleLabelImpl extends Trait {
     }
   }
 }
-
-Eq.implFor(ScheduleLabelImpl, {
-  eq(other: any): boolean {
-    return typeId(this) === typeId(other) && stringify(this) === stringify(other);
-  },
-});
 
 export const ScheduleLabel = macroTrait(ScheduleLabelImpl);
 

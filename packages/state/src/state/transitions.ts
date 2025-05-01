@@ -12,7 +12,20 @@ import {
   SystemSet,
   World,
 } from '@sciurus/ecs';
-import { Constructor, Default, derive, Enum, Eq, HashMap, None, Option, Some, Type, variant } from 'rustable';
+import {
+  Constructor,
+  deepClone,
+  Default,
+  derive,
+  Enum,
+  Eq,
+  HashMap,
+  None,
+  Option,
+  Some,
+  Type,
+  variant
+} from 'rustable';
 import { State } from './resources';
 import { States } from './states';
 
@@ -29,8 +42,8 @@ export class OnExit<S> {
 @derive([ScheduleLabel])
 export class OnTransition<S> {
   constructor(
-    public enter: S,
     public exit: S,
+    public enter: S,
   ) {}
 }
 
@@ -40,8 +53,8 @@ export class StateTransition {}
 @derive([Event])
 export class StateTransitionEvent<S = any> {
   constructor(
-    public enter: Option<S>,
     public exit: Option<S>,
+    public enter: Option<S>,
   ) {}
 }
 
@@ -120,19 +133,18 @@ export function internalApplyStateTransition<S extends States>(
         // and register transition schedules.
         Some: (current) => {
           let exited = entered;
-          if (!current.get().get().eq(entered)) {
-            exited = current.get().get();
+          if (!current.val.eq(entered)) {
+            exited = current.val;
             current.set(new ST(entered));
           }
           // Transition events are sent even for same state transitions
           // Although enter and exit schedules are not run by default.
-          event.send(new StateTransitionEvent(Some(entered), Some(exited)));
+          event.send(new StateTransitionEvent(Some(deepClone(exited)), Some(entered)));
         },
         // If the `State<S>` resource does not exist, we create it, compute dependent states, send a transition event and register the `OnEnter` schedule.
-
         None: () => {
           commands.insertResource(new ST(entered));
-          event.send(new StateTransitionEvent(Some(entered), None));
+          event.send(new StateTransitionEvent(None, Some(entered)));
         },
       });
     },
@@ -140,7 +152,7 @@ export function internalApplyStateTransition<S extends States>(
       // We first remove the `State<S>` resource, and if one existed we compute dependent states, send a transition event and run the `OnExit` schedule.
       if (currentState.isSome()) {
         commands.removeResource(ST);
-        event.send(new StateTransitionEvent(None, Some(currentState.unwrap().get().get())));
+        event.send(new StateTransitionEvent(Some(currentState.unwrap().val), None));
       }
     },
   });
@@ -171,7 +183,7 @@ export const lastTransition = <S extends States>(type: Constructor<S>) => {
   if (lastTransitionCache.containsKey(type)) {
     return lastTransitionCache.get(type).unwrap();
   }
-  
+
   // Create a new system and cache it
   const newSystem = system(
     [EventReader(Type(StateTransitionEvent<S>, [type]))],
@@ -179,10 +191,10 @@ export const lastTransition = <S extends States>(type: Constructor<S>) => {
       return reader.read().iter().last();
     },
   );
-  
+
   // Store in cache
   lastTransitionCache.insert(type, newSystem);
-  
+
   return newSystem;
 };
 
@@ -194,7 +206,7 @@ export const runEnter = <S extends States>(type: Constructor<S>) => {
   if (runEnterCache.containsKey(type)) {
     return runEnterCache.get(type).unwrap();
   }
-  
+
   // Create a new system and cache it
   const newSystem = system(
     [In(Option<StateTransitionEvent<S>>), World],
@@ -213,10 +225,10 @@ export const runEnter = <S extends States>(type: Constructor<S>) => {
       world.tryRunSchedule(new OnEnter(enter.unwrap()));
     },
   );
-  
+
   // Store in cache
   runEnterCache.insert(type, newSystem);
-  
+
   return newSystem;
 };
 
@@ -228,7 +240,7 @@ export const runExit = <S extends States>(type: Constructor<S>) => {
   if (runExitCache.containsKey(type)) {
     return runExitCache.get(type).unwrap();
   }
-  
+
   // Create a new system and cache it
   const newSystem = system(
     [In(Option<StateTransitionEvent<S>>), World],
@@ -247,10 +259,10 @@ export const runExit = <S extends States>(type: Constructor<S>) => {
       world.tryRunSchedule(new OnExit(exit.unwrap()));
     },
   );
-  
+
   // Store in cache
   runExitCache.insert(type, newSystem);
-  
+
   return newSystem;
 };
 
@@ -262,7 +274,7 @@ export const runTransition = <S extends States>(type: Constructor<S>) => {
   if (runTransitionCache.containsKey(type)) {
     return runTransitionCache.get(type).unwrap();
   }
-  
+
   // Create a new system and cache it
   const newSystem = system(
     [In(Option<StateTransitionEvent<S>>), World],
@@ -278,12 +290,12 @@ export const runTransition = <S extends States>(type: Constructor<S>) => {
       if (exit.isNone()) {
         return;
       }
-      world.tryRunSchedule(new OnTransition(enter.unwrap(), exit.unwrap()));
+      world.tryRunSchedule(new OnTransition(exit.unwrap(), enter.unwrap()));
     },
   );
-  
+
   // Store in cache
   runTransitionCache.insert(type, newSystem);
-  
+
   return newSystem;
 };

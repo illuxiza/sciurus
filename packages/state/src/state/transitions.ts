@@ -178,7 +178,7 @@ export const lastTransition = <S extends States>(type: Constructor<S>) => {
     (reader: EventReader<StateTransitionEvent<S>>) => {
       return reader.read().iter().last();
     },
-  ).intoSystem();
+  );
   
   // Store in cache
   lastTransitionCache.insert(type, newSystem);
@@ -212,7 +212,7 @@ export const runEnter = <S extends States>(type: Constructor<S>) => {
       }
       world.tryRunSchedule(new OnEnter(enter.unwrap()));
     },
-  ).intoSystem();
+  );
   
   // Store in cache
   runEnterCache.insert(type, newSystem);
@@ -246,7 +246,7 @@ export const runExit = <S extends States>(type: Constructor<S>) => {
       }
       world.tryRunSchedule(new OnExit(exit.unwrap()));
     },
-  ).intoSystem();
+  );
   
   // Store in cache
   runExitCache.insert(type, newSystem);
@@ -280,7 +280,7 @@ export const runTransition = <S extends States>(type: Constructor<S>) => {
       }
       world.tryRunSchedule(new OnTransition(enter.unwrap(), exit.unwrap()));
     },
-  ).intoSystem();
+  );
   
   // Store in cache
   runTransitionCache.insert(type, newSystem);

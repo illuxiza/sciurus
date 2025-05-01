@@ -17,7 +17,7 @@ import {
 } from './transitions';
 
 export class FreelyMutableState extends States {
-  static registerState(this: typeof FreelyMutableState, schedule: Schedule): void {
+  static regState(this: typeof FreelyMutableState, schedule: Schedule): void {
     schedule.configureSets([
       new ApplyStateTransition(this).inSet(StateTransitionSteps.DependentTransitions()),
       new ExitSchedules(this).inSet(StateTransitionSteps.ExitSchedules()),

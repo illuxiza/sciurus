@@ -17,13 +17,19 @@ import { FreelyMutableState } from './freely_mutable_state';
 import { States } from './states';
 
 @derive([Resource])
-export class State<S extends States = any> {
+class StateRes<S extends States = any> {
   constructor(public val: S) {}
 
   get(): S {
     return this.val;
   }
 }
+
+export const State = createFactory(StateRes, (type: Constructor) => {
+  return Type(StateRes, [type]);
+});
+
+export interface State<S extends States = any> extends StateRes {}
 
 FromWorld.implFor(State, {
   static: {

@@ -4,7 +4,7 @@ import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
 import { World } from '../world';
 import { DeferredWorld } from '../world/deferred';
-import { System } from './base';
+import { ReadonlySystem, System } from './base';
 
 /**
  * Customizes the behavior of an AdapterSystem
@@ -113,6 +113,8 @@ System.implFor(AdapterSystem, {
     this.system.setLastRun(lastRun);
   },
 });
+
+ReadonlySystem.implFor(AdapterSystem);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface AdapterSystem<In, Out, T> extends System<In, T> {}

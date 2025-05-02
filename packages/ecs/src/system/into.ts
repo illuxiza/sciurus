@@ -27,6 +27,18 @@ IntoSystem.implFor(System, {
   },
 });
 
+IntoSystem.implFor(ReadonlySystem, {
+  intoSystem(this: ReadonlySystem): System {
+    return this;
+  },
+});
+
+IntoReadonlySystem.implFor(ReadonlySystem, {
+  intoReadonlySystem(this: ReadonlySystem): ReadonlySystem {
+    return this;
+  },
+});
+
 declare module './base' {
   interface System<In = any, Out = any> extends IntoSystem<In, Out> {}
   interface ReadonlySystem<In = any, Out = any> extends IntoReadonlySystem<In, Out> {}

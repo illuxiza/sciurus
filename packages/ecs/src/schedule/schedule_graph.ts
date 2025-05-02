@@ -15,7 +15,7 @@ import {
   Vec,
 } from 'rustable';
 import { ComponentId, Components } from '../component';
-import { IntoSystem, ScheduleSystem } from '../system';
+import { Condition, IntoSystem, ScheduleSystem } from '../system';
 import { System } from '../system/base';
 import { World } from '../world/base';
 import { IntoConfigs, NodeConfig, NodeConfigs, SystemConfig, SystemSetConfig } from './config';
@@ -35,7 +35,6 @@ import {
 import { AnonymousSet, ScheduleLabel, SystemSet } from './set';
 import {
   Chain,
-  Condition,
   Dag,
   LogLevel,
   ProcessConfigsResult,

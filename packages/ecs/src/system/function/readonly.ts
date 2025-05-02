@@ -63,7 +63,7 @@ export class FunctionReadonlySystem {
     const changeTick = world.incrementChangeTick();
     const paramState = this.state.expect(ERROR_UNINITIALIZED).param;
     const params = this.param.getParam(paramState, this.meta, world, changeTick, input);
-    const out = this.func(...deepClone(params));
+    const out = this.func(...params);
     this.meta.lastRun = changeTick;
     return out;
   }

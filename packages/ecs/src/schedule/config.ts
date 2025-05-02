@@ -1,9 +1,9 @@
 import { Enum, NotImplementedError, Trait, variant, Vec } from 'rustable';
-import { IntoSystem } from '../system';
+import { IntoCondition, IntoSystem, ReadonlySystem } from '../system';
 import { System } from '../system/base';
 import { Ambiguity, DependencyKind, GraphInfo } from './graph';
 import { IntoSystemSet, SystemSet } from './set';
-import { Chain, Condition, IntoCondition } from './types';
+import { Chain } from './types';
 
 export const ambiguousWith = (graphInfo: GraphInfo, set: SystemSet) => {
   const ambiguity = graphInfo.ambiguousWith;
@@ -22,7 +22,7 @@ export class NodeConfig<T> {
   constructor(
     public node: T,
     public graphInfo: GraphInfo = new GraphInfo(),
-    public conditions: Vec<Condition> = Vec.new(),
+    public conditions: Vec<ReadonlySystem> = Vec.new(),
   ) {}
 }
 
@@ -38,7 +38,7 @@ interface NodeConfigsMatch<T, U> {
   NodeConfig: (config: NodeConfig<T>) => U;
   Configs: (
     configs: Vec<NodeConfigs<T>>,
-    collectiveConditions: Vec<Condition>,
+    collectiveConditions: Vec<ReadonlySystem>,
     chained: Chain,
   ) => U;
 }
@@ -55,7 +55,7 @@ export class NodeConfigs<T> extends Enum {
   @variant
   static Configs<T>(
     _configs: Vec<NodeConfigs<T>>,
-    _collectiveConditions: Vec<Condition>,
+    _collectiveConditions: Vec<ReadonlySystem>,
     _chained: Chain,
   ): NodeConfigs<T> {
     return null!;

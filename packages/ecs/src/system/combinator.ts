@@ -4,7 +4,7 @@ import { Access } from '../query/access';
 import { SystemSet } from '../schedule/set';
 import { World } from '../world';
 import { DeferredWorld } from '../world/deferred';
-import { System } from './base';
+import { ReadonlySystem, System } from './base';
 
 /**
  * Customizes the behavior of a CombinatorSystem
@@ -14,7 +14,7 @@ export class Combine extends Trait {
    * When used in a CombinatorSystem, this function customizes how
    * the two composite systems are invoked and their outputs are combined.
    */
-  combine(_input: any, _a: (input: any) => any, _b: (input: any) => any): any {
+  static combine(_input: any, _a: (input: any) => any, _b: (input: any) => any): any {
     throw new NotImplementedError();
   }
 }
@@ -28,13 +28,19 @@ export class CombinatorSystem {
   private archetype_component_access: Access = new Access();
 
   constructor(
+    public func: any,
     public a: System,
     public b: System,
     private _name: string,
   ) {}
 
-  static new<A extends System, B extends System>(a: A, b: B, name: string): CombinatorSystem {
-    return new CombinatorSystem(a, b, name);
+  static new<A extends System, B extends System>(
+    func: any,
+    a: A,
+    b: B,
+    name: string,
+  ): CombinatorSystem {
+    return new CombinatorSystem(func, a, b, name);
   }
 
   name(): string {
@@ -58,7 +64,7 @@ export class CombinatorSystem {
   }
 
   runUnsafe(input: any, world: World): any {
-    return (this as any).func.combine(
+    return this.func.combine(
       input,
       (input: any) => this.a.runUnsafe(input, world),
       (input: any) => this.b.runUnsafe(input, world),
@@ -66,7 +72,7 @@ export class CombinatorSystem {
   }
 
   run(input: any, world: World): any {
-    return (this as any).func.combine(
+    return this.func.combine(
       input,
       (input: any) => this.a.run(input, world),
       (input: any) => this.b.run(input, world),
@@ -123,7 +129,11 @@ export class CombinatorSystem {
   }
 }
 
-export interface CombinatorSystem extends System {}
+System.implFor(CombinatorSystem);
+
+ReadonlySystem.implFor(CombinatorSystem);
+
+export interface CombinatorSystem extends ReadonlySystem {}
 
 /**
  * A System created by piping the output of the first system into the input of the second.

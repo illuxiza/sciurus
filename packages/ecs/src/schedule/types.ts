@@ -1,8 +1,7 @@
 import { Option, Some, stringify, Vec } from 'rustable';
-import { ReadonlySystem, System } from '../system/base';
-import { SystemSet } from './set';
+import { System } from '../system/base';
 import { DiGraph, NodeId } from './graph';
-import { IntoReadonlySystem } from '../system/into';
+import { SystemSet } from './set';
 
 export enum LogLevel {
   /// Occurrences are completely ignored.
@@ -72,10 +71,6 @@ export class ScheduleBuildSettings {
     public reportSets: boolean = true,
   ) {}
 }
-
-export type Condition = ReadonlySystem<any, boolean>;
-
-export type IntoCondition = IntoReadonlySystem<any, boolean>;
 
 export class ProcessConfigsResult {
   constructor(

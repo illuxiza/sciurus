@@ -4,6 +4,7 @@ import { System } from '../system/base';
 import { Ambiguity, DependencyKind, GraphInfo } from './graph';
 import { IntoSystemSet, SystemSet } from './set';
 import { Chain } from './types';
+import { IntoReadonlySystem } from '../system/into';
 
 export const ambiguousWith = (graphInfo: GraphInfo, set: SystemSet) => {
   const ambiguity = graphInfo.ambiguousWith;
@@ -182,7 +183,7 @@ export class NodeConfigs<T> extends Enum {
     return this;
   }
 
-  runIf<T extends IntoCondition>(condition: T) {
+  runIf<T extends IntoReadonlySystem>(condition: T) {
     this.match({
       NodeConfig: (config) => {
         config.conditions.push(condition.intoReadonlySystem());

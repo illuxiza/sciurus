@@ -2,23 +2,22 @@ import { FixedBitSet } from '@sciurus/utils';
 import { Ok, Option, typeId, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
 import { Access } from '../../query/access';
-import { type ScheduleSystem, System } from '../../system';
+import { type ReadonlySystem, type ScheduleSystem, System } from '../../system';
 import { World } from '../../world';
 import { DeferredWorld } from '../../world/deferred';
 import { NodeId } from '../graph';
 import { IntoSystemSet, SystemSet, SystemTypeSet } from '../set';
-import { Condition } from '../types';
 
 export class SystemSchedule {
   constructor(
     public systemIds: Vec<NodeId> = Vec.new(),
     public systems: Vec<ScheduleSystem> = Vec.new(),
-    public systemConditions: Vec<Vec<Condition>> = Vec.new(),
+    public systemConditions: Vec<Vec<ReadonlySystem<any, boolean>>> = Vec.new(),
     public systemDependencies: Vec<number> = Vec.new(),
     public systemDependents: Vec<Vec<number>> = Vec.new(),
     public setsWithConditionsOfSystems: Vec<FixedBitSet> = Vec.new(),
     public setIds: Vec<NodeId> = Vec.new(),
-    public setConditions: Vec<Vec<Condition>> = Vec.new(),
+    public setConditions: Vec<Vec<ReadonlySystem<any, boolean>>> = Vec.new(),
     public systemsInSetsWithConditions: Vec<FixedBitSet> = Vec.new(),
   ) {}
 }

@@ -1,3 +1,4 @@
+import './inner_state_set';
 export { ComputedStates } from './computed_states';
 export { FreelyMutableState } from './freely_mutable_state';
 export { NextState, State } from './resources';
@@ -6,14 +7,11 @@ export { States } from './states';
 export { SubStates } from './sub_states';
 export {
   EnterSchedules,
-  ExitSchedules,
-  OnEnter,
+  ExitSchedules, lastTransition, OnEnter,
   OnExit,
-  OnTransition,
-  StateTransition,
+  OnTransition, setupStateTransitionsInWorld, StateTransition,
   StateTransitionEvent,
   StateTransitionSteps,
-  TransitionSchedules,
-  lastTransition,
-  setupStateTransitionsInWorld,
+  TransitionSchedules
 } from './transitions';
+

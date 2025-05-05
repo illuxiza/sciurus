@@ -1,7 +1,7 @@
 import { FixedBitSet } from '@sciurus/utils';
 import { Option, range, Result, Vec } from 'rustable';
+import { ReadonlySystem } from '../../system';
 import { World } from '../../world/base';
-import { Condition } from '../types';
 import { ExecutorKind, isApplyDeferred, SystemExecutor, SystemSchedule } from './types';
 
 export class SingleThreadedExecutor implements SystemExecutor {
@@ -109,7 +109,7 @@ export class SingleThreadedExecutor implements SystemExecutor {
   }
 }
 
-const evaluateAndFoldConditions = (conditions: Vec<Condition>, world: World): boolean => {
+const evaluateAndFoldConditions = (conditions: Vec<ReadonlySystem<any, boolean>>, world: World): boolean => {
   // not short-circuiting is intentional
   return conditions
     .iter()

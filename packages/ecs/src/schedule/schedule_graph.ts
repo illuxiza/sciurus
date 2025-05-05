@@ -16,7 +16,7 @@ import {
 } from 'rustable';
 import { ComponentId, Components } from '../component';
 import { Condition, IntoSystem, ScheduleSystem } from '../system';
-import { System } from '../system/base';
+import { ReadonlySystem, System } from '../system/base';
 import { World } from '../world/base';
 import { IntoConfigs, NodeConfig, NodeConfigs, SystemConfig, SystemSetConfig } from './config';
 import { ApplyDeferred, isApplyDeferred, SystemSchedule } from './executor';
@@ -47,9 +47,9 @@ import {
 
 export class ScheduleGraph {
   syss: Vec<SystemNode> = Vec.new();
-  sysCodns: Vec<Vec<Condition>> = Vec.new();
+  sysCodns: Vec<Vec<ReadonlySystem<any, boolean>>> = Vec.new();
   sysSets: Vec<SystemSetNode> = Vec.new();
-  sysSetConds: Vec<Vec<Condition>> = Vec.new();
+  sysSetConds: Vec<Vec<ReadonlySystem<any, boolean>>> = Vec.new();
   sysSetIds: HashMap<SystemSet, NodeId> = new HashMap();
   uninit: Vec<[NodeId, number]> = Vec.new();
   hierarchy: Dag = new Dag();
@@ -102,7 +102,7 @@ export class ScheduleGraph {
       });
   }
 
-  systemSets(): RustIter<[NodeId, SystemSet, Condition[]]> {
+  systemSets(): RustIter<[NodeId, SystemSet, ReadonlySystem<any, boolean>[]]> {
     return this.sysSetIds.iter().map(([_, id]) => {
       const setMode = this.sysSets.getUnchecked(id.index);
       let set = setMode.inner;
@@ -380,7 +380,7 @@ function configureSet(self: ScheduleGraph, config: SystemSetConfig): NodeId {
 function applyCollectiveConditions<T>(
   self: ScheduleGraph,
   configs: Vec<NodeConfigs<T>>,
-  collectiveConditions: Vec<Condition>,
+  collectiveConditions: Vec<ReadonlySystem<any, boolean>>,
 ): void {
   if (!collectiveConditions.isEmpty()) {
     if (configs.len() === 1) {

@@ -1,6 +1,6 @@
 import { Commands, World } from '@sciurus/ecs';
 import { logger } from '@sciurus/utils';
-import { Trait, type, Type } from 'rustable';
+import { Trait, type } from 'rustable';
 import { FreelyMutableState } from './state/freely_mutable_state';
 import { NextState } from './state/resources';
 

@@ -1,7 +1,7 @@
 {
   "name": "@sciurus/state",
-  "description": "",
-  "version": "0.0.6",
+  "description": "Finite state machines for Sciurus",
+  "version": "0.0.7",
   "homepage": "https://github.com/illuxiza/sciurus#readme",
   "license": "MIT",
   "main": "lib/index.js",
@@ -28,8 +28,9 @@
     "url": "https://github.com/illuxiza/sciurus/issues"
   },
   "dependencies": {
-    "@sciurus/ecs": "0.0.6",
-    "@sciurus/utils": "0.0.6"
+    "@sciurus/app": "0.0.7",
+    "@sciurus/ecs": "0.0.7",
+    "@sciurus/utils": "0.0.7"
   },
   "peerDependencies": {
     "rustable": "^0.4.0"

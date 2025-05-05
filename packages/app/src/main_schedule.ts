@@ -165,43 +165,51 @@ export class MainScheduleOrder {
   }
 
   insertAfter(after: ScheduleLabel, schedule: ScheduleLabel): void {
+    const afterLabel = ScheduleLabel.label(after);
+    const label = ScheduleLabel.label(schedule);
     const index = this.labels
       .iter()
-      .position((current) => current.eq(after))
+      .position((current) => current.eq(afterLabel))
       .unwrapOrElse(() => {
-        throw new Error(`Expected ${after} to exist`);
+        throw new Error(`Expected ${afterLabel} to exist`);
       });
-    this.labels.insert(index + 1, schedule);
+    this.labels.insert(index + 1, label);
   }
 
   insertBefore(before: ScheduleLabel, schedule: ScheduleLabel): void {
+    const beforeLabel = ScheduleLabel.label(before);
+    const label = ScheduleLabel.label(schedule);
     const index = this.labels
       .iter()
-      .position((current) => current.eq(before))
+      .position((current) => current.eq(beforeLabel))
       .unwrapOrElse(() => {
-        throw new Error(`Expected ${before} to exist`);
+        throw new Error(`Expected ${beforeLabel} to exist`);
       });
-    this.labels.insert(index, schedule);
+    this.labels.insert(index, label);
   }
 
   insertStartupAfter(after: ScheduleLabel, schedule: ScheduleLabel): void {
+    const afterLabel = ScheduleLabel.label(after);
+    const label = ScheduleLabel.label(schedule);
     const index = this.startupLabels
       .iter()
-      .position((current) => current.eq(after))
+      .position((current) => current.eq(afterLabel))
       .unwrapOrElse(() => {
-        throw new Error(`Expected ${after} to exist`);
+        throw new Error(`Expected ${afterLabel} to exist`);
       });
-    this.startupLabels.insert(index + 1, schedule);
+    this.startupLabels.insert(index + 1, label);
   }
 
   insertStartupBefore(before: ScheduleLabel, schedule: ScheduleLabel): void {
+    const beforeLabel = ScheduleLabel.label(before);
+    const label = ScheduleLabel.label(schedule);
     const index = this.startupLabels
       .iter()
-      .position((current) => current.eq(before))
+      .position((current) => current.eq(beforeLabel))
       .unwrapOrElse(() => {
-        throw new Error(`Expected ${before} to exist`);
+        throw new Error(`Expected ${beforeLabel} to exist`);
       });
-    this.startupLabels.insert(index, schedule);
+    this.startupLabels.insert(index, label);
   }
 }
 
@@ -224,19 +232,23 @@ export class FixedMainScheduleOrder {
   }
 
   insertAfter(after: ScheduleLabel, schedule: ScheduleLabel): void {
+    const afterLabel = ScheduleLabel.label(after);
+    const label = ScheduleLabel.label(schedule);
     const index = this.labels
       .iter()
-      .position((current) => current.eq(after))
-      .expect(`Expected ${after} to exist`);
-    this.labels.insert(index + 1, schedule);
+      .position((current) => current.eq(afterLabel))
+      .expect(`Expected ${afterLabel} to exist`);
+    this.labels.insert(index + 1, label);
   }
 
   insertBefore(before: ScheduleLabel, schedule: ScheduleLabel): void {
+    const beforeLabel = ScheduleLabel.label(before);
+    const label = ScheduleLabel.label(schedule);
     const index = this.labels
       .iter()
-      .position((current) => current.eq(before))
-      .expect(`Expected ${before} to exist`);
-    this.labels.insert(index, schedule);
+      .position((current) => current.eq(beforeLabel))
+      .expect(`Expected ${beforeLabel} to exist`);
+    this.labels.insert(index, label);
   }
 }
 

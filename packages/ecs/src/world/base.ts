@@ -539,10 +539,10 @@ export class World {
       Some: (x) => x,
       None: () => {
         throw new Error(
-          `Requested resource ${resource.name} does not exist in the 'World'. \
-        Did you forget to add it using 'app.insertResource' / 'app.initResource'? \
-        Resources are also implicitly added via 'app.addEvent', \
-        and can be added by plugins.`,
+          `Requested resource ${resource.name} does not exist in the 'World'.` +
+            `Did you forget to add it using 'app.insertResource' / 'app.initResource'?` +
+            `Resources are also implicitly added via 'app.addEvent',` +
+            `and can be added by plugins.`,
         );
       },
     });

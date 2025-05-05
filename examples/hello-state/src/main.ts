@@ -1,10 +1,9 @@
 import { App, Update } from '@sciurus/app';
 import { Res, system } from '@sciurus/ecs';
-import { inState, NextState, OnEnter, states, StatesPlugin } from '@sciurus/state';
+import { inState, NextState, OnEnter, States, StatesPlugin } from '@sciurus/state';
 import { Default, derive, Enum, variant } from 'rustable';
 
-@derive([Default])
-@states()
+@derive([States, Default])
 class GameState extends Enum<typeof GameState> {
   @variant
   static Start(): GameState {

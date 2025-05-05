@@ -29,6 +29,7 @@ export const State = createFactory(StateRes, (type: Constructor) => {
   return Type(StateRes, [type]);
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface State<S extends States = any> extends StateRes {}
 
 FromWorld.implFor(State, {

@@ -9,7 +9,6 @@ import {
   NotImplementedError,
   Option,
   Some,
-  stringify,
   Trait,
   typeId,
   TypeId,

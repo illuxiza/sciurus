@@ -7,15 +7,17 @@ export {
   FixedPreUpdate,
   FixedUpdate,
   Last,
-  Main, MainScheduleOrder, PostStartup,
+  Main,
+  MainScheduleOrder,
+  PostStartup,
   PostUpdate,
   PreStartup,
   PreUpdate,
   RunFixedMainLoop,
-  RunFixedMainLoopSystem, SpawnScene,
+  RunFixedMainLoopSystem,
+  SpawnScene,
   Startup,
-  Update
+  Update,
 } from './main_schedule';
 export { Plugin } from './plugin';
 export { PluginGroup } from './plugin_group';
-

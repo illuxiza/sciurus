@@ -67,24 +67,12 @@ describe('Entity', () => {
       expect(e1.toBits() < e2.toBits()).toBe(false);
       expect(e1.toBits() > e2.toBits()).toBe(false);
 
-      expect(
-        Entity.fromRawAndGen(9, 1).toBits() < Entity.fromRawAndGen(1, 9).toBits(),
-      ).toBe(true);
-      expect(
-        Entity.fromRawAndGen(1, 9).toBits() > Entity.fromRawAndGen(9, 1).toBits(),
-      ).toBe(true);
-      expect(
-        Entity.fromRawAndGen(1, 1).toBits() < Entity.fromRawAndGen(2, 1).toBits(),
-      ).toBe(true);
-      expect(
-        Entity.fromRawAndGen(1, 1).toBits() <= Entity.fromRawAndGen(2, 1).toBits(),
-      ).toBe(true);
-      expect(
-        Entity.fromRawAndGen(2, 2).toBits() > Entity.fromRawAndGen(1, 2).toBits(),
-      ).toBe(true);
-      expect(
-        Entity.fromRawAndGen(2, 2).toBits() >= Entity.fromRawAndGen(1, 2).toBits(),
-      ).toBe(true);
+      expect(Entity.fromRawAndGen(9, 1).toBits() < Entity.fromRawAndGen(1, 9).toBits()).toBe(true);
+      expect(Entity.fromRawAndGen(1, 9).toBits() > Entity.fromRawAndGen(9, 1).toBits()).toBe(true);
+      expect(Entity.fromRawAndGen(1, 1).toBits() < Entity.fromRawAndGen(2, 1).toBits()).toBe(true);
+      expect(Entity.fromRawAndGen(1, 1).toBits() <= Entity.fromRawAndGen(2, 1).toBits()).toBe(true);
+      expect(Entity.fromRawAndGen(2, 2).toBits() > Entity.fromRawAndGen(1, 2).toBits()).toBe(true);
+      expect(Entity.fromRawAndGen(2, 2).toBits() >= Entity.fromRawAndGen(1, 2).toBits()).toBe(true);
     });
   });
 });

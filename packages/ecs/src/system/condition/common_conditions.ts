@@ -1,14 +1,12 @@
 import { Constructor, equals, Ptr } from 'rustable';
+import { Component, Resource } from '../../component';
 import { Event, EventReader } from '../../event';
+import { With } from '../../query';
 import { RemovedComponents } from '../../removal_detection';
-import { CombinatorSystem } from '../combinator';
+import { Adapt, AdapterSystem } from '../adapt';
 import { condition } from '../function/fn';
 import { In, Local, OptionRes, Query, Res } from '../param';
-import { World } from '../../world';
-import { With } from '../../query';
 import { Condition, IntoCondition, NotMark } from './condition';
-import { Component, Resource } from '../../component';
-import { Adapt, AdapterSystem } from '../adapt';
 
 /**
  * A collection of run conditions that may be useful in any Sciurus app.

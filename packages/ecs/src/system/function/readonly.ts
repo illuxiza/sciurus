@@ -1,4 +1,4 @@
-import { Constructor, deepClone, None, Option, Some, Vec } from 'rustable';
+import { Constructor, None, Option, Some, Vec } from 'rustable';
 import { Tick } from '../../change_detection/tick';
 import { Access } from '../../query/access';
 import { SystemSet, SystemTypeSet } from '../../schedule/set';

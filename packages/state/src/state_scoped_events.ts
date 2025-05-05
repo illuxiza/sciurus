@@ -171,7 +171,7 @@ export class StateScopedEventsAppExt extends Trait {
    * @param eventType The event type to register
    * @param state The state to associate with this event cleanup
    */
-  addStateScopedEvent<E extends Event>(eventType: Constructor<E>, state: FreelyMutableState): any {
+  addStateScopedEvent<E extends Event>(_eventType: Constructor<E>, _state: FreelyMutableState): any {
     throw new NotImplementedError();
   }
 }

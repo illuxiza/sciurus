@@ -5,21 +5,19 @@ import {
   Resource,
   Schedule,
   Schedules,
-  World,
   system,
+  World,
 } from '@sciurus/ecs';
 import {
   Constructor,
   Default,
+  derive,
   Enum,
   Eq,
   None,
   Option,
   Some,
   Type,
-  derive,
-  hash,
-  stringify,
   variant,
 } from 'rustable';
 import {
@@ -31,13 +29,13 @@ import {
   OnEnter,
   OnExit,
   OnTransition,
+  setupStateTransitionsInWorld,
   State,
   StateSet,
   StateTransition,
   StateTransitionEvent,
   SubStates,
   TransitionSchedules,
-  setupStateTransitionsInWorld,
 } from '../src/state';
 import { states } from '../src/state/sub_states';
 

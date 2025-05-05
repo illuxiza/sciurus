@@ -27,7 +27,9 @@ export class FreelyMutableState extends States {
     schedule
       .addSystems(applyStateTransition(this).inSet(new ApplyStateTransition(this)))
       .addSystems(lastTransition(this).pipe(runExit(this)).inSet(new ExitSchedules(this)))
-      .addSystems(lastTransition(this).pipe(runTransition(this)).inSet(new TransitionSchedules(this)))
+      .addSystems(
+        lastTransition(this).pipe(runTransition(this)).inSet(new TransitionSchedules(this)),
+      )
       .addSystems(lastTransition(this).pipe(runEnter(this)).inSet(new EnterSchedules(this)));
   }
 }

@@ -1,5 +1,5 @@
 import { Schedule, system } from '@sciurus/ecs';
-import { Default, Enum, derive, variant } from 'rustable';
+import { Default, derive, Enum, variant } from 'rustable';
 import { inState, stateChanged, stateExists } from '../src/condition';
 import { states } from '../src/state/sub_states';
 

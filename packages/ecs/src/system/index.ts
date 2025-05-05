@@ -7,4 +7,3 @@ export { IntoObserverSystem, ObserverSystem } from './observer';
 export { In, Local, OptionRes, Query, Res, SystemParam } from './param';
 export { SystemId } from './registry';
 export { ScheduleSystem } from './schedule';
-

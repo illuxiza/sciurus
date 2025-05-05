@@ -385,6 +385,7 @@ StateSet.implFor(Array<InnerStateSet>, {
 });
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Array<T> extends InnerStateSet {}
 }
 
@@ -393,5 +394,6 @@ declare module './states' {
 }
 
 declare module 'rustable' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   export interface Option<T> extends InnerStateSet {}
 }

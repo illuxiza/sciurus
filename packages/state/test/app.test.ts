@@ -1,7 +1,7 @@
 import { App } from '@sciurus/app';
 import { Events } from '@sciurus/ecs';
-import { Default, Enum, None, Option, Some, Type, variant } from 'rustable';
-import { State, StateTransition, StateTransitionEvent, StatesPlugin } from '../src';
+import { Default, Enum, Option, Type, variant } from 'rustable';
+import { State, StatesPlugin, StateTransition, StateTransitionEvent } from '../src';
 import { states } from '../src/state/sub_states';
 
 /**

@@ -45,10 +45,7 @@ export class Entities {
     const index = this.pending.pop();
     if (index.isSome()) {
       this.freeCursor = this.pending.len();
-      return Entity.fromRawAndGen(
-        index.unwrap(),
-        this.meta.getUnchecked(index.unwrap()).gen,
-      );
+      return Entity.fromRawAndGen(index.unwrap(), this.meta.getUnchecked(index.unwrap()).gen);
     } else {
       const index = this.meta.len();
       this.meta.push(EntityMeta.EMPTY.clone());

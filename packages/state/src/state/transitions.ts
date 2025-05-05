@@ -24,7 +24,7 @@ import {
   Option,
   Some,
   Type,
-  variant
+  variant,
 } from 'rustable';
 import { State } from './resources';
 import { States } from './states';

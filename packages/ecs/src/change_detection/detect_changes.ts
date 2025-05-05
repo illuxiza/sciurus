@@ -157,18 +157,18 @@ export interface DetectChangesMut<T> extends DetectChangesMutTrait<T> {}
 export const proxyValue = (value: any): any => {
   return new Proxy(value, {
     get(target, prop) {
-      if (prop in target && typeof (target as any)[prop] === 'function') {
+      if (prop !== 'constructor' && prop in target && typeof (target as any)[prop] === 'function') {
         return (target as any)[prop].bind(target);
       }
       target.setChanged();
       target.__changeBy__ = new Location().caller()!.name;
-      return target.get()[prop];
+      return Reflect.get(target.get(), prop);
     },
     set(target, prop, value) {
       if (prop in target && typeof (target as any)[prop] === 'function') {
         return true;
       }
-      target.get()[prop] = value;
+      Reflect.set(target.get(), prop, value);
       return true;
     },
   });

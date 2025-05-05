@@ -52,28 +52,28 @@ interface NextStateMatch<S extends FreelyMutableState, U> {
 @derive([Resource])
 class NextStateEnum<S extends FreelyMutableState = any> extends Enum {
   @variant
-  static Unchanged<S extends FreelyMutableState>(): NextState<S> {
+  static Unchanged<S extends FreelyMutableState>(): NextStateEnum<S> {
     return null!;
   }
   @variant
-  static Pending<S extends FreelyMutableState>(_state: S): NextState<S> {
+  static Pending<S extends FreelyMutableState>(_state: S): NextStateEnum<S> {
     return null!;
   }
   match<U>(patterns: NextStateMatch<S, U>): U {
     return super.match(patterns);
   }
-  set(state: S): void {
-    this.replace(NextState.Pending(state));
+  to(state: S): void {
+    this.replace(NextStateEnum.Pending(state));
   }
   reset(): void {
-    this.replace(NextState.Unchanged());
+    this.replace(NextStateEnum.Unchanged());
   }
 }
 
 Default.implFor(NextStateEnum, {
   static: {
-    default(this: typeof NextStateEnum): NextState {
-      return NextState.Unchanged();
+    default(this: typeof NextStateEnum): NextStateEnum {
+      return NextStateEnum.Unchanged();
     },
   },
 });
@@ -82,7 +82,7 @@ export const NextState = createFactory(NextStateEnum, (stateType: Constructor) =
   const type = Type(NextStateEnum, [stateType]);
   type.Pending = (state) => new type('Pending', state);
   type.Unchanged = () => new type('Unchanged');
-  type.prototype.set = function (state) {
+  type.prototype.to = function (state) {
     this.replace(type.Pending(state));
   };
   type.prototype.reset = function () {

@@ -4,12 +4,16 @@ export { FreelyMutableState } from './freely_mutable_state';
 export { NextState, State } from './resources';
 export { StateSet } from './state_set';
 export { States } from './states';
-export { SubStates } from './sub_states';
+export { states, SubStates } from './sub_states';
 export {
   EnterSchedules,
-  ExitSchedules, lastTransition, OnEnter,
+  ExitSchedules,
+  lastTransition,
+  OnEnter,
   OnExit,
-  OnTransition, setupStateTransitionsInWorld, StateTransition,
+  OnTransition,
+  setupStateTransitionsInWorld,
+  StateTransition,
   StateTransitionEvent,
   StateTransitionSteps,
   TransitionSchedules

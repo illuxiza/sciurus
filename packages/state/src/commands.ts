@@ -18,7 +18,7 @@ CommandsStatesExt.implFor(Commands, {
         },
         Unchanged: () => {},
       });
-      next.get().set(state);
+      next.to(state);
     });
   },
 });
